@@ -37,6 +37,7 @@ jobs:
         run: |
           set +e
           status=0
+          : > axiom-audit.log
           {
             echo "Lean toolchain: $(cat lean-toolchain)"
             lake update || status=1
@@ -51,14 +52,26 @@ jobs:
             if grep -RInE --include='*.lean' \
               '(^|[^[:alnum:]_])(sorry|admit|sorryAx)([^[:alnum:]_]|$)|^[[:space:]]*axiom[[:space:]]' \
               CrooksJarzynski.lean CrooksJarzynski; then
-              echo "Proof audit failed."
+              echo "Proof source audit failed."
               status=1
             else
-              echo "Proof audit passed."
+              echo "Proof source audit passed."
+            fi
+            if [ "$status" -eq 0 ]; then
+              echo
+              echo "Printing axioms of the headline theorems..."
+              lake env lean CrooksJarzynski/AxiomAudit.lean > axiom-audit.log 2>&1 || status=1
+              cat axiom-audit.log
+              if grep -Fq 'sorryAx' axiom-audit.log; then
+                echo "Kernel axiom audit found a proof placeholder."
+                status=1
+              else
+                echo "Kernel axiom audit passed."
+              fi
             fi
           } > build.log 2>&1
           printf '%s\n' "$status" > build.status
-          tail -n 180 build.log
+          tail -n 220 build.log
           exit 0
       - name: Upload compiler diagnostics and dependency lock
         if: always()
@@ -68,6 +81,7 @@ jobs:
           path: |
             build.log
             build.status
+            axiom-audit.log
             lake-manifest.json
           if-no-files-found: error
       - name: Propagate build status
