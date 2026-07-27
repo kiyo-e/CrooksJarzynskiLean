@@ -3,9 +3,9 @@ import CrooksJarzynski
 /-!
 # Axiom audit
 
-This module prints the kernel axioms used by the headline results.  The CI log
-therefore records whether `sorryAx` or any custom axiom has entered the trusted
-base of the development.
+This module prints the kernel axioms used by the headline results. The CI log
+therefore records whether a proof placeholder or any custom axiom has entered
+the trusted base of the development.
 -/
 
 #print axioms CrooksJarzynski.Protocol.boltzmann_crooks
