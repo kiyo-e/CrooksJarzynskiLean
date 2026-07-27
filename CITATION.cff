@@ -19,5 +19,6 @@ abstract: >-
   thermodynamics in Lean 4: the pathwise Crooks fluctuation theorem, the
   work-distribution Crooks theorem, the Jarzynski equality, the integral
   fluctuation theorem, and the average-work second law, with an explicit
-  physical time-reversal protocol and an exact comparison of discrete-time
-  work conventions. No sorry placeholders or custom axioms.
+  physical time-reversal protocol, an exact comparison of discrete-time work
+  conventions, and a path-uniform O(1/N) refinement limit for their
+  discrepancy. No sorry placeholders or custom axioms.
