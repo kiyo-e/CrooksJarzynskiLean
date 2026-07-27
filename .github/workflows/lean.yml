@@ -14,24 +14,34 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install Lean and restore Mathlib cache
+      - name: Install Lean
         uses: leanprover/lean-action@v1
         with:
           build: false
           test: false
           lint: false
-          use-mathlib-cache: true
-      - name: Build project
+          use-mathlib-cache: false
+      - name: Resolve dependencies and build
         run: |
           set +e
-          lake build > build.log 2>&1
+          {
+            lake update
+            lake exe cache get
+            lake build
+          } > build.log 2>&1
           status=$?
-          cat build.log
-          exit "$status"
+          printf '%s\n' "$status" > build.status
+          tail -n 120 build.log
+          exit 0
       - name: Upload compiler diagnostics
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: lean-build-log
-          path: build.log
+          path: |
+            build.log
+            build.status
           if-no-files-found: error
+      - name: Propagate build status
+        if: always()
+        run: exit "$(cat build.status)"
