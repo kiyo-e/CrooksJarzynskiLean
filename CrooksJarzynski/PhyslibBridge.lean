@@ -9,6 +9,9 @@ Crooks–Jarzynski development with Physlib's finite `CanonicalEnsemble` API.
 The bridge proves equality of partition functions, Gibbs probabilities, and
 Helmholtz free energies after converting inverse temperature to Physlib's
 `Temperature` type.
+
+Physlib's current `CanonicalEnsemble` carrier is defined in `Type`, so this
+adapter specializes the universe-polymorphic core library to that universe.
 -/
 
 open MeasureTheory
@@ -16,13 +19,11 @@ open scoped BigOperators Temperature
 
 namespace CrooksJarzynski
 
-universe u
-
 noncomputable section
 
 namespace PhyslibBridge
 
-variable {Ω : Type u} [Fintype Ω]
+variable {Ω : Type} [Fintype Ω]
 variable [MeasurableSpace Ω] [MeasurableSingletonClass Ω]
 
 /-- Regard a finite energy landscape as a discrete Physlib canonical ensemble. -/
@@ -45,7 +46,7 @@ def temperatureOfBeta (β : ℝ) (hβ : 0 ≤ β) : Temperature :=
 @[simp]
 theorem temperatureOfBeta_beta (β : ℝ) (hβ : 0 ≤ β) :
     ((temperatureOfBeta β hβ).β : ℝ) = β := by
-  simp [temperatureOfBeta]
+  rfl
 
 /-- Physlib and the finite algebraic layer use the same partition function. -/
 theorem partitionFunction_eq
@@ -86,7 +87,7 @@ end PhyslibBridge
 
 namespace Protocol
 
-variable {Ω : Type u} [Fintype Ω] [Nonempty Ω]
+variable {Ω : Type} [Fintype Ω] [Nonempty Ω]
 variable [MeasurableSpace Ω] [MeasurableSingletonClass Ω]
 variable {n : ℕ}
 
@@ -101,7 +102,7 @@ def physlibTemperature (P : Protocol Ω n) : Temperature :=
 @[simp]
 theorem physlibTemperature_beta (P : Protocol Ω n) :
     ((P.physlibTemperature).β : ℝ) = P.β := by
-  simp [physlibTemperature]
+  rfl
 
 /-- Every protocol energy slice has the same partition function in Physlib. -/
 theorem physlib_partitionFunction_at (P : Protocol Ω n) (t : ℕ) :
