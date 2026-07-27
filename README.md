@@ -1,6 +1,6 @@
 # Crooks–Jarzynski in Lean 4
 
-A machine-checked finite-state, discrete-time development of stochastic thermodynamics.
+A machine-checked finite-state, discrete-time development of stochastic thermodynamics, together with a path-uniform refinement limit for the two standard discrete work conventions.
 
 The library proves, without `sorry` or custom axioms:
 
@@ -11,6 +11,7 @@ The library proves, without `sorry` or custom axioms:
 - sign reversal of work under the physical reverse experiment;
 - Crooks' theorem for the probability mass of each exact work value;
 - an exact comparison of the quench-then-transition and transition-then-quench work conventions;
+- a discrete summation-by-parts identity and a path-uniform `O(1/N)` refinement limit for the difference between those conventions;
 - the Jarzynski equality;
 - the integral fluctuation theorem for dissipated work;
 - the average-work second law `ΔF ≤ ⟨W⟩`;
@@ -36,6 +37,39 @@ W_rev(γ†) = -W(γ).
 ```
 
 For the same forward schedule, the alternative transition-then-quench convention evaluates each quench at `x_{t+1}` instead of `x_t`. The theorem `Protocol.workConvention_difference` gives the exact trajectory-wise difference between the two conventions, and `Protocol.workConvention_eq_of_stationary` shows that they agree when no transition changes the state.
+
+### Path-uniform continuous-time refinement limit
+
+The module `CrooksJarzynski.WorkConventionLimit` separates this comparison from the stochastic protocol. It needs only an energy schedule and a path. Write
+
+```text
+q_i(x) = E_{i+1}(x) - E_i(x)
+```
+
+for the energy increment across mesh edge `i`, and let `D_N` be the transition-then-quench work minus the quench-then-transition work on an `N`-edge path. The theorem `WorkConvention.discrepancy_summation_by_parts` proves the discrete summation-by-parts identity
+
+```text
+D_N = q_{N-1}(x_N) - q_0(x_0)
+    + ∑_{i=1}^{N-1} (q_{i-1}(x_i) - q_i(x_i)).
+```
+
+The interior expression compares two temporal increments at the same state. In particular, it contains no state increment and requires no continuity, finite-jump, or probabilistic assumption on the path.
+
+Suppose that a uniform mesh has width `h = T / N` and that the energy increments obey the path-independent bounds
+
+```text
+|q_i(x)| ≤ M h,
+|q_i(x) - q_{i+1}(x)| ≤ L h².
+```
+
+Then `WorkConvention.discrepancy_uniform_grid_abs_le` proves, for every path,
+
+```text
+|D_N| ≤ 2 M h + (N - 1) L h²
+      ≤ (2 M T + L T²) / N.
+```
+
+Consequently, `WorkConvention.discrepancy_tendsto_zero` proves that the two conventions converge to one another for every choice of paths on successively refined meshes. Since the bound is independent of the paths and their probability laws, the convergence is path-uniform. This is a finite-variation time-discretization result for externally driven work; it is not an Itô–Stratonovich conversion statement, and it does not assert a continuous-time Crooks theorem.
 
 ## Work-distribution Crooks theorem
 
@@ -68,6 +102,10 @@ CrooksJarzynski.Protocol.reverseProtocol
 CrooksJarzynski.Protocol.reverseProtocol_forwardWeight_reverse
 CrooksJarzynski.Protocol.reverseProtocol_work_reverse
 CrooksJarzynski.Protocol.workConvention_difference
+CrooksJarzynski.WorkConvention.discrepancy_summation_by_parts
+CrooksJarzynski.WorkConvention.discrepancy_abs_le
+CrooksJarzynski.WorkConvention.discrepancy_uniform_grid_abs_le
+CrooksJarzynski.WorkConvention.discrepancy_tendsto_zero
 CrooksJarzynski.Protocol.work_distribution_crooks
 CrooksJarzynski.Protocol.work_distribution_crooks_ratio
 CrooksJarzynski.Protocol.jarzynski
@@ -77,7 +115,9 @@ CrooksJarzynski.Protocol.second_law
 
 ## Scope
 
-The system is finite and the protocol is discrete in time. Every forward time step consists of an instantaneous energy quench followed by a Markov transition. Forward and reverse kernels are supplied separately and satisfy local detailed balance at the post-quench energy. The explicit physical reverse experiment uses the reversed transition first and the reverse quench second. Reversible dynamics are obtained by choosing the same kernel in both directions.
+The Crooks–Jarzynski system is finite-state and discrete in time. Every forward time step consists of an instantaneous energy quench followed by a Markov transition. Forward and reverse kernels are supplied separately and satisfy local detailed balance at the post-quench energy. The explicit physical reverse experiment uses the reversed transition first and the reverse quench second. Reversible dynamics are obtained by choosing the same kernel in both directions.
+
+The work-convention refinement theorem has a narrower and more general scope: it is independent of the kernels, path probabilities, and finite-state assumption, but it compares only the two discrete approximations to externally driven work. A measure-theoretic general-state-space Crooks theorem and a genuinely continuous-time stochastic process are outside the current scope.
 
 ## References
 
