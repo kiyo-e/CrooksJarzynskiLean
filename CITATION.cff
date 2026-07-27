@@ -1,0 +1,23 @@
+cff-version: 1.2.0
+message: "If you use this formalization, please cite it as below."
+title: "CrooksJarzynskiLean: a Lean 4 formalization of the Crooks and Jarzynski fluctuation theorems"
+type: software
+authors:
+  - name: "kiyo-e"
+repository-code: "https://github.com/kiyo-e/CrooksJarzynskiLean"
+license: Apache-2.0
+keywords:
+  - Lean 4
+  - Mathlib
+  - formal verification
+  - stochastic thermodynamics
+  - fluctuation theorems
+  - Crooks theorem
+  - Jarzynski equality
+abstract: >-
+  A machine-checked development of finite-state, discrete-time stochastic
+  thermodynamics in Lean 4: the pathwise Crooks fluctuation theorem, the
+  work-distribution Crooks theorem, the Jarzynski equality, the integral
+  fluctuation theorem, and the average-work second law, with an explicit
+  physical time-reversal protocol and an exact comparison of discrete-time
+  work conventions. No sorry placeholders or custom axioms.
