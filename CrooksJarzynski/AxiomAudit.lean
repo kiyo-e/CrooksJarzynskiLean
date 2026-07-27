@@ -21,6 +21,10 @@ the trusted base of the development.
 #print axioms CrooksJarzynski.Protocol.integral_fluctuation_theorem
 #print axioms CrooksJarzynski.Protocol.second_law
 #print axioms CrooksJarzynski.Protocol.workConvention_difference
+#print axioms CrooksJarzynski.WorkConvention.sum_transport_summationByParts
+#print axioms CrooksJarzynski.WorkConvention.uniformMesh_difference_bound
+#print axioms CrooksJarzynski.WorkConvention.uniformMesh_difference_tendsto_zero
+#print axioms CrooksJarzynski.Protocol.workConvention_uniformMesh_bound
 #print axioms CrooksJarzynski.TransitionThenQuenchProtocol.sum_forwardWeight
 #print axioms CrooksJarzynski.Protocol.reverseProtocol_forwardWeight_reverse
 #print axioms CrooksJarzynski.Protocol.reverseProtocol_work_reverse
