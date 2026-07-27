@@ -10,7 +10,7 @@ import Mathlib.Analysis.SpecificLimits.Basic
 # Continuous-time limit of the two discrete work conventions
 
 This module separates the comparison of the quench-then-transition and
-transition-then-quench work conventions from the stochastic protocol.  It
+transition-then-quench work conventions from the stochastic protocol. It
 works with only an energy schedule and a path through the state space.
 
 For the quench increment
@@ -22,7 +22,7 @@ the convention discrepancy is
 `D = ∑ t, (q_t(x_{t+1}) - q_t(x_t))`.
 
 A discrete summation-by-parts identity rewrites this as two boundary terms
-plus temporal differences of `q_t` at the same state.  Consequently, if
+plus temporal differences of `q_t` at the same state. Consequently, if
 `|q_t| ≤ M h` and `|q_{t+1} - q_t| ≤ L h²` on a uniform mesh of width
 `h = T / N`, then every path satisfies
 
@@ -30,7 +30,7 @@ plus temporal differences of `q_t` at the same state.  Consequently, if
 
 The estimate is independent of the transition kernels and of the path law.
 It therefore gives path-uniform convergence of the two conventions as the
-mesh is refined.  This is a finite-variation time-discretization result, not
+mesh is refined. This is a finite-variation time-discretization result, not
 an Itô--Stratonovich conversion theorem.
 -/
 
@@ -79,14 +79,18 @@ theorem discrepancy_eq_sum {Ω : Type u} {n : ℕ}
   unfold discrepancy transitionThenQuenchWork quenchThenTransitionWork
   rw [← Finset.sum_sub_distrib]
 
-@[simp] private theorem castSucc_succ_eq_succ_castSucc {n : ℕ} (t : Fin n) :
+private theorem castSucc_succ_eq_succ_castSucc {n : ℕ} (t : Fin n) :
     t.castSucc.succ = t.succ.castSucc := by
   apply Fin.ext
   rfl
 
-@[simp] private theorem last_succ_eq_last (n : ℕ) :
+private theorem last_succ_eq_last (n : ℕ) :
     (Fin.last n).succ = Fin.last (n + 1) := by
   apply Fin.ext
+  rfl
+
+private theorem zero_castSucc_eq_zero {n : ℕ} :
+    (0 : Fin (n + 1)).castSucc = (0 : Fin (n + 2)) := by
   rfl
 
 private theorem sum_sub_sum_summation_by_parts {n : ℕ}
@@ -95,7 +99,7 @@ private theorem sum_sub_sum_summation_by_parts {n : ℕ}
       a (Fin.last n) - b 0 +
         ∑ t : Fin n, (a t.castSucc - b t.succ) := by
   rw [Fin.sum_univ_castSucc a, Fin.sum_univ_succ b,
-    ← Finset.sum_sub_distrib]
+    Finset.sum_sub_distrib]
   ring
 
 /-- Discrete summation by parts for the work-convention discrepancy.
@@ -111,7 +115,8 @@ theorem discrepancy_summation_by_parts {Ω : Type u} {n : ℕ}
         (quenchIncrement E t.castSucc (x t.succ.castSucc) -
           quenchIncrement E t.succ (x t.succ.castSucc)) := by
   unfold discrepancy transitionThenQuenchWork quenchThenTransitionWork
-  simpa using
+  simpa only [castSucc_succ_eq_succ_castSucc, last_succ_eq_last,
+    zero_castSucc_eq_zero] using
     (sum_sub_sum_summation_by_parts
       (a := fun t : Fin (n + 1) => quenchIncrement E t (x t.succ))
       (b := fun t : Fin (n + 1) => quenchIncrement E t (x t.castSucc)))
@@ -150,14 +155,19 @@ theorem discrepancy_abs_le {Ω : Type u} {n : ℕ}
             quenchIncrement E t.succ (x t.succ.castSucc))| ≤
           ∑ t : Fin n,
             |quenchIncrement E t.castSucc (x t.succ.castSucc) -
-              quenchIncrement E t.succ (x t.succ.castSucc)| :=
-        Finset.abs_sum_le_sum_abs
+              quenchIncrement E t.succ (x t.succ.castSucc)| := by
+        simpa using
+          (Finset.abs_sum_le_sum_abs
+            (fun t : Fin n =>
+              quenchIncrement E t.castSucc (x t.succ.castSucc) -
+                quenchIncrement E t.succ (x t.succ.castSucc))
+            Finset.univ)
       _ ≤ ∑ _t : Fin n, B := by
         apply Finset.sum_le_sum
         intro t _
         exact hB t _
       _ = (n : ℝ) * B := by simp
-  exact (abs_add _ _).trans (add_le_add hBoundary hInterior)
+  exact (abs_add_le _ _).trans (add_le_add hBoundary hInterior)
 
 /-- The finite-difference estimate with bounds scaled by a mesh width `h`. -/
 theorem discrepancy_abs_le_of_mesh {Ω : Type u} {n : ℕ}
@@ -195,11 +205,10 @@ theorem discrepancy_uniform_grid_abs_le {Ω : Type u} {n : ℕ}
     _ ≤ 2 * (M * (T / ((n + 1 : ℕ) : ℝ))) +
           ((n + 1 : ℕ) : ℝ) *
             (L * (T / ((n + 1 : ℕ) : ℝ)) ^ 2) := by
-      exact add_le_add_left (mul_le_mul_of_nonneg_right hn hCoefficient) _
+      exact add_le_add_right (mul_le_mul_of_nonneg_right hn hCoefficient) _
     _ = (2 * M * T + L * T ^ 2) / ((n + 1 : ℕ) : ℝ) := by
       have hne : (((n + 1 : ℕ) : ℝ)) ≠ 0 := by positivity
-      field_simp [hne]
-      ring
+      field_simp [hne] <;> ring
 
 /-- For any choice of one path on every uniform mesh, the discrepancy tends to zero.
 
