@@ -1,6 +1,6 @@
 # Crooks–Jarzynski in Lean 4
 
-A machine-checked finite-state, discrete-time development of stochastic thermodynamics.
+A machine-checked finite-state, discrete-time development of stochastic thermodynamics, including a path-uniform continuous-time limit for the two discrete work conventions.
 
 The library proves, without `sorry` or custom axioms:
 
@@ -11,6 +11,7 @@ The library proves, without `sorry` or custom axioms:
 - sign reversal of work under the physical reverse experiment;
 - Crooks' theorem for the probability mass of each exact work value;
 - an exact comparison of the quench-then-transition and transition-then-quench work conventions;
+- a discrete summation-by-parts identity and an `O(1/N)` uniform-mesh limit for those conventions;
 - the Jarzynski equality;
 - the integral fluctuation theorem for dissipated work;
 - the average-work second law `ΔF ≤ ⟨W⟩`;
@@ -36,6 +37,30 @@ W_rev(γ†) = -W(γ).
 ```
 
 For the same forward schedule, the alternative transition-then-quench convention evaluates each quench at `x_{t+1}` instead of `x_t`. The theorem `Protocol.workConvention_difference` gives the exact trajectory-wise difference between the two conventions, and `Protocol.workConvention_eq_of_stationary` shows that they agree when no transition changes the state.
+
+## Continuous-time limit of the work conventions
+
+The probability-free `WorkConvention` layer writes the edgewise energy increment as
+
+```text
+q_i(x) = E_{i+1}(x) - E_i(x).
+```
+
+For an `N`-step path, the difference `D_N` between transition-then-quench and quench-then-transition work obeys the exact discrete summation-by-parts identity
+
+```text
+D_N = q_{N-1}(x_N) - q_0(x_0)
+      + ∑_{i=1}^{N-1} (q_{i-1}(x_i) - q_i(x_i)).
+```
+
+Consequently, if `|q_i(x)| ≤ M h` and `|q_i(x) - q_{i-1}(x)| ≤ L h²` on a uniform mesh `h = T/N`, then every path satisfies
+
+```text
+|D_N| ≤ 2 M h + (N - 1) L h²
+      ≤ T (2 M + L T) / N.
+```
+
+The bound is independent of the transition kernels, the path law, and the path itself. Thus the two conventions converge to one another uniformly over all paths. No path continuity or finite-jump assumption is required. This is a continuous-time limit of the finite-variation work convention, not a continuous-time Crooks theorem and not an Itô–Stratonovich conversion statement. See [`docs/continuous-time-limit.md`](docs/continuous-time-limit.md) for a manuscript-ready formulation.
 
 ## Work-distribution Crooks theorem
 
@@ -68,6 +93,10 @@ CrooksJarzynski.Protocol.reverseProtocol
 CrooksJarzynski.Protocol.reverseProtocol_forwardWeight_reverse
 CrooksJarzynski.Protocol.reverseProtocol_work_reverse
 CrooksJarzynski.Protocol.workConvention_difference
+CrooksJarzynski.WorkConvention.sum_transport_summationByParts
+CrooksJarzynski.WorkConvention.uniformMesh_difference_bound
+CrooksJarzynski.WorkConvention.uniformMesh_difference_tendsto_zero
+CrooksJarzynski.Protocol.workConvention_uniformMesh_bound
 CrooksJarzynski.Protocol.work_distribution_crooks
 CrooksJarzynski.Protocol.work_distribution_crooks_ratio
 CrooksJarzynski.Protocol.jarzynski
@@ -77,7 +106,9 @@ CrooksJarzynski.Protocol.second_law
 
 ## Scope
 
-The system is finite and the protocol is discrete in time. Every forward time step consists of an instantaneous energy quench followed by a Markov transition. Forward and reverse kernels are supplied separately and satisfy local detailed balance at the post-quench energy. The explicit physical reverse experiment uses the reversed transition first and the reverse quench second. Reversible dynamics are obtained by choosing the same kernel in both directions.
+The stochastic-thermodynamic system is finite, and every protocol is discrete in time. Every forward time step consists of an instantaneous energy quench followed by a Markov transition. Forward and reverse kernels are supplied separately and satisfy local detailed balance at the post-quench energy. The explicit physical reverse experiment uses the reversed transition first and the reverse quench second. Reversible dynamics are obtained by choosing the same kernel in both directions.
+
+The continuous-time statement concerns only the vanishing discrepancy between the two discrete work conventions along increasingly fine uniform meshes. It does not construct a continuous-time Markov process or prove a continuous-time Crooks relation.
 
 ## References
 
