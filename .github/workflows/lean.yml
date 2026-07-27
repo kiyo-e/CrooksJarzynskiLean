@@ -1,0 +1,91 @@
+name: Lean
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: lean-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Elan
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --proto '=https' --tlsv1.2 -sSf \
+            https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh \
+            | sh -s -- -y --default-toolchain none
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+      - name: Resolve dependencies, audit proofs, and build
+        shell: bash
+        run: |
+          set +e
+          status=0
+          : > axiom-audit.log
+          {
+            echo "Lean toolchain: $(cat lean-toolchain)"
+            lake exe cache get || status=1
+            if [ "$status" -eq 0 ]; then
+              lake build || status=1
+            fi
+            echo
+            echo "Checking for proof placeholders and custom axiom declarations..."
+            if grep -RInE --include='*.lean' \
+              '(^|[^[:alnum:]_])(sorry|admit|sorryAx)([^[:alnum:]_]|$)|^[[:space:]]*axiom[[:space:]]' \
+              CrooksJarzynski.lean CrooksJarzynski; then
+              echo "Proof source audit failed."
+              status=1
+            else
+              echo "Proof source audit passed."
+            fi
+            if [ "$status" -eq 0 ]; then
+              echo
+              echo "Printing axioms of the headline theorems..."
+              lake env lean CrooksJarzynski/AxiomAudit.lean > axiom-audit.log 2>&1 || status=1
+              cat axiom-audit.log
+              axiom_reports="$(grep -Ec \
+                'depends on axioms:|does not depend on any axioms' \
+                axiom-audit.log)"
+              if [ "$axiom_reports" -ne 6 ]; then
+                echo "Kernel axiom audit did not report every headline theorem."
+                status=1
+              elif sed -n 's/.*depends on axioms: \[\(.*\)\]$/\1/p' \
+                  axiom-audit.log \
+                  | tr ',' '\n' \
+                  | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' \
+                  | grep -Evx \
+                    'propext|Classical\.choice|Quot\.sound'; then
+                echo "Kernel axiom audit found an unapproved axiom."
+                status=1
+              else
+                echo "Kernel axiom audit passed."
+              fi
+            fi
+          } > build.log 2>&1
+          printf '%s\n' "$status" > build.status
+          tail -n 220 build.log
+          exit 0
+      - name: Upload compiler diagnostics and dependency lock
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lean-build-log
+          path: |
+            build.log
+            build.status
+            axiom-audit.log
+            lake-manifest.json
+          if-no-files-found: error
+      - name: Propagate build status
+        if: always()
+        shell: bash
+        run: exit "$(cat build.status)"
