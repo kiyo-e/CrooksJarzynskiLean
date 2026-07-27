@@ -2,10 +2,11 @@ name: Lean
 
 on:
   pull_request:
-  push:
-    branches:
-      - crooks-jarzynski-lean
   workflow_dispatch:
+
+concurrency:
+  group: lean-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
