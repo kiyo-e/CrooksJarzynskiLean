@@ -78,3 +78,18 @@ CrooksJarzynski.Protocol.second_law
 ## Scope
 
 The system is finite and the protocol is discrete in time. Every forward time step consists of an instantaneous energy quench followed by a Markov transition. Forward and reverse kernels are supplied separately and satisfy local detailed balance at the post-quench energy. The explicit physical reverse experiment uses the reversed transition first and the reverse quench second. Reversible dynamics are obtained by choosing the same kernel in both directions.
+
+## References
+
+The formalized results correspond to the finite-state, discrete-time versions of:
+
+- C. Jarzynski, *Nonequilibrium equality for free energy differences*, Phys. Rev. Lett. **78**, 2690 (1997). [doi:10.1103/PhysRevLett.78.2690](https://doi.org/10.1103/PhysRevLett.78.2690)
+- G. E. Crooks, *Nonequilibrium measurements of free energy differences for microscopically reversible Markovian systems*, J. Stat. Phys. **90**, 1481 (1998). [doi:10.1023/A:1023208217925](https://doi.org/10.1023/A:1023208217925)
+- G. E. Crooks, *Entropy production fluctuation theorem and the nonequilibrium work relation for free energy differences*, Phys. Rev. E **60**, 2721 (1999). [doi:10.1103/PhysRevE.60.2721](https://doi.org/10.1103/PhysRevE.60.2721)
+- G. E. Crooks, *Path-ensemble averages in systems driven far from equilibrium*, Phys. Rev. E **61**, 2361 (2000). [doi:10.1103/PhysRevE.61.2361](https://doi.org/10.1103/PhysRevE.61.2361)
+- L. Peliti and S. Pigolotti, *Stochastic Thermodynamics: An Introduction*, Princeton University Press (2021) — for the discrete-time conventions.
+- P. Hack, S. Gottwald, and D. A. Braun, *Jarzynski's equality and Crooks' fluctuation theorem for general Markov chains with application to decision-making systems*, Entropy **24**, 1731 (2022). [doi:10.3390/e24121731](https://doi.org/10.3390/e24121731) — the closest modern treatment; its discussion of the discrete-time work asymmetry corresponds to `Protocol.workConvention_difference` here.
+
+## License
+
+Released under the Apache License 2.0 (see [LICENSE](LICENSE)), matching the licensing of [Mathlib](https://github.com/leanprover-community/mathlib4) and [Physlib](https://github.com/leanprover-community/physlib). See [CITATION.cff](CITATION.cff) for how to cite this repository.
