@@ -90,32 +90,39 @@ theorem toKernel_singleton (K : CrooksJarzynski.Kernel Ω) (x y : Ω) :
   rw [toKernel_apply]
   exact FiniteDistribution.toMeasure_singleton (K x) y
 
+end MathlibBridge
+
+namespace Protocol
+
+variable {Ω : Type u} [Fintype Ω]
+variable [MeasurableSpace Ω] [MeasurableSingletonClass Ω]
+
 /-- Every protocol transition kernel has a canonical Mathlib Markov-kernel view. -/
-noncomputable def Protocol.forwardMathlibKernel
+noncomputable def forwardMathlibKernel
     {n : ℕ} (P : Protocol Ω n) (t : Fin n) :
     ProbabilityTheory.Kernel Ω Ω :=
-  toKernel (P.forwardKernel t)
+  MathlibBridge.toKernel (P.forwardKernel t)
 
 /-- Every reverse transition kernel has a canonical Mathlib Markov-kernel view. -/
-noncomputable def Protocol.reverseMathlibKernel
+noncomputable def reverseMathlibKernel
     {n : ℕ} (P : Protocol Ω n) (t : Fin n) :
     ProbabilityTheory.Kernel Ω Ω :=
-  toKernel (P.reverseKernel t)
+  MathlibBridge.toKernel (P.reverseKernel t)
 
 @[simp]
-theorem Protocol.forwardMathlibKernel_singleton
+theorem forwardMathlibKernel_singleton
     {n : ℕ} (P : Protocol Ω n) (t : Fin n) (x y : Ω) :
     P.forwardMathlibKernel t x {y} =
       ENNReal.ofReal (P.forwardKernel t x y) := by
-  exact toKernel_singleton (P.forwardKernel t) x y
+  exact MathlibBridge.toKernel_singleton (P.forwardKernel t) x y
 
 @[simp]
-theorem Protocol.reverseMathlibKernel_singleton
+theorem reverseMathlibKernel_singleton
     {n : ℕ} (P : Protocol Ω n) (t : Fin n) (x y : Ω) :
     P.reverseMathlibKernel t x {y} =
       ENNReal.ofReal (P.reverseKernel t x y) := by
-  exact toKernel_singleton (P.reverseKernel t) x y
+  exact MathlibBridge.toKernel_singleton (P.reverseKernel t) x y
 
-end MathlibBridge
+end Protocol
 
 end CrooksJarzynski
