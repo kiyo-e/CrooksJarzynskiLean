@@ -117,7 +117,7 @@ theorem abs_sum_transport_le {n : ℕ}
         |q (Fin.last n) (x (Fin.last (n + 1))) - q 0 (x 0)| +
           |∑ t : Fin n,
             (q t.castSucc (x t.castSucc.succ) -
-              q t.succ (x t.castSucc.succ))| := abs_add _ _
+              q t.succ (x t.castSucc.succ))| := abs_add_le _ _
     _ ≤ (|q (Fin.last n) (x (Fin.last (n + 1)))| + |q 0 (x 0)|) +
           ∑ t : Fin n,
             |q t.castSucc (x t.castSucc.succ) -
@@ -178,7 +178,7 @@ theorem abs_difference_le_mesh {n : ℕ}
     |transitionThenQuenchWork E x - quenchThenTransitionWork E x| ≤
         2 * (M * h) + (n : ℝ) * (L * h ^ 2) :=
       abs_difference_le_finiteDifferences E x hincrement hvariation
-    _ ≤ 2 * (M * h) + L * T * h := add_le_add_left hlast _
+    _ ≤ 2 * (M * h) + L * T * h := add_le_add (le_refl _) hlast
     _ = (2 * M + L * T) * h := by ring
 
 /-- On a uniform partition of `[0,T]` into `n+1` steps, the two conventions
