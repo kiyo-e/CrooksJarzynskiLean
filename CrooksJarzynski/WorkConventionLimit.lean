@@ -184,7 +184,7 @@ theorem discrepancy_abs_le_of_mesh {Ω : Type u} {n : ℕ}
 uniformly over all paths. -/
 theorem discrepancy_uniform_grid_abs_le {Ω : Type u} {n : ℕ}
     (E : EnergySchedule Ω (n + 1)) (x : Path Ω (n + 1))
-    {T M L : ℝ} (hT : 0 ≤ T) (hM : 0 ≤ M) (hL : 0 ≤ L)
+    {T M L : ℝ} (hL : 0 ≤ L)
     (hIncrement : ∀ t z,
       |quenchIncrement E t z| ≤ M * (T / ((n + 1 : ℕ) : ℝ)))
     (hVariation : ∀ (t : Fin n) z,
@@ -208,7 +208,7 @@ theorem discrepancy_uniform_grid_abs_le {Ω : Type u} {n : ℕ}
       exact add_le_add_right (mul_le_mul_of_nonneg_right hn hCoefficient) _
     _ = (2 * M * T + L * T ^ 2) / ((n + 1 : ℕ) : ℝ) := by
       have hne : (((n + 1 : ℕ) : ℝ)) ≠ 0 := by positivity
-      field_simp [hne] <;> ring
+      field_simp [hne]
 
 /-- For any choice of one path on every uniform mesh, the discrepancy tends to zero.
 
@@ -241,7 +241,7 @@ theorem discrepancy_tendsto_zero {Ω : Type u}
   obtain ⟨N, hN⟩ := hMajorant ε hε
   refine ⟨N, fun n hn => ?_⟩
   have hBound := discrepancy_uniform_grid_abs_le
-    (E := E n) (x := x n) hT hM hL (hIncrement n) (hVariation n)
+    (E := E n) (x := x n) hL (hIncrement n) (hVariation n)
   have hMajorantLt := hN n hn
   rw [Real.dist_eq, sub_zero] at hMajorantLt ⊢
   have hMajorantNonneg :
