@@ -21,7 +21,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .lake
-          key: lake-${{ runner.os }}-${{ hashFiles('lean-toolchain', 'lakefile.lean') }}
+          key: lake-${{ runner.os }}-${{ hashFiles('lean-toolchain', 'lakefile.lean', 'lake-manifest.json') }}
+          restore-keys: |
+            lake-${{ runner.os }}-${{ hashFiles('lean-toolchain', 'lakefile.lean') }}
       - name: Install Elan
         shell: bash
         run: |
@@ -30,21 +32,35 @@ jobs:
             https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh \
             | sh -s -- -y --default-toolchain none
           echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
-      - name: Resolve dependencies and build
+      - name: Resolve dependencies, audit proofs, and build
         shell: bash
         run: |
           set +e
+          status=0
           {
             echo "Lean toolchain: $(cat lean-toolchain)"
-            lake update
-            lake exe cache get
-            lake build
+            lake update || status=1
+            if [ "$status" -eq 0 ]; then
+              lake exe cache get || status=1
+            fi
+            if [ "$status" -eq 0 ]; then
+              lake build || status=1
+            fi
+            echo
+            echo "Checking for proof placeholders and custom axiom declarations..."
+            if grep -RInE --include='*.lean' \
+              '(^|[^[:alnum:]_])(sorry|admit|sorryAx)([^[:alnum:]_]|$)|^[[:space:]]*axiom[[:space:]]' \
+              CrooksJarzynski.lean CrooksJarzynski; then
+              echo "Proof audit failed."
+              status=1
+            else
+              echo "Proof audit passed."
+            fi
           } > build.log 2>&1
-          status=$?
           printf '%s\n' "$status" > build.status
-          tail -n 160 build.log
+          tail -n 180 build.log
           exit 0
-      - name: Upload compiler diagnostics
+      - name: Upload compiler diagnostics and dependency lock
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -52,6 +68,7 @@ jobs:
           path: |
             build.log
             build.status
+            lake-manifest.json
           if-no-files-found: error
       - name: Propagate build status
         if: always()
