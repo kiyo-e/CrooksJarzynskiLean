@@ -4,7 +4,7 @@ import Mathlib
 # Finite probability and trajectory infrastructure
 
 This module defines finite distributions, finite-state Markov kernels, and a
-recursive representation of finite trajectories.  The recursive representation
+recursive representation of finite trajectories. The recursive representation
 makes trajectory normalization an elementary induction over the number of time
 steps.
 -/
@@ -99,7 +99,7 @@ theorem reverseTransitionWeight_zero {Ω : Type u} [Fintype Ω]
 theorem transitionWeight_nonneg {Ω : Type u} [Fintype Ω]
     {n : ℕ} (K : Fin n → Kernel Ω) (x : Ω) (c : Continuation Ω n) :
     0 ≤ transitionWeight K x c := by
-  induction n with
+  induction n generalizing x with
   | zero =>
       cases c
       simp [transitionWeight]
@@ -113,7 +113,7 @@ theorem transitionWeight_nonneg {Ω : Type u} [Fintype Ω]
 theorem reverseTransitionWeight_nonneg {Ω : Type u} [Fintype Ω]
     {n : ℕ} (K : Fin n → Kernel Ω) (x : Ω) (c : Continuation Ω n) :
     0 ≤ reverseTransitionWeight K x c := by
-  induction n with
+  induction n generalizing x with
   | zero =>
       cases c
       simp [reverseTransitionWeight]
@@ -127,12 +127,14 @@ theorem reverseTransitionWeight_nonneg {Ω : Type u} [Fintype Ω]
 theorem sum_transitionWeight {Ω : Type u} [Fintype Ω]
     (n : ℕ) (K : Fin n → Kernel Ω) (x : Ω) :
     ∑ c : Continuation Ω n, transitionWeight K x c = 1 := by
-  induction n generalizing K x with
+  induction n generalizing x with
   | zero =>
+      change (∑ _ : PUnit, (1 : ℝ)) = 1
       simp
   | succ n ih =>
       change
-        (∑ c : Ω × Continuation Ω n, transitionWeight K x c) = 1
+        (∑ c : Ω × Continuation Ω n,
+          transitionWeight (n := n + 1) K x c) = 1
       rw [Fintype.sum_prod_type]
       simp only [transitionWeight]
       calc
@@ -156,13 +158,15 @@ theorem sum_reverseTransitionWeight {Ω : Type u} [Fintype Ω]
     (n : ℕ) (K : Fin n → Kernel Ω) (ν : FiniteDistribution Ω) :
     ∑ x : Ω, ∑ c : Continuation Ω n,
       ν (finalState x c) * reverseTransitionWeight K x c = 1 := by
-  induction n generalizing K with
+  induction n with
   | zero =>
+      change (∑ x : Ω, ∑ _ : PUnit, ν x * (1 : ℝ)) = 1
       simpa using ν.sum_prob
   | succ n ih =>
       change
         (∑ x : Ω, ∑ c : Ω × Continuation Ω n,
-          ν (finalState x c) * reverseTransitionWeight K x c) = 1
+          ν (finalState (n := n + 1) x c) *
+            reverseTransitionWeight (n := n + 1) K x c) = 1
       simp only [Fintype.sum_prod_type, finalState, reverseTransitionWeight]
       calc
         (∑ x : Ω, ∑ y : Ω, ∑ rest : Continuation Ω n,
