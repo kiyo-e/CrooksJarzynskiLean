@@ -29,7 +29,7 @@ noncomputable def toMeasure (μ : FiniteDistribution Ω) : Measure Ω :=
 theorem toMeasure_apply (μ : FiniteDistribution Ω) {s : Set Ω}
     (hs : MeasurableSet s) :
     μ.toMeasure s =
-      ∑ x : Ω, ENNReal.ofReal (μ x) * s.indicator (fun _ => 1) x := by
+      ∑ x : Ω, ENNReal.ofReal (μ x) * s.indicator 1 x := by
   simp [toMeasure, hs, Measure.dirac_apply']
 
 @[simp]
@@ -80,8 +80,11 @@ theorem toKernel_apply (K : CrooksJarzynski.Kernel Ω) (x : Ω) :
   rfl
 
 noncomputable instance (K : CrooksJarzynski.Kernel Ω) :
-    ProbabilityTheory.IsMarkovKernel (toKernel K) :=
-  ⟨fun _ => inferInstance⟩
+    ProbabilityTheory.IsMarkovKernel (toKernel K) := by
+  constructor
+  intro x
+  change IsProbabilityMeasure ((K x).toMeasure)
+  infer_instance
 
 /-- The mass of a singleton is exactly the original transition probability. -/
 @[simp]
