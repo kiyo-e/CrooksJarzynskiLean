@@ -46,6 +46,8 @@ def temperatureOfBeta (β : ℝ) (hβ : 0 ≤ β) : Temperature :=
 @[simp]
 theorem temperatureOfBeta_beta (β : ℝ) (hβ : 0 ≤ β) :
     ((temperatureOfBeta β hβ).β : ℝ) = β := by
+  unfold temperatureOfBeta
+  rw [Temperature.β_ofβ]
   rfl
 
 /-- Physlib and the finite algebraic layer use the same partition function. -/
@@ -55,7 +57,7 @@ theorem partitionFunction_eq
       CrooksJarzynski.partitionFunction β E := by
   rw [CanonicalEnsemble.partitionFunction_of_fintype]
   unfold CrooksJarzynski.partitionFunction CrooksJarzynski.boltzmannWeight
-  simp [toCanonicalEnsemble, temperatureOfBeta]
+  simp only [toCanonicalEnsemble, temperatureOfBeta_beta]
 
 /-- Physlib's point probability is the Gibbs probability used by this library. -/
 theorem probability_eq_gibbsProbability
@@ -65,7 +67,7 @@ theorem probability_eq_gibbsProbability
   unfold CanonicalEnsemble.probability gibbsProbability
   rw [CanonicalEnsemble.mathematicalPartitionFunction_of_fintype]
   unfold CrooksJarzynski.partitionFunction CrooksJarzynski.boltzmannWeight
-  simp [toCanonicalEnsemble, temperatureOfBeta]
+  simp only [toCanonicalEnsemble, temperatureOfBeta_beta]
 
 /-- Physlib's Helmholtz free energy agrees with `-log Z / β` at positive β. -/
 theorem helmholtzFreeEnergy_eq_freeEnergy
@@ -81,7 +83,6 @@ theorem helmholtzFreeEnergy_eq_freeEnergy
         Real.log (CrooksJarzynski.partitionFunction β E) =
       -Real.log (CrooksJarzynski.partitionFunction β E) / β
   field_simp [Constants.kB_ne_zero, hβ.ne']
-  ring
 
 end PhyslibBridge
 
@@ -102,7 +103,7 @@ def physlibTemperature (P : Protocol Ω n) : Temperature :=
 @[simp]
 theorem physlibTemperature_beta (P : Protocol Ω n) :
     ((P.physlibTemperature).β : ℝ) = P.β := by
-  rfl
+  exact PhyslibBridge.temperatureOfBeta_beta P.β P.β_pos.le
 
 /-- Every protocol energy slice has the same partition function in Physlib. -/
 theorem physlib_partitionFunction_at (P : Protocol Ω n) (t : ℕ) :

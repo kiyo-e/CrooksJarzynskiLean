@@ -33,10 +33,7 @@ jobs:
           : > axiom-audit.log
           {
             echo "Lean toolchain: $(cat lean-toolchain)"
-            lake update || status=1
-            if [ "$status" -eq 0 ]; then
-              lake exe cache get || status=1
-            fi
+            lake exe cache get || status=1
             if [ "$status" -eq 0 ]; then
               lake build || status=1
             fi
@@ -55,8 +52,19 @@ jobs:
               echo "Printing axioms of the headline theorems..."
               lake env lean CrooksJarzynski/AxiomAudit.lean > axiom-audit.log 2>&1 || status=1
               cat axiom-audit.log
-              if grep -Fq 'sorryAx' axiom-audit.log; then
-                echo "Kernel axiom audit found a proof placeholder."
+              axiom_reports="$(grep -Ec \
+                'depends on axioms:|does not depend on any axioms' \
+                axiom-audit.log)"
+              if [ "$axiom_reports" -ne 6 ]; then
+                echo "Kernel axiom audit did not report every headline theorem."
+                status=1
+              elif sed -n 's/.*depends on axioms: \[\(.*\)\]$/\1/p' \
+                  axiom-audit.log \
+                  | tr ',' '\n' \
+                  | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' \
+                  | grep -Evx \
+                    'propext|Classical\.choice|Quot\.sound'; then
+                echo "Kernel axiom audit found an unapproved axiom."
                 status=1
               else
                 echo "Kernel axiom audit passed."
