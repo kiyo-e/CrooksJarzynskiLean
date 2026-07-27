@@ -27,7 +27,7 @@ lake exe cache get
 lake build
 ```
 
-The project is pinned to Lean and Mathlib `v4.32.0`.
+The project is pinned to Lean and Mathlib `v4.32.0`. GitHub Actions preserves the complete compiler log as the `lean-build-log` artifact on every build attempt.
 
 ## Main declarations
 
