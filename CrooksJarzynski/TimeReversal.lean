@@ -35,7 +35,7 @@ def ofFn : {n : ℕ} → (Fin (n + 1) → Ω) → Trajectory Ω n
 @[simp]
 theorem stateAt_ofFn {n : ℕ} (f : Fin (n + 1) → Ω) :
     stateAt (ofFn f) = f := by
-  induction n generalizing f with
+  induction n with
   | zero =>
       funext i
       fin_cases i
@@ -58,6 +58,7 @@ theorem ofFn_stateAt {n : ℕ} (γ : Trajectory Ω n) :
       rcases γ with ⟨x, tail⟩
       change (x, ofFn (stateAt tail)) = (x, tail)
       rw [ih tail]
+      rfl
 
 @[ext]
 theorem ext {n : ℕ} {γ δ : Trajectory Ω n}
@@ -131,17 +132,15 @@ theorem finalState_reverse {n : ℕ} (γ : Trajectory Ω n) :
 reversed edge. -/
 @[simp]
 theorem rev_castSucc_edge {n : ℕ} (i : Fin n) :
-    (i.castSucc : Fin (n + 1)).rev = i.rev.succ := by
-  apply Fin.ext
-  omega
+    (i.castSucc : Fin (n + 1)).rev = i.rev.succ :=
+  Fin.rev_castSucc i
 
 /-- Reversal exchanges the right vertex of an edge with the left vertex of the
 reversed edge. -/
 @[simp]
 theorem rev_succ_edge {n : ℕ} (i : Fin n) :
-    (i.succ : Fin (n + 1)).rev = i.rev.castSucc := by
-  apply Fin.ext
-  omega
+    (i.succ : Fin (n + 1)).rev = i.rev.castSucc :=
+  Fin.rev_succ i
 
 variable [Fintype Ω]
 
@@ -206,7 +205,7 @@ theorem transitionProduct_reverse {n : ℕ}
   simp only [transitionProduct, reverseTransitionProduct, stateAt_reverse,
     rev_castSucc_edge, rev_succ_edge]
   simpa using
-    (Fin.revPerm.prod_comp
+    (Equiv.prod_comp (Fin.revPerm : Equiv.Perm (Fin n))
       (fun t : Fin n => K t (stateAt γ t.succ) (stateAt γ t.castSucc)))
 
 end Trajectory
@@ -241,8 +240,8 @@ private theorem workAux_eq_sum_quenchThenTransitionIncrement
     {n : ℕ} (E : ℕ → Energy Ω) (x : Ω) (c : Continuation Ω n) :
     workAux E x c =
       ∑ t : Fin n,
-        E (t.val + 1) (Trajectory.stateAt (x, c) t.castSucc) -
-          E t.val (Trajectory.stateAt (x, c) t.castSucc) := by
+        (E (t.val + 1) (Trajectory.stateAt (x, c) t.castSucc) -
+          E t.val (Trajectory.stateAt (x, c) t.castSucc)) := by
   induction n generalizing E x with
   | zero =>
       cases c
@@ -361,7 +360,6 @@ theorem sum_forwardWeight (R : TransitionThenQuenchProtocol Ω n) :
           apply Finset.sum_congr rfl
           intro x _
           rw [Finset.mul_sum]
-          apply congrArg
           apply Finset.sum_congr rfl
           intro c _
           rw [← Trajectory.transitionWeight_eq_transitionProduct]
@@ -397,9 +395,7 @@ def reverseProtocol (P : Protocol Ω n) : TransitionThenQuenchProtocol Ω n wher
   reverseKernel := fun t => P.forwardKernel t.rev
   localBalance := by
     intro t x y
-    have hindex : t.rev.val + 1 = t.castSucc.rev.val := by
-      omega
-    simpa [hindex] using (P.localBalance t.rev y x).symm
+    simpa [Fin.rev_castSucc] using (P.localBalance t.rev y x).symm
 
 @[simp]
 theorem reverseProtocol_initialEnergy (P : Protocol Ω n) :
@@ -414,7 +410,10 @@ theorem reverseProtocol_finalEnergy (P : Protocol Ω n) :
 @[simp]
 theorem reverseProtocol_deltaFreeEnergy (P : Protocol Ω n) :
     P.reverseProtocol.deltaFreeEnergy = -P.deltaFreeEnergy := by
-  simp [TransitionThenQuenchProtocol.deltaFreeEnergy, deltaFreeEnergy]
+  unfold TransitionThenQuenchProtocol.deltaFreeEnergy deltaFreeEnergy
+  rw [reverseProtocol_initialEnergy, reverseProtocol_finalEnergy]
+  change freeEnergy P.β P.initialEnergy - freeEnergy P.β P.finalEnergy =
+    -(freeEnergy P.β P.finalEnergy - freeEnergy P.β P.initialEnergy)
   ring
 
 /-- The explicit reverse protocol assigns exactly `reverseWeight` to the
@@ -425,6 +424,11 @@ theorem reverseProtocol_forwardWeight_reverse
     P.reverseProtocol.forwardWeight (Trajectory.reverse γ) = P.reverseWeight γ := by
   unfold TransitionThenQuenchProtocol.forwardWeight reverseWeight
   rw [reverseProtocol_initialEnergy, Trajectory.reverse_fst]
+  change gibbsProbability P.β P.finalEnergy (finalState γ.1 γ.2) *
+      Trajectory.transitionProduct (fun t => P.reverseKernel t.rev)
+        (Trajectory.reverse γ) =
+    gibbsProbability P.β P.finalEnergy (finalState γ.1 γ.2) *
+      reverseTransitionWeight P.reverseKernel γ.1 γ.2
   rw [Trajectory.transitionProduct_reverse]
   rw [← Trajectory.reverseTransitionWeight_eq_reverseTransitionProduct]
 
@@ -438,6 +442,11 @@ theorem reverseProtocol_workIncrement_reverse
     quenchThenTransitionIncrement
   simp only [Trajectory.stateAt_reverse, Trajectory.rev_succ_edge,
     Trajectory.rev_castSucc_edge]
+  change
+    P.energy t.rev.val (Trajectory.stateAt γ t.rev.castSucc) -
+        P.energy (t.rev.val + 1) (Trajectory.stateAt γ t.rev.castSucc) =
+      -(P.energy (t.rev.val + 1) (Trajectory.stateAt γ t.rev.castSucc) -
+        P.energy t.rev.val (Trajectory.stateAt γ t.rev.castSucc))
   ring
 
 /-- Work changes sign under the physical reverse protocol. This theorem also
@@ -457,7 +466,7 @@ theorem reverseProtocol_work_reverse
           rw [P.reverseProtocol_workIncrement_reverse γ t]
     _ = ∑ t : Fin n, -P.quenchThenTransitionIncrement γ t := by
           simpa using
-            (Fin.revPerm.sum_comp
+            (Equiv.sum_comp (Fin.revPerm : Equiv.Perm (Fin n))
               (fun t : Fin n => -P.quenchThenTransitionIncrement γ t))
     _ = -(∑ t : Fin n, P.quenchThenTransitionIncrement γ t) := by
           rw [Finset.sum_neg_distrib]
@@ -484,7 +493,11 @@ theorem reverseProtocol_workProbability (P : Protocol Ω n) (w : ℝ) :
           if P.reverseProtocol.work (Trajectory.reverse γ) = w then
             P.reverseProtocol.forwardWeight (Trajectory.reverse γ) else 0 := by
           symm
-          exact (Trajectory.reverseEquiv Ω n).sum_comp _
+          exact
+            Equiv.sum_comp (Trajectory.reverseEquiv Ω n)
+              (fun δ : Trajectory Ω n =>
+                if P.reverseProtocol.work δ = w then
+                  P.reverseProtocol.forwardWeight δ else 0)
     _ = ∑ γ : Trajectory Ω n,
           if -P.work γ = w then P.reverseWeight γ else 0 := by
           apply Finset.sum_congr rfl
