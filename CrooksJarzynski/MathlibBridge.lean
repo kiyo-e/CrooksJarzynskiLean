@@ -36,7 +36,7 @@ theorem toMeasure_apply (μ : FiniteDistribution Ω) {s : Set Ω}
 theorem toMeasure_univ (μ : FiniteDistribution Ω) :
     μ.toMeasure Set.univ = 1 := by
   rw [toMeasure_apply μ MeasurableSet.univ]
-  simp only [Set.indicator_of_mem, Set.mem_univ, mul_one]
+  simp only [Set.indicator_of_mem, Set.mem_univ, Pi.one_apply, mul_one]
   calc
     (∑ x : Ω, ENNReal.ofReal (μ x)) =
         ENNReal.ofReal (∑ x : Ω, μ x) := by
