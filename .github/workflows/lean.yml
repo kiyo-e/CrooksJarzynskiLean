@@ -40,7 +40,7 @@ jobs:
             echo
             echo "Checking for proof placeholders and custom axiom declarations..."
             if grep -RInE --include='*.lean' \
-              '(^|[^[:alnum:]_])(sorry|admit|sorryAx)([^[:alnum:]_]|$)|^[[:space:]]*axiom[[:space:]]' \
+              '(^|[^[:alnum:]_])(sorry|admit|sorryAx)([^[:alnum:]_]|$)|^[[:space:]]*(axiom|constant)[[:space:]]' \
               CrooksJarzynski.lean CrooksJarzynski; then
               echo "Proof source audit failed."
               status=1
@@ -55,7 +55,7 @@ jobs:
               axiom_reports="$(grep -Ec \
                 'depends on axioms:|does not depend on any axioms' \
                 axiom-audit.log)"
-              if [ "$axiom_reports" -ne 6 ]; then
+              if [ "$axiom_reports" -ne 13 ]; then
                 echo "Kernel axiom audit did not report every headline theorem."
                 status=1
               elif sed -n 's/.*depends on axioms: \[\(.*\)\]$/\1/p' \
