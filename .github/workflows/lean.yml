@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - crooks-jarzynski-lean
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -12,25 +13,30 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - name: Install Elan
+        shell: bash
         run: |
+          set -euo pipefail
           curl --proto '=https' --tlsv1.2 -sSf \
             https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh \
-            | sh -s -- -y
+            | sh -s -- -y --default-toolchain none
           echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
       - name: Resolve dependencies and build
+        shell: bash
         run: |
           set +e
           {
+            echo "Lean toolchain: $(cat lean-toolchain)"
             lake update
             lake exe cache get
             lake build
           } > build.log 2>&1
           status=$?
           printf '%s\n' "$status" > build.status
-          tail -n 120 build.log
+          tail -n 160 build.log
           exit 0
       - name: Upload compiler diagnostics
         if: always()
@@ -43,4 +49,5 @@ jobs:
           if-no-files-found: error
       - name: Propagate build status
         if: always()
+        shell: bash
         run: exit "$(cat build.status)"
