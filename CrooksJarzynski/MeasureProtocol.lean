@@ -76,8 +76,10 @@ theorem compProd_withDensity_fst
     (μ ⊗ₘ κ).withDensity (fun p => q p.1) = μ.withDensity q ⊗ₘ κ := by
   ext s hs
   rw [withDensity_apply _ hs, Measure.compProd_apply hs]
-  rw [← lintegral_indicator hs,
-    Measure.lintegral_compProd ((hq.comp measurable_fst).indicator hs)]
+  rw [← lintegral_indicator hs]
+  have hqfst : Measurable (fun p : Ω × Ω => q p.1) :=
+    hq.comp measurable_fst
+  rw [Measure.lintegral_compProd (hqfst.indicator hs)]
   rw [lintegral_withDensity_eq_lintegral_mul μ hq
     (Kernel.measurable_kernel_prodMk_left hs)]
   apply lintegral_congr
