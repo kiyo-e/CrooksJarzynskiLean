@@ -118,15 +118,21 @@ theorem reweight_partitionRatio
     fun_prop
   have hwork : Measurable (workWeight β initial final) :=
     measurable_workWeight β hinitialMeas hfinalMeas
-  unfold measure Measure.tilted partitionRatio partitionFunction
+  unfold measure Measure.tilted
+  change
+    (base.withDensity (fun x => ENNReal.ofReal
+      (Real.exp (-β * initial x) / partitionFunction base β initial))).withDensity
+        (workWeight β initial final) =
+      partitionRatio base β initial final •
+        base.withDensity (fun x => ENNReal.ofReal
+          (Real.exp (-β * final x) / partitionFunction base β final))
   rw [← withDensity_mul base hdinitial hwork,
     ← withDensity_smul (μ := base)
-      (ENNReal.ofReal
-        ((∫ x, Real.exp (-β * final x) ∂base) /
-          ∫ x, Real.exp (-β * initial x) ∂base)) hdfinal]
+      (partitionRatio base β initial final) hdfinal]
   apply withDensity_congr_ae
   filter_upwards with x
-  simp only [Pi.mul_apply, Pi.smul_apply, smul_eq_mul, workWeight]
+  simp only [Pi.mul_apply, Pi.smul_apply, smul_eq_mul, workWeight,
+    partitionRatio]
   have hexp :
       Real.exp (-β * initial x) *
           Real.exp (-β * (final x - initial x)) =
@@ -136,12 +142,12 @@ theorem reweight_partitionRatio
     ring
   have hreal :
       (Real.exp (-β * initial x) /
-          ∫ y, Real.exp (-β * initial y) ∂base) *
+          partitionFunction base β initial) *
           Real.exp (-β * (final x - initial x)) =
-        ((∫ y, Real.exp (-β * final y) ∂base) /
-            ∫ y, Real.exp (-β * initial y) ∂base) *
+        (partitionFunction base β final /
+            partitionFunction base β initial) *
           (Real.exp (-β * final x) /
-            ∫ y, Real.exp (-β * final y) ∂base) := by
+            partitionFunction base β final) := by
     rw [div_mul_eq_mul_div, hexp]
     field_simp [hZinitial.ne', hZfinal.ne']
   rw [← ENNReal.ofReal_mul (by positivity),
