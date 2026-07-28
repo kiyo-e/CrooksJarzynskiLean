@@ -37,6 +37,7 @@ private noncomputable def continuationMeasurableSpace
         continuationMeasurableSpace Ω n
       inferInstanceAs (MeasurableSpace (Ω × Continuation Ω n))
 
+@[reducible]
 noncomputable instance (priority := 100) instMeasurableSpaceContinuation (n : ℕ) :
     MeasurableSpace (Continuation Ω n) :=
   continuationMeasurableSpace Ω n
@@ -83,18 +84,24 @@ noncomputable instance instIsMarkovKernelReverseContinuationKernel
       simp only [reverseContinuationKernel]
       infer_instance
   | succ n ih =>
-      simp only [reverseContinuationKernel]
       letI : ∀ i : Fin n, IsMarkovKernel ((fun j => K j.castSucc) i) :=
         fun i => hK i.castSucc
       haveI : IsMarkovKernel
           (reverseContinuationKernel (fun i => K i.castSucc)) :=
         ih (fun i => K i.castSucc)
       letI : IsMarkovKernel (K (Fin.last n)) := hK (Fin.last n)
-      constructor
-      intro x
-      constructor
-      rw [ProbabilityTheory.Kernel.compProd_apply MeasurableSet.univ]
-      simp
+      haveI : IsMarkovKernel
+          (ProbabilityTheory.Kernel.prodMkLeft Ω
+            (reverseContinuationKernel (fun i => K i.castSucc))) := by
+        unfold ProbabilityTheory.Kernel.prodMkLeft
+        exact ProbabilityTheory.Kernel.IsMarkovKernel.comap _
+          (measurable_snd : Measurable
+            (fun p : Ω × Ω => p.2))
+      change IsMarkovKernel
+        (K (Fin.last n) ⊗ₖ
+          ProbabilityTheory.Kernel.prodMkLeft Ω
+            (reverseContinuationKernel (fun i => K i.castSucc)))
+      infer_instance
 
 /-- The reverse-experiment path measure, written in reverse chronological order
 `(xₙ, xₙ₋₁, …, x₀)`. -/
@@ -192,7 +199,8 @@ theorem liftLocalBalance_past
     ((((μ ⊗ₘ past) ⊗ₘ
         forward.comap (fun p : Ω × A => p.1)
           (measurable_fst : Measurable (fun p : Ω × A => p.1))).map
-          (MeasurableEquiv.prodComm : ((Ω × A) × Ω) ≃ᵐ Ω × (Ω × A))) =
+          (MeasurableEquiv.prodComm :
+            ((Ω × A) × Ω) ≃ᵐ Ω × (Ω × A))) =
       μ ⊗ₘ (reverse ⊗ₖ
         ProbabilityTheory.Kernel.prodMkLeft Ω past)) := by
   haveI : IsMarkovKernel
@@ -211,7 +219,8 @@ theorem liftLocalBalance_past
           (measurable_fst : Measurable (fun p : Ω × A => p.1))).map
           (MeasurableEquiv.prodComm : ((Ω × A) × Ω) ≃ᵐ Ω × (Ω × A)))) :=
     Measure.isProbabilityMeasure_map
-      ((MeasurableEquiv.prodComm : ((Ω × A) × Ω) ≃ᵐ Ω × (Ω × A)).measurable.aemeasurable)
+      ((MeasurableEquiv.prodComm :
+        ((Ω × A) × Ω) ≃ᵐ Ω × (Ω × A)).measurable.aemeasurable)
   apply Measure.ext_prod₃
   intro s t u hs ht hu
   let fForward : Ω × A → ℝ≥0∞ := fun p => forward p.1 s
@@ -231,7 +240,11 @@ theorem liftLocalBalance_past
           (s ×ˢ t ×ˢ u) =
         (t ×ˢ u) ×ˢ s := by
     ext p
-    simp
+    constructor
+    · rintro ⟨hs', ht', hu'⟩
+      exact ⟨⟨ht', hu'⟩, hs'⟩
+    · rintro ⟨⟨ht', hu'⟩, hs'⟩
+      exact ⟨hs', ht', hu'⟩
   have hpreLocal :
       Prod.swap ⁻¹' (t ×ˢ s) = s ×ˢ t := by
     ext p
@@ -247,7 +260,8 @@ theorem liftLocalBalance_past
               (measurable_fst : Measurable (fun p : Ω × A => p.1)))
               ((t ×ˢ u) ×ˢ s) := by
           rw [Measure.map_apply
-            (MeasurableEquiv.prodComm : ((Ω × A) × Ω) ≃ᵐ Ω × (Ω × A)).measurable
+            (MeasurableEquiv.prodComm :
+              ((Ω × A) × Ω) ≃ᵐ Ω × (Ω × A)).measurable
             (hs.prod (ht.prod hu)), hpre]
     _ = ∫⁻ p in t ×ˢ u, forward p.1 s ∂(μ ⊗ₘ past) := by
           rw [Measure.compProd_apply_prod (ht.prod hu) hs]
@@ -257,7 +271,7 @@ theorem liftLocalBalance_past
             Measure.setLIntegral_compProd hg ht hs]
           apply setLIntegral_congr_fun ht
           intro x hx
-          simp [fForward, g, setLIntegral_const, mul_comm]
+          simp [fForward, g, mul_comm]
     _ = ∫⁻ p in t ×ˢ s, past p.1 u
           ∂((μ ⊗ₘ reverse).map Prod.swap) := by
           rw [← hbalance]
@@ -271,6 +285,9 @@ theorem liftLocalBalance_past
             Measure.compProd_apply_prod hs (ht.prod hu)]
           apply setLIntegral_congr_fun hs
           intro y hy
+          change (∫⁻ b in t, past b u ∂reverse y) =
+            ((reverse ⊗ₖ ProbabilityTheory.Kernel.prodMkLeft Ω past) y)
+              (t ×ˢ u)
           rw [ProbabilityTheory.Kernel.compProd_apply_prod ht hu]
           rfl
 
