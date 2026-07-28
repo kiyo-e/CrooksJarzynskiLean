@@ -163,10 +163,13 @@ theorem measurable_pathWork
       (fun x => energy i.succ x - energy i.castSucc x) := by
     intro i
     exact (henergy i.succ).sub (henergy i.castSucc)
-  simpa [pathWork, Function.comp_def] using
-    ((Markov.measurable_reversedAccumulatedWork
-      (fun i x => energy i.succ x - energy i.castSucc x) hstep).comp
-        Trajectory.measurable_reverse)
+  change Measurable (fun γ : Trajectory Ω n =>
+    Markov.reversedAccumulatedWork
+      (fun i x => energy i.succ x - energy i.castSucc x)
+      (Trajectory.reverse γ))
+  exact (Markov.measurable_reversedAccumulatedWork
+    (fun i x => energy i.succ x - energy i.castSucc x) hstep).comp
+      Trajectory.measurable_reverse
 
 /-- The chronological work factor is exactly `exp (-β W)`. -/
 theorem chronologicalWorkWeight_eq_exp_pathWork
