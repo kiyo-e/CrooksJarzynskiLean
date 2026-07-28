@@ -234,10 +234,7 @@ theorem multiStep_crooks
         rfl
       rw [hendpoint] at hext
       change @CrooksRelation (Ω × (Ω × Continuation Ω n)) _ _ _ _ _
-      simpa [equilibriumPrefix, forwardPrefix, reversePrefix, workPrefix,
-        factorPrefix, reversedForwardPathMeasure,
-        reversePathMeasure, reverseContinuationKernel, reversedWorkWeight,
-        accumulatedFreeEnergyWeight] using hext
+      exact hext
 
 /-- The finite-horizon Jarzynski equality on an arbitrary measurable state
 space. -/
