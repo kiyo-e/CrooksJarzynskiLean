@@ -50,15 +50,17 @@ noncomputable def prependEquiv (n : ℕ) :
 
 /-- Lift a state kernel to a kernel on a reverse-oriented path prefix by reading
 its current endpoint. -/
-def endpointKernel (K : ProbabilityTheory.Kernel Ω Ω) (n : ℕ) :
+noncomputable def endpointKernel (K : ProbabilityTheory.Kernel Ω Ω) (n : ℕ) :
     ProbabilityTheory.Kernel (Trajectory Ω n) Ω :=
-  K.comap (fun γ : Trajectory Ω n => γ.1) measurable_fst
+  K.comap (fun γ : Trajectory Ω n => γ.1)
+    (measurable_fst : Measurable (fun γ : Trajectory Ω n => γ.1))
 
 instance instIsMarkovKernelEndpointKernel
     (K : ProbabilityTheory.Kernel Ω Ω) [IsMarkovKernel K] (n : ℕ) :
     IsMarkovKernel (endpointKernel K n) := by
   unfold endpointKernel
-  exact ProbabilityTheory.Kernel.IsMarkovKernel.comap _ measurable_fst
+  exact ProbabilityTheory.Kernel.IsMarkovKernel.comap _
+    (measurable_fst : Measurable (fun γ : Trajectory Ω n => γ.1))
 
 /-- Given an endpoint, generate the earlier states in reverse chronological
 order with kernels indexed in forward chronological order. -/
@@ -88,12 +90,11 @@ noncomputable instance instIsMarkovKernelReverseContinuationKernel
           (reverseContinuationKernel (fun i => K i.castSucc)) :=
         ih (fun i => K i.castSucc)
       letI : IsMarkovKernel (K (Fin.last n)) := hK (Fin.last n)
-      haveI : IsMarkovKernel
-          (ProbabilityTheory.Kernel.prodMkLeft Ω
-            (reverseContinuationKernel (fun i => K i.castSucc))) := by
-        unfold ProbabilityTheory.Kernel.prodMkLeft
-        exact ProbabilityTheory.Kernel.IsMarkovKernel.comap _ measurable_snd
-      infer_instance
+      constructor
+      intro x
+      constructor
+      rw [ProbabilityTheory.Kernel.compProd_apply MeasurableSet.univ]
+      simp
 
 /-- The reverse-experiment path measure, written in reverse chronological order
 `(xₙ, xₙ₋₁, …, x₀)`. -/
@@ -189,36 +190,45 @@ theorem liftLocalBalance_past
     [IsMarkovKernel past] [IsMarkovKernel forward] [IsMarkovKernel reverse]
     (hbalance : μ ⊗ₘ forward = (μ ⊗ₘ reverse).map Prod.swap) :
     ((((μ ⊗ₘ past) ⊗ₘ
-        forward.comap (fun p : Ω × A => p.1) measurable_fst).map
-          MeasurableEquiv.prodComm) =
+        forward.comap (fun p : Ω × A => p.1)
+          (measurable_fst : Measurable (fun p : Ω × A => p.1))).map
+          (MeasurableEquiv.prodComm : ((Ω × A) × Ω) ≃ᵐ Ω × (Ω × A))) =
       μ ⊗ₘ (reverse ⊗ₖ
         ProbabilityTheory.Kernel.prodMkLeft Ω past)) := by
   haveI : IsMarkovKernel
-      (forward.comap (fun p : Ω × A => p.1) measurable_fst) :=
-    ProbabilityTheory.Kernel.IsMarkovKernel.comap _ measurable_fst
+      (forward.comap (fun p : Ω × A => p.1)
+        (measurable_fst : Measurable (fun p : Ω × A => p.1))) :=
+    ProbabilityTheory.Kernel.IsMarkovKernel.comap _
+      (measurable_fst : Measurable (fun p : Ω × A => p.1))
   haveI : IsMarkovKernel
       (ProbabilityTheory.Kernel.prodMkLeft Ω past) := by
     unfold ProbabilityTheory.Kernel.prodMkLeft
-    exact ProbabilityTheory.Kernel.IsMarkovKernel.comap _ measurable_snd
+    exact ProbabilityTheory.Kernel.IsMarkovKernel.comap _
+      (measurable_snd : Measurable (fun p : Ω × A => p.2))
   haveI : IsProbabilityMeasure
       ((((μ ⊗ₘ past) ⊗ₘ
-        forward.comap (fun p : Ω × A => p.1) measurable_fst).map
-          MeasurableEquiv.prodComm)) :=
+        forward.comap (fun p : Ω × A => p.1)
+          (measurable_fst : Measurable (fun p : Ω × A => p.1))).map
+          (MeasurableEquiv.prodComm : ((Ω × A) × Ω) ≃ᵐ Ω × (Ω × A)))) :=
     Measure.isProbabilityMeasure_map
-      (MeasurableEquiv.prodComm.measurable.aemeasurable)
+      ((MeasurableEquiv.prodComm : ((Ω × A) × Ω) ≃ᵐ Ω × (Ω × A)).measurable.aemeasurable)
   apply Measure.ext_prod₃
   intro s t u hs ht hu
   let fForward : Ω × A → ℝ≥0∞ := fun p => forward p.1 s
   have hfForward : Measurable fForward :=
-    (forward.measurable_coe hs).comp measurable_fst
+    (forward.measurable_coe hs).comp
+      (measurable_fst : Measurable (fun p : Ω × A => p.1))
   let g : Ω × Ω → ℝ≥0∞ := fun p => past p.1 u
   have hg : Measurable g :=
-    (past.measurable_coe hu).comp measurable_fst
+    (past.measurable_coe hu).comp
+      (measurable_fst : Measurable (fun p : Ω × Ω => p.1))
   let gswap : Ω × Ω → ℝ≥0∞ := fun p => past p.2 u
   have hgswap : Measurable gswap :=
-    (past.measurable_coe hu).comp measurable_snd
+    (past.measurable_coe hu).comp
+      (measurable_snd : Measurable (fun p : Ω × Ω => p.2))
   have hpre :
-      MeasurableEquiv.prodComm ⁻¹' (s ×ˢ t ×ˢ u) =
+      (MeasurableEquiv.prodComm : ((Ω × A) × Ω) ≃ᵐ Ω × (Ω × A)) ⁻¹'
+          (s ×ˢ t ×ˢ u) =
         (t ×ˢ u) ×ˢ s := by
     ext p
     simp
@@ -228,12 +238,16 @@ theorem liftLocalBalance_past
     simp
   calc
     ((((μ ⊗ₘ past) ⊗ₘ
-        forward.comap (fun p : Ω × A => p.1) measurable_fst).map
-          MeasurableEquiv.prodComm) (s ×ˢ t ×ˢ u))
+        forward.comap (fun p : Ω × A => p.1)
+          (measurable_fst : Measurable (fun p : Ω × A => p.1))).map
+          (MeasurableEquiv.prodComm : ((Ω × A) × Ω) ≃ᵐ Ω × (Ω × A)))
+          (s ×ˢ t ×ˢ u))
         = ((μ ⊗ₘ past) ⊗ₘ
-            forward.comap (fun p : Ω × A => p.1) measurable_fst)
+            forward.comap (fun p : Ω × A => p.1)
+              (measurable_fst : Measurable (fun p : Ω × A => p.1)))
               ((t ×ˢ u) ×ˢ s) := by
-          rw [Measure.map_apply MeasurableEquiv.prodComm.measurable
+          rw [Measure.map_apply
+            (MeasurableEquiv.prodComm : ((Ω × A) × Ω) ≃ᵐ Ω × (Ω × A)).measurable
             (hs.prod (ht.prod hu)), hpre]
     _ = ∫⁻ p in t ×ˢ u, forward p.1 s ∂(μ ⊗ₘ past) := by
           rw [Measure.compProd_apply_prod (ht.prod hu) hs]
