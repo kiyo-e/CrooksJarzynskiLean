@@ -20,7 +20,7 @@ Mathlib's Ionescu–Tulcea construction.  Thus `trajectoryMeasure μ₀ K` is th
 of the full trajectory on `ℕ → Ω` for an arbitrary measurable state space.
 -/
 
-open MeasureTheory ProbabilityTheory
+open MeasureTheory ProbabilityTheory MeasurableSpace
 open scoped ENNReal ProbabilityTheory
 
 namespace CrooksJarzynski
@@ -63,9 +63,9 @@ namespace Markov
 
 variable {Ω : Type u} [MeasurableSpace Ω]
 
-/-- The last state in a history indexed by `Set.Iic t`. -/
-def historyLast (t : ℕ) (x : (i : Set.Iic t) → Ω) : Ω :=
-  x ⟨t, Set.mem_Iic.mpr le_rfl⟩
+/-- The last state in a history indexed by `Finset.Iic t`. -/
+def historyLast (t : ℕ) (x : (i : Finset.Iic t) → Ω) : Ω :=
+  x ⟨t, Finset.mem_Iic.mpr le_rfl⟩
 
 @[fun_prop]
 theorem measurable_historyLast (t : ℕ) :
@@ -75,7 +75,7 @@ theorem measurable_historyLast (t : ℕ) :
 /-- Regard an ordinary Markov kernel as a history-dependent kernel by reading
 only the most recent state.  This is the adapter required by Ionescu–Tulcea. -/
 def historyKernel (K : ℕ → Kernel Ω Ω) (t : ℕ) :
-    Kernel ((i : Set.Iic t) → Ω) Ω :=
+    Kernel ((i : Finset.Iic t) → Ω) Ω :=
   (K t).comap (historyLast t) (measurable_historyLast t)
 
 instance instIsMarkovKernelHistoryKernel
