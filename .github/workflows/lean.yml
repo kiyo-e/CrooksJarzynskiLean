@@ -67,19 +67,38 @@ jobs:
               axiom_reports="$(grep -Ec \
                 'depends on axioms:|does not depend on any axioms' \
                 axiom-audit.log)"
-              if [ "$axiom_reports" -ne 27 ]; then
+              expected_axiom_reports="$(grep -Ec \
+                '^[[:space:]]*#print axioms ' \
+                CrooksJarzynski/AxiomAudit.lean)"
+              if [ "$axiom_reports" -ne "$expected_axiom_reports" ]; then
                 echo "Kernel axiom audit did not report every headline theorem."
                 status=1
-              elif sed -n 's/.*depends on axioms: \[\(.*\)\]$/\1/p' \
-                  axiom-audit.log \
-                  | tr ',' '\n' \
-                  | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' \
-                  | grep -Evx \
-                    'propext|Classical\.choice|Quot\.sound'; then
-                echo "Kernel axiom audit found an unapproved axiom."
-                status=1
               else
-                echo "Kernel axiom audit passed."
+                unexpected_axioms="$(
+                  awk '
+                    /depends on axioms: \[/ {
+                      line = $0
+                      sub(/^.*depends on axioms: \[/, "", line)
+                      while (line !~ /\]$/ && getline continuation > 0) {
+                        line = line " " continuation
+                      }
+                      sub(/\].*$/, "", line)
+                      print line
+                    }
+                  ' axiom-audit.log \
+                    | tr ',' '\n' \
+                    | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' \
+                    | grep -Evx \
+                      'propext|Classical\.choice|Quot\.sound' \
+                    || true
+                )"
+                if [ -n "$unexpected_axioms" ]; then
+                  printf '%s\n' "$unexpected_axioms"
+                  echo "Kernel axiom audit found an unapproved axiom."
+                  status=1
+                else
+                  echo "Kernel axiom audit passed."
+                fi
               fi
             fi
           } > build.log 2>&1

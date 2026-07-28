@@ -59,7 +59,9 @@ theorem localBalance_toMeasure
   have hpre : Prod.swap ⁻¹' ({(x, y)} : Set (Ω × Ω)) = {(y, x)} := by
     ext p
     rcases p with ⟨a, b⟩
-    simp [Prod.swap]
+    simp only [Set.mem_preimage, Set.mem_singleton_iff,
+      Prod.swap_prod_mk, Prod.mk.injEq]
+    constructor <;> rintro ⟨h₁, h₂⟩ <;> exact ⟨h₂, h₁⟩
   rw [hpre, compProd_toKernel_singleton, hbalance x y]
 
 end MathlibBridge
@@ -157,8 +159,18 @@ theorem measureReweight
             partitionFunction P.β (P.energy (t.val + 1))) := by
             field_simp [hZ0, hZ1]
   unfold MeasureProtocol.Gibbs.workWeight
+  change
+    ENNReal.ofReal (Real.exp (-P.β *
+        (P.energy (t.val + 1) x - P.energy t.val x))) *
+        ENNReal.ofReal (gibbsProbability P.β (P.energy t.val) x) =
+      ENNReal.ofReal (Real.exp (-P.β *
+        (freeEnergy P.β (P.energy (t.val + 1)) -
+          freeEnergy P.β (P.energy t.val)))) *
+        ENNReal.ofReal
+          (gibbsProbability P.β (P.energy (t.val + 1)) x)
   rw [← ENNReal.ofReal_mul (Real.exp_pos _).le,
-    ← ENNReal.ofReal_mul (Real.exp_pos _).le, hreal]
+    ← ENNReal.ofReal_mul (Real.exp_pos _).le]
+  exact congrArg ENNReal.ofReal hreal
 
 /-- The original finite protocol is a concrete instance of the general
 chronological finite-horizon Crooks theorem. -/

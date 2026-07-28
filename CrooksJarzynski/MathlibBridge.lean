@@ -135,6 +135,18 @@ noncomputable def reverseMathlibKernel
     ProbabilityTheory.Kernel Ω Ω :=
   MathlibBridge.toKernel (P.reverseKernel t)
 
+noncomputable instance instIsMarkovKernelForwardMathlibKernel
+    {n : ℕ} (P : Protocol Ω n) (t : Fin n) :
+    ProbabilityTheory.IsMarkovKernel (P.forwardMathlibKernel t) := by
+  unfold forwardMathlibKernel
+  infer_instance
+
+noncomputable instance instIsMarkovKernelReverseMathlibKernel
+    {n : ℕ} (P : Protocol Ω n) (t : Fin n) :
+    ProbabilityTheory.IsMarkovKernel (P.reverseMathlibKernel t) := by
+  unfold reverseMathlibKernel
+  infer_instance
+
 @[simp]
 theorem forwardMathlibKernel_singleton
     {n : ℕ} (P : Protocol Ω n) (t : Fin n) (x y : Ω) :

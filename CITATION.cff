@@ -15,10 +15,12 @@ keywords:
   - Crooks theorem
   - Jarzynski equality
 abstract: >-
-  A machine-checked development of finite-state, discrete-time stochastic
-  thermodynamics in Lean 4: the pathwise Crooks fluctuation theorem, the
-  work-distribution Crooks theorem, the Jarzynski equality, the integral
-  fluctuation theorem, and the average-work second law, with an explicit
-  physical time-reversal protocol, an exact comparison of discrete-time work
-  conventions, and a path-uniform O(1/N) refinement limit for their
-  discrepancy. No sorry placeholders or custom axioms.
+  A machine-checked development of discrete-time stochastic thermodynamics in
+  Lean 4. It proves finite-horizon Crooks and Jarzynski theorems for arbitrary
+  measurable state spaces directly with Mathlib measures and Markov kernels,
+  specializes them to Gibbs measures and standard physical work and
+  free-energy weights, and provides real-integral, work-distribution,
+  non-atomic Gaussian, and finite-state specializations. It also formalizes an
+  explicit physical time-reversal protocol, compares discrete-time work
+  conventions, and proves a path-uniform O(1/N) refinement bound. No sorry
+  placeholders or custom axioms.

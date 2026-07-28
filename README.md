@@ -6,6 +6,11 @@ The library proves, without `sorry` or custom axioms:
 
 - a measure-level Crooks relation on arbitrary measurable trajectory spaces and its Lebesgue-integral Jarzynski consequence;
 - a one-step Crooks theorem and Jarzynski equality on arbitrary measurable state spaces from equilibrium reweighting and measure-theoretic local detailed balance;
+- a finite-horizon, multi-step Crooks theorem on arbitrary measurable state spaces, with chronological paths and measurable path reversal;
+- Gibbs specialization from a base measure and measurable energies, including the physical `exp (-β W)` and `exp (-β ΔF)` form;
+- real-integral Jarzynski and density-free work-distribution Crooks theorems;
+- a non-atomic example on `ℝ` built from a Gaussian base measure;
+- a bridge deriving the general measure theorem from the original finite-state protocol;
 - an Ionescu–Tulcea trajectory measure for time-inhomogeneous Mathlib Markov kernels, together with its finite-prefix evolution law;
 - normalization and nonnegativity of finite forward and reverse path probabilities;
 - a finite-state multi-step Crooks path identity from local detailed balance;
@@ -58,7 +63,32 @@ final ⊗ₘ forward = (final ⊗ₘ reverse).map Prod.swap
 
 It then proves the corresponding Crooks relation for the forward one-step path measure `initial ⊗ₘ forward`; `oneStep_jarzynski` gives the integral equality directly. This formulation does not use singleton masses, ratios, or a finite-state assumption.
 
-For a time-inhomogeneous family `K t : ProbabilityTheory.Kernel Ω Ω`, `MeasureProtocol.Markov.trajectoryMeasure` adapts each ordinary Markov kernel to the history-dependent interface used by Mathlib's Ionescu–Tulcea construction. The resulting probability measure lives on the full path space `ℕ → Ω`. The original finite distributions and kernels are connected back to this construction by `MathlibBridge.trajectoryMeasure`, so the finite layer is a concrete specialization of the general core.
+The finite-horizon theorem `MeasureProtocol.Markov.multiStep_crooks` iterates
+the same two hypotheses over an arbitrary number of steps. Its chronological
+form, `multiStep_crooks_chronological`, transports the internal recursive path
+representation to `Fin (n + 1) → Ω` and an explicit measurable path reversal.
+
+`MeasureProtocol.Gibbs` constructs equilibrium measures by exponential tilting
+of a base measure and proves that their quench weights satisfy the required
+reweighting identity. The resulting physical theorem
+`Gibbs.multiStep_crooks_physical` uses the standard weights
+`exp (-β W)` and `exp (-β ΔF)`. The same layer proves a real-integral
+Jarzynski equality and a work-distribution Crooks relation stated as a
+pushforward-measure identity, without assuming a density for the work law.
+
+`MeasureProtocol.GaussianExample` applies the theory on `ℝ` using a Gaussian
+base measure and independently resampled Gibbs kernels. Every singleton has
+measure zero, so the example exercises genuinely non-atomic state spaces.
+`MeasureProtocolFiniteBridge` proves that the original finite protocol supplies
+the measure-level reweighting and local-balance hypotheses and is therefore a
+specialization of the general theorem.
+
+For a time-inhomogeneous family `K t : ProbabilityTheory.Kernel Ω Ω`,
+`MeasureProtocol.Markov.trajectoryMeasure` adapts each ordinary Markov kernel
+to the history-dependent interface used by Mathlib's Ionescu–Tulcea
+construction. The resulting probability measure lives on the full path space
+`ℕ → Ω`. Its complete finite-dimensional identification with the recursive
+finite-horizon path measure is not yet formalized.
 
 ## Time reversal and discrete-time work
 
@@ -134,9 +164,20 @@ CrooksJarzynski.MeasureProtocol.jarzynski_exponential
 CrooksJarzynski.MeasureProtocol.Markov.compProd_withDensity_fst
 CrooksJarzynski.MeasureProtocol.Markov.oneStep_crooks
 CrooksJarzynski.MeasureProtocol.Markov.oneStep_jarzynski
+CrooksJarzynski.MeasureProtocol.Markov.multiStep_crooks
+CrooksJarzynski.MeasureProtocol.Markov.multiStep_jarzynski
+CrooksJarzynski.MeasureProtocol.Markov.multiStep_crooks_chronological
 CrooksJarzynski.MeasureProtocol.Markov.trajectoryMeasure
 CrooksJarzynski.MeasureProtocol.Markov.trajectoryMeasure_step
+CrooksJarzynski.MeasureProtocol.Gibbs.reweight_freeEnergy
+CrooksJarzynski.MeasureProtocol.Gibbs.multiStep_crooks_physical
+CrooksJarzynski.MeasureProtocol.Gibbs.multiStep_jarzynski_integral
+CrooksJarzynski.MeasureProtocol.Gibbs.multiStep_work_distribution_crooks
+CrooksJarzynski.MeasureProtocol.GaussianExample.multiStep_crooks
+CrooksJarzynski.MeasureProtocol.GaussianExample.multiStep_jarzynski
 CrooksJarzynski.MathlibBridge.trajectoryMeasure
+CrooksJarzynski.Protocol.measure_crooks
+CrooksJarzynski.Protocol.measure_jarzynski_integral
 CrooksJarzynski.Trajectory.reverse
 CrooksJarzynski.Trajectory.reverse_reverse
 CrooksJarzynski.Protocol.crooks_partition_ratio
@@ -160,9 +201,17 @@ CrooksJarzynski.Protocol.second_law
 
 ## Scope
 
-The complete multi-step thermodynamic development is finite-state and discrete in time. Every forward time step consists of an instantaneous energy quench followed by a Markov transition. Forward and reverse kernels are supplied separately and satisfy local detailed balance at the post-quench energy. The explicit physical reverse experiment uses the reversed transition first and the reverse quench second. Reversible dynamics are obtained by choosing the same kernel in both directions.
+The complete finite-horizon, multi-step Crooks–Jarzynski development is
+discrete in time but permits arbitrary measurable state spaces. Forward and
+reverse kernels are supplied separately and satisfy measure-level local
+detailed balance; this library does not construct reverse kernels by
+disintegration. The Gibbs specialization assumes the integrability and
+nonvanishing conditions needed by Mathlib's exponentially tilted measures.
 
-The measure-theoretic module removes the finite-state assumption from the trajectory-space Crooks-to-Jarzynski implication, the one-step local-detailed-balance theorem, and the construction of time-inhomogeneous Markov trajectory laws. Deriving the full multi-step general-state-space Crooks relation from a sequence of local detailed-balance assumptions remains the next formalization step. A genuinely continuous-time stochastic-process theorem is also outside the current scope.
+A genuinely continuous-time stochastic-process theorem is outside the current
+scope. The Ionescu–Tulcea infinite path measure is present, but its finite
+dimensional marginals have not yet been identified with the recursive
+finite-horizon path measures used by the multi-step theorem.
 
 The work-convention refinement theorem has a narrower and more general scope: it is independent of the kernels, path probabilities, and finite-state assumption, but it compares only the two discrete approximations to externally driven work.
 

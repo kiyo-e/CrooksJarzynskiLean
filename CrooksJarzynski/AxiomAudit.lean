@@ -32,6 +32,8 @@ the trusted base of the development.
 #print axioms CrooksJarzynski.Protocol.work_distribution_crooks
 #print axioms CrooksJarzynski.Protocol.work_distribution_crooks_ratio
 #print axioms CrooksJarzynski.MeasureProtocol.jarzynski_lintegral
+#print axioms CrooksJarzynski.MeasureProtocol.jarzynski_integral
+#print axioms CrooksJarzynski.MeasureProtocol.work_distribution_crooks
 #print axioms CrooksJarzynski.MeasureProtocol.Markov.compProd_withDensity_fst
 #print axioms CrooksJarzynski.MeasureProtocol.Markov.oneStep_crooks
 #print axioms CrooksJarzynski.MeasureProtocol.Markov.oneStep_jarzynski
@@ -40,3 +42,12 @@ the trusted base of the development.
 #print axioms CrooksJarzynski.MeasureProtocol.Markov.extendReversedPrefix_crooks
 #print axioms CrooksJarzynski.MeasureProtocol.Markov.multiStep_crooks
 #print axioms CrooksJarzynski.MeasureProtocol.Markov.multiStep_jarzynski
+#print axioms CrooksJarzynski.MeasureProtocol.Markov.multiStep_crooks_chronological
+#print axioms CrooksJarzynski.MeasureProtocol.Gibbs.reweight_freeEnergy
+#print axioms CrooksJarzynski.MeasureProtocol.Gibbs.multiStep_crooks_physical
+#print axioms CrooksJarzynski.MeasureProtocol.Gibbs.multiStep_jarzynski_integral
+#print axioms CrooksJarzynski.MeasureProtocol.Gibbs.multiStep_work_distribution_crooks
+#print axioms CrooksJarzynski.MeasureProtocol.GaussianExample.multiStep_crooks
+#print axioms CrooksJarzynski.MeasureProtocol.GaussianExample.multiStep_jarzynski
+#print axioms CrooksJarzynski.Protocol.measure_crooks
+#print axioms CrooksJarzynski.Protocol.measure_jarzynski_integral
