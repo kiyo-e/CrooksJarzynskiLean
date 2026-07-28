@@ -210,10 +210,44 @@ theorem discrepancy_uniform_grid_abs_le {Ω : Type u} {n : ℕ}
       have hne : (((n + 1 : ℕ) : ℝ)) ≠ 0 := by positivity
       field_simp [hne]
 
-/-- For any choice of one path on every uniform mesh, the discrepancy tends to zero.
+/-- The discrepancy tends to zero uniformly over all paths on each mesh. -/
+theorem discrepancy_uniform_tendsto_zero {Ω : Type u}
+    (E : ∀ n, EnergySchedule Ω (n + 1))
+    {T M L : ℝ} (hT : 0 ≤ T) (hM : 0 ≤ M) (hL : 0 ≤ L)
+    (hIncrement : ∀ n t z,
+      |quenchIncrement (E n) t z| ≤ M * (T / ((n + 1 : ℕ) : ℝ)))
+    (hVariation : ∀ n (t : Fin n) z,
+      |quenchIncrement (E n) t.castSucc z -
+          quenchIncrement (E n) t.succ z| ≤
+        L * (T / ((n + 1 : ℕ) : ℝ)) ^ 2) :
+    ∀ ε > 0, ∀ᶠ n in atTop,
+      ∀ x : Path Ω (n + 1), |discrepancy (E n) x| < ε := by
+  have hC : 0 ≤ 2 * M * T + L * T ^ 2 := by positivity
+  have hMajorant :
+      Tendsto
+        (fun n : ℕ =>
+          (2 * M * T + L * T ^ 2) / ((n + 1 : ℕ) : ℝ))
+        atTop (𝓝 0) := by
+    simpa using
+      ((tendsto_add_atTop_iff_nat 1).2
+        (tendsto_const_div_atTop_nhds_zero_nat
+          (𝕜 := ℝ) (2 * M * T + L * T ^ 2)))
+  intro ε hε
+  rw [Metric.tendsto_atTop] at hMajorant
+  obtain ⟨N, hN⟩ := hMajorant ε hε
+  rw [eventually_atTop]
+  refine ⟨N, fun n hn x => ?_⟩
+  have hBound := discrepancy_uniform_grid_abs_le
+    (E := E n) (x := x) hL (hIncrement n) (hVariation n)
+  have hMajorantLt := hN n hn
+  rw [Real.dist_eq, sub_zero] at hMajorantLt
+  have hMajorantNonneg :
+      0 ≤ (2 * M * T + L * T ^ 2) / ((n + 1 : ℕ) : ℝ) :=
+    div_nonneg hC (by positivity)
+  rw [abs_of_nonneg hMajorantNonneg] at hMajorantLt
+  exact lt_of_le_of_lt hBound hMajorantLt
 
-Because the preceding estimate is independent of the chosen paths, this is the
-path-uniform continuous-time limit of the two discrete work conventions. -/
+/-- For any choice of one path on every uniform mesh, the discrepancy tends to zero. -/
 theorem discrepancy_tendsto_zero {Ω : Type u}
     (E : ∀ n, EnergySchedule Ω (n + 1))
     (x : ∀ n, Path Ω (n + 1))
@@ -225,30 +259,13 @@ theorem discrepancy_tendsto_zero {Ω : Type u}
           quenchIncrement (E n) t.succ z| ≤
         L * (T / ((n + 1 : ℕ) : ℝ)) ^ 2) :
     Tendsto (fun n => discrepancy (E n) (x n)) atTop (𝓝 0) := by
-  have hC : 0 ≤ 2 * M * T + L * T ^ 2 := by positivity
-  have hMajorant :
-      Tendsto
-        (fun n : ℕ =>
-          (2 * M * T + L * T ^ 2) / ((n + 1 : ℕ) : ℝ))
-        atTop (𝓝 0) := by
-    simpa using
-      ((tendsto_add_atTop_iff_nat 1).2
-        (tendsto_const_div_atTop_nhds_zero_nat
-          (𝕜 := ℝ) (2 * M * T + L * T ^ 2)))
   rw [Metric.tendsto_atTop]
   intro ε hε
-  rw [Metric.tendsto_atTop] at hMajorant
-  obtain ⟨N, hN⟩ := hMajorant ε hε
-  refine ⟨N, fun n hn => ?_⟩
-  have hBound := discrepancy_uniform_grid_abs_le
-    (E := E n) (x := x n) hL (hIncrement n) (hVariation n)
-  have hMajorantLt := hN n hn
-  rw [Real.dist_eq, sub_zero] at hMajorantLt ⊢
-  have hMajorantNonneg :
-      0 ≤ (2 * M * T + L * T ^ 2) / ((n + 1 : ℕ) : ℝ) :=
-    div_nonneg hC (by positivity)
-  rw [abs_of_nonneg hMajorantNonneg] at hMajorantLt
-  exact lt_of_le_of_lt hBound hMajorantLt
+  have hUniform :=
+    discrepancy_uniform_tendsto_zero E hT hM hL hIncrement hVariation ε hε
+  rw [eventually_atTop] at hUniform
+  obtain ⟨N, hN⟩ := hUniform
+  exact ⟨N, fun n hn => by simpa [Real.dist_eq] using hN n hn (x n)⟩
 
 /-- The energy schedule underlying a stochastic protocol, without its kernels. -/
 def ofProtocol {Ω : Type u} [Fintype Ω] {n : ℕ}

@@ -69,7 +69,7 @@ Then `WorkConvention.discrepancy_uniform_grid_abs_le` proves, for every path,
       ≤ (2 M T + L T²) / N.
 ```
 
-Consequently, `WorkConvention.discrepancy_tendsto_zero` proves that the two conventions converge to one another for every choice of paths on successively refined meshes. Since the bound is independent of the paths and their probability laws, the convergence is path-uniform. This is a finite-variation time-discretization result for externally driven work; it is not an Itô–Stratonovich conversion statement, and it does not assert a continuous-time Crooks theorem.
+Consequently, `WorkConvention.discrepancy_uniform_tendsto_zero` proves directly that, for every `ε > 0`, all paths on every sufficiently fine mesh have discrepancy less than `ε`. The theorem `WorkConvention.discrepancy_tendsto_zero` gives the corresponding convergence for any chosen sequence of paths. Since the bound is independent of the paths and their probability laws, the convergence is path-uniform. This is a finite-variation time-discretization result for externally driven work; it is not an Itô–Stratonovich conversion statement, and it does not assert a continuous-time Crooks theorem.
 
 ## Work-distribution Crooks theorem
 
@@ -105,6 +105,7 @@ CrooksJarzynski.Protocol.workConvention_difference
 CrooksJarzynski.WorkConvention.discrepancy_summation_by_parts
 CrooksJarzynski.WorkConvention.discrepancy_abs_le
 CrooksJarzynski.WorkConvention.discrepancy_uniform_grid_abs_le
+CrooksJarzynski.WorkConvention.discrepancy_uniform_tendsto_zero
 CrooksJarzynski.WorkConvention.discrepancy_tendsto_zero
 CrooksJarzynski.Protocol.work_distribution_crooks
 CrooksJarzynski.Protocol.work_distribution_crooks_ratio
