@@ -13,6 +13,7 @@ import CrooksJarzynski.MeasureProtocolFiniteCrooks
 import CrooksJarzynski.MeasureProtocolGibbs
 import CrooksJarzynski.MeasureProtocolPaths
 import CrooksJarzynski.MeasureProtocolPhysical
+import CrooksJarzynski.MeasureProtocolGaussianExample
 import CrooksJarzynski.MathlibBridge
 import CrooksJarzynski.PhyslibBridge
 import CrooksJarzynski.Examples
@@ -26,8 +27,9 @@ measure-theoretic layer includes one-step and finite-horizon Crooks relations,
 the corresponding Lebesgue and real-integral Jarzynski equalities, a Gibbs
 specialization constructed from Mathlib's exponentially tilted measures,
 measurable chronological path reversal, physical total-work and endpoint
-free-energy forms, and an Ionescu–Tulcea trajectory-measure adapter for
-time-inhomogeneous Mathlib Markov kernels.
+free-energy forms, a non-atomic Gaussian example on `ℝ`, and an
+Ionescu–Tulcea trajectory-measure adapter for time-inhomogeneous Mathlib Markov
+kernels.
 
 The finite-state results include explicit time reversal, both standard
 discrete-time work conventions, a path-uniform `O(1/N)` continuous-time limit
@@ -39,6 +41,8 @@ canonical-ensemble API. The main results include `Protocol.crooks`,
 `MeasureProtocol.Gibbs.multiStep_crooks_physical`,
 `MeasureProtocol.Gibbs.multiStep_jarzynski_integral`,
 `MeasureProtocol.Gibbs.multiStep_work_distribution_crooks`,
+`MeasureProtocol.GaussianExample.multiStep_crooks`,
+`MeasureProtocol.GaussianExample.multiStep_jarzynski`,
 `MeasureProtocol.Markov.trajectoryMeasure`,
 `Protocol.work_distribution_crooks`,
 `WorkConvention.discrepancy_uniform_tendsto_zero`, and `Protocol.second_law`.
