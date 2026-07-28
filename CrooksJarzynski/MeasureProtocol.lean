@@ -14,6 +14,11 @@ Crooks relation is expressed as an equality of measures on an arbitrary
 measurable trajectory space.  Evaluating that equality on the whole space gives
 the Jarzynski equality as a Lebesgue integral.
 
+For one Markov step, the module derives the Crooks relation from two
+measure-theoretic hypotheses: equilibrium reweighting under the quench and local
+detailed balance as an equality of composition-product measures.  Both results
+hold on arbitrary measurable state spaces.
+
 The module also adapts an ordinary time-inhomogeneous family of Mathlib Markov
 kernels `K t : Kernel Ω Ω` to the history-dependent kernels expected by
 Mathlib's Ionescu–Tulcea construction.  Thus `trajectoryMeasure μ₀ K` is the law
@@ -62,6 +67,69 @@ theorem jarzynski_exponential
 namespace Markov
 
 variable {Ω : Type u} [MeasurableSpace Ω]
+
+/-- Reweighting the first marginal before composing with a kernel is the same
+as reweighting the resulting one-step path measure by the first coordinate. -/
+theorem compProd_withDensity_fst
+    (μ : Measure Ω) (κ : Kernel Ω Ω) [SFinite μ] [IsSFiniteKernel κ]
+    (q : Ω → ℝ≥0∞) (hq : Measurable q) :
+    (μ ⊗ₘ κ).withDensity (fun p => q p.1) = μ.withDensity q ⊗ₘ κ := by
+  ext s hs
+  rw [withDensity_apply _ hs, Measure.compProd_apply hs]
+  rw [← lintegral_indicator hs,
+    Measure.lintegral_compProd ((hq.comp measurable_fst).indicator hs)]
+  rw [lintegral_withDensity_eq_lintegral_mul μ hq
+    (Kernel.measurable_kernel_prodMk_left hs)]
+  apply lintegral_congr
+  intro a
+  simp only [Pi.mul_apply]
+  have hsection : MeasurableSet (Prod.mk a ⁻¹' s) :=
+    measurable_prodMk_left hs
+  have hindicator :
+      (fun b => s.indicator (fun p => q p.1) (a, b)) =
+        (Prod.mk a ⁻¹' s).indicator (fun _ => q a) := by
+    funext b
+    rfl
+  rw [hindicator, lintegral_indicator hsection]
+  simp [MeasureTheory.lintegral_const]
+
+/-- A one-step Crooks relation on an arbitrary measurable state space.  The
+first hypothesis is the Gibbs reweighting identity for the quench.  The second
+is local detailed balance, stated without point masses as equality between the
+forward equilibrium step measure and the swapped reverse equilibrium step
+measure. -/
+theorem oneStep_crooks
+    (initial final : Measure Ω) (forward reverse : Kernel Ω Ω)
+    [IsProbabilityMeasure initial] [IsProbabilityMeasure final]
+    [IsMarkovKernel forward] [IsMarkovKernel reverse]
+    (workWeight : Ω → ℝ≥0∞) (freeEnergyWeight : ℝ≥0∞)
+    (hwork : Measurable workWeight)
+    (hreweight : initial.withDensity workWeight = freeEnergyWeight • final)
+    (hbalance :
+      final ⊗ₘ forward = (final ⊗ₘ reverse).map Prod.swap) :
+    CrooksRelation (initial ⊗ₘ forward)
+      ((final ⊗ₘ reverse).map Prod.swap)
+      (fun p => workWeight p.1) freeEnergyWeight := by
+  unfold CrooksRelation
+  rw [compProd_withDensity_fst initial forward workWeight hwork, hreweight,
+    Measure.compProd_smul_left, hbalance]
+
+/-- The one-step Jarzynski equality on an arbitrary measurable state space. -/
+theorem oneStep_jarzynski
+    (initial final : Measure Ω) (forward reverse : Kernel Ω Ω)
+    [IsProbabilityMeasure initial] [IsProbabilityMeasure final]
+    [IsMarkovKernel forward] [IsMarkovKernel reverse]
+    (workWeight : Ω → ℝ≥0∞) (freeEnergyWeight : ℝ≥0∞)
+    (hwork : Measurable workWeight)
+    (hreweight : initial.withDensity workWeight = freeEnergyWeight • final)
+    (hbalance :
+      final ⊗ₘ forward = (final ⊗ₘ reverse).map Prod.swap) :
+    ∫⁻ p, workWeight p.1 ∂(initial ⊗ₘ forward) = freeEnergyWeight := by
+  letI : IsProbabilityMeasure ((final ⊗ₘ reverse).map Prod.swap) :=
+    Measure.isProbabilityMeasure_map (by fun_prop)
+  exact jarzynski_lintegral _ _ _ _
+    (oneStep_crooks initial final forward reverse workWeight freeEnergyWeight
+      hwork hreweight hbalance)
 
 /-- The last state in a history indexed by `Finset.Iic t`. -/
 def historyLast (t : ℕ) (x : (i : Finset.Iic t) → Ω) : Ω :=
