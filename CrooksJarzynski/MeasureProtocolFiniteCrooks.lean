@@ -85,44 +85,61 @@ theorem extendReversedPrefix_crooks
     (hbalance : next ⊗ₘ forward = (next ⊗ₘ reverse).map Prod.swap) :
     CrooksRelation
       ((prefixForward ⊗ₘ
-        forward.comap (fun p : Ω × A => p.1) measurable_fst).map
-          MeasurableEquiv.prodComm)
+        forward.comap (fun p : Ω × A => p.1)
+          (measurable_fst : Measurable (fun p : Ω × A => p.1))).map
+          (MeasurableEquiv.prodComm :
+            ((Ω × A) × Ω) ≃ᵐ Ω × (Ω × A)))
       (next ⊗ₘ (reverse ⊗ₖ
         ProbabilityTheory.Kernel.prodMkLeft Ω past))
       (fun z => prefixWork z.2 * stepWork z.2.1)
       (prefixFactor * stepFactor) := by
   haveI : IsMarkovKernel
-      (forward.comap (fun p : Ω × A => p.1) measurable_fst) :=
-    ProbabilityTheory.Kernel.IsMarkovKernel.comap _ measurable_fst
+      (forward.comap (fun p : Ω × A => p.1)
+        (measurable_fst : Measurable (fun p : Ω × A => p.1))) :=
+    ProbabilityTheory.Kernel.IsMarkovKernel.comap _
+      (measurable_fst : Measurable (fun p : Ω × A => p.1))
   unfold CrooksRelation at hprefix ⊢
   have hOutput : Measurable
       (fun z : Ω × (Ω × A) => prefixWork z.2 * stepWork z.2.1) :=
-    (hprefixWork.comp measurable_snd).mul
-      (hstepWork.comp (measurable_fst.comp measurable_snd))
+    (hprefixWork.comp
+      (measurable_snd : Measurable (fun z : Ω × (Ω × A) => z.2))).mul
+      (hstepWork.comp
+        ((measurable_fst : Measurable (fun p : Ω × A => p.1)).comp
+          (measurable_snd : Measurable (fun z : Ω × (Ω × A) => z.2))))
   rw [map_withDensity_equiv
     (prefixForward ⊗ₘ
-      forward.comap (fun p : Ω × A => p.1) measurable_fst)
-    MeasurableEquiv.prodComm _ hOutput]
+      forward.comap (fun p : Ω × A => p.1)
+        (measurable_fst : Measurable (fun p : Ω × A => p.1)))
+    (MeasurableEquiv.prodComm : ((Ω × A) × Ω) ≃ᵐ Ω × (Ω × A))
+    _ hOutput]
   change
     (((prefixForward ⊗ₘ
-        forward.comap (fun p : Ω × A => p.1) measurable_fst).withDensity
+        forward.comap (fun p : Ω × A => p.1)
+          (measurable_fst : Measurable (fun p : Ω × A => p.1))).withDensity
       (fun p => prefixWork p.1 * stepWork p.1.1)).map
-        MeasurableEquiv.prodComm) =
+        (MeasurableEquiv.prodComm : ((Ω × A) × Ω) ≃ᵐ Ω × (Ω × A))) =
       (prefixFactor * stepFactor) •
         (next ⊗ₘ (reverse ⊗ₖ
           ProbabilityTheory.Kernel.prodMkLeft Ω past))
   rw [show (fun p : (Ω × A) × Ω => prefixWork p.1 * stepWork p.1.1) =
       (fun p => prefixWork p.1) * (fun p => stepWork p.1.1) by rfl,
     withDensity_mul _
-      (hprefixWork.comp measurable_fst)
-      (hstepWork.comp (measurable_fst.comp measurable_fst)),
+      (hprefixWork.comp
+        (measurable_fst : Measurable (fun p : (Ω × A) × Ω => p.1)))
+      (hstepWork.comp
+        ((measurable_fst : Measurable (fun p : Ω × A => p.1)).comp
+          (measurable_fst : Measurable (fun p : (Ω × A) × Ω => p.1)))),
     compProd_withDensity_fst_general prefixForward
-      (forward.comap (fun p : Ω × A => p.1) measurable_fst)
+      (forward.comap (fun p : Ω × A => p.1)
+        (measurable_fst : Measurable (fun p : Ω × A => p.1)))
       prefixWork hprefixWork,
     hprefix, Measure.compProd_smul_left, withDensity_smul_measure,
     compProd_withDensity_fst_general (current ⊗ₘ past)
-      (forward.comap (fun p : Ω × A => p.1) measurable_fst)
-      (fun p => stepWork p.1) (hstepWork.comp measurable_fst),
+      (forward.comap (fun p : Ω × A => p.1)
+        (measurable_fst : Measurable (fun p : Ω × A => p.1)))
+      (fun p => stepWork p.1)
+      (hstepWork.comp
+        (measurable_fst : Measurable (fun p : Ω × A => p.1))),
     compProd_withDensity_fst_general current past stepWork hstepWork,
     hreweight, Measure.compProd_smul_left, Measure.compProd_smul_left,
     Measure.map_smul, Measure.map_smul,
