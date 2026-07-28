@@ -117,7 +117,6 @@ theorem Markov.accumulatedStepSum_telescope
         rfl
       rw [← hlast]
       simp
-      ring
 
 /-- Scalar exponential step factors multiply to the exponential of their
 recursive sum. -/
@@ -160,7 +159,7 @@ theorem measurable_pathWork
     {n : ℕ} (energy : Fin (n + 1) → Ω → ℝ)
     (henergy : ∀ i, Measurable (energy i)) :
     Measurable (pathWork energy) := by
-  have hstep : ∀ i, Measurable
+  have hstep : ∀ i : Fin n, Measurable
       (fun x => energy i.succ x - energy i.castSucc x) := by
     intro i
     exact (henergy i.succ).sub (henergy i.castSucc)
@@ -194,7 +193,16 @@ theorem accumulatedFreeEnergyWeight_eq_exp_delta
       ENNReal.ofReal (Real.exp (-β * deltaFreeEnergy base β energy)) := by
   unfold freeEnergyWeight deltaFreeEnergy
   rw [Markov.accumulatedFreeEnergyWeight_eq_exp_sum]
-  rw [Markov.accumulatedStepSum_telescope]
+  have htel :
+      Markov.accumulatedStepSum
+          (fun i : Fin n =>
+            freeEnergy base β (energy i.succ) -
+              freeEnergy base β (energy i.castSucc)) =
+        freeEnergy base β (energy (Fin.last n)) -
+          freeEnergy base β (energy 0) :=
+    Markov.accumulatedStepSum_telescope
+      (fun i => freeEnergy base β (energy i))
+  rw [htel]
 
 /-- The standard physical finite-horizon Crooks relation on chronological paths
 in an arbitrary measurable state space. -/
