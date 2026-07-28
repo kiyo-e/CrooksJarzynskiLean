@@ -10,25 +10,26 @@ import Mathlib.Probability.Kernel.IonescuTulcea.Traj
 /-!
 # Measure-theoretic Crooks–Jarzynski infrastructure
 
-This module contains the state-space-independent core of the development.  A
+This module contains the state-space-independent core of the development. A
 Crooks relation is expressed as an equality of measures on an arbitrary
-measurable trajectory space.  Evaluating that equality on the whole space gives
+measurable trajectory space. Evaluating that equality on the whole space gives
 the Jarzynski equality as a Lebesgue integral.
 
 For one Markov step, the module derives the Crooks relation from two
 measure-theoretic hypotheses: equilibrium reweighting under the quench and local
-detailed balance as an equality of composition-product measures.  Both results
+detailed balance as an equality of composition-product measures. Both results
 hold on arbitrary measurable state spaces.
 
 The finite-horizon layer below uses the existing recursive trajectory type, but
 replaces all finite sums and point probabilities by Mathlib measures and Markov
-kernels.  Reverse-oriented prefixes keep the current endpoint first; this makes
+kernels. Reverse-oriented prefixes keep the current endpoint first; this makes
 one-step extension and time reversal compatible with `Measure.compProd`.
 
 The module also adapts an ordinary time-inhomogeneous family of Mathlib Markov
-kernels `K t : Kernel Ω Ω` to the history-dependent kernels expected by
-Mathlib's Ionescu–Tulcea construction.  Thus `trajectoryMeasure μ₀ K` is the law
-of the full trajectory on `ℕ → Ω` for an arbitrary measurable state space.
+kernels `K t : ProbabilityTheory.Kernel Ω Ω` to the history-dependent kernels
+expected by Mathlib's Ionescu–Tulcea construction. Thus `trajectoryMeasure μ₀ K`
+is the law of the full trajectory on `ℕ → Ω` for an arbitrary measurable state
+space.
 -/
 
 open MeasureTheory ProbabilityTheory
@@ -43,7 +44,7 @@ namespace MeasureProtocol
 variable {Γ : Type u} [MeasurableSpace Γ]
 
 /-- A division-free Crooks relation on an arbitrary measurable trajectory
-space.  `workWeight` is the exponential work factor and `freeEnergyWeight` is
+space. `workWeight` is the exponential work factor and `freeEnergyWeight` is
 the corresponding equilibrium factor. -/
 def CrooksRelation (forward reverse : Measure Γ)
     (workWeight : Γ → ℝ≥0∞) (freeEnergyWeight : ℝ≥0∞) : Prop :=
@@ -77,7 +78,8 @@ variable {Ω : Type u} [MeasurableSpace Ω]
 /-- Reweighting the first marginal before composing with a kernel is the same
 as reweighting the resulting one-step path measure by the first coordinate. -/
 theorem compProd_withDensity_fst
-    (μ : Measure Ω) (κ : Kernel Ω Ω) [SFinite μ] [IsSFiniteKernel κ]
+    (μ : Measure Ω) (κ : ProbabilityTheory.Kernel Ω Ω)
+    [SFinite μ] [IsSFiniteKernel κ]
     (q : Ω → ℝ≥0∞) (hq : Measurable q) :
     (μ ⊗ₘ κ).withDensity (fun p => q p.1) = μ.withDensity q ⊗ₘ κ := by
   ext s hs
@@ -87,7 +89,7 @@ theorem compProd_withDensity_fst
     hq.comp measurable_fst
   rw [Measure.lintegral_compProd (hqfst.indicator hs)]
   rw [lintegral_withDensity_eq_lintegral_mul μ hq
-    (Kernel.measurable_kernel_prodMk_left hs)]
+    (ProbabilityTheory.Kernel.measurable_kernel_prodMk_left hs)]
   apply lintegral_congr
   intro a
   simp only [Pi.mul_apply]
@@ -104,7 +106,8 @@ theorem compProd_withDensity_fst
 /-- The first-coordinate density lemma with different source and target spaces. -/
 theorem compProd_withDensity_fst_general
     {α : Type v} {β : Type w} [MeasurableSpace α] [MeasurableSpace β]
-    (μ : Measure α) (κ : Kernel α β) [SFinite μ] [IsSFiniteKernel κ]
+    (μ : Measure α) (κ : ProbabilityTheory.Kernel α β)
+    [SFinite μ] [IsSFiniteKernel κ]
     (q : α → ℝ≥0∞) (hq : Measurable q) :
     (μ ⊗ₘ κ).withDensity (fun p => q p.1) = μ.withDensity q ⊗ₘ κ := by
   ext s hs
@@ -114,7 +117,7 @@ theorem compProd_withDensity_fst_general
     hq.comp measurable_fst
   rw [Measure.lintegral_compProd (hqfst.indicator hs)]
   rw [lintegral_withDensity_eq_lintegral_mul μ hq
-    (Kernel.measurable_kernel_prodMk_left hs)]
+    (ProbabilityTheory.Kernel.measurable_kernel_prodMk_left hs)]
   apply lintegral_congr
   intro a
   simp only [Pi.mul_apply]
@@ -138,14 +141,16 @@ theorem map_withDensity_equiv
   rw [withDensity_apply _ hs, setLIntegral_map hs hq e.measurable,
     Measure.map_apply e.measurable hs,
     withDensity_apply _ (e.measurable hs)]
+  rfl
 
-/-- A one-step Crooks relation on an arbitrary measurable state space.  The
-first hypothesis is the Gibbs reweighting identity for the quench.  The second
+/-- A one-step Crooks relation on an arbitrary measurable state space. The
+first hypothesis is the Gibbs reweighting identity for the quench. The second
 is local detailed balance, stated without point masses as equality between the
 forward equilibrium step measure and the swapped reverse equilibrium step
 measure. -/
 theorem oneStep_crooks
-    (initial final : Measure Ω) (forward reverse : Kernel Ω Ω)
+    (initial final : Measure Ω)
+    (forward reverse : ProbabilityTheory.Kernel Ω Ω)
     [IsProbabilityMeasure initial] [IsProbabilityMeasure final]
     [IsMarkovKernel forward] [IsMarkovKernel reverse]
     (workWeight : Ω → ℝ≥0∞) (freeEnergyWeight : ℝ≥0∞)
@@ -162,7 +167,8 @@ theorem oneStep_crooks
 
 /-- The one-step Jarzynski equality on an arbitrary measurable state space. -/
 theorem oneStep_jarzynski
-    (initial final : Measure Ω) (forward reverse : Kernel Ω Ω)
+    (initial final : Measure Ω)
+    (forward reverse : ProbabilityTheory.Kernel Ω Ω)
     [IsProbabilityMeasure initial] [IsProbabilityMeasure final]
     [IsMarkovKernel forward] [IsMarkovKernel reverse]
     (workWeight : Ω → ℝ≥0∞) (freeEnergyWeight : ℝ≥0∞)
@@ -172,7 +178,7 @@ theorem oneStep_jarzynski
       final ⊗ₘ forward = (final ⊗ₘ reverse).map Prod.swap) :
     ∫⁻ p, workWeight p.1 ∂(initial ⊗ₘ forward) = freeEnergyWeight := by
   letI : IsProbabilityMeasure ((final ⊗ₘ reverse).map Prod.swap) :=
-    Measure.isProbabilityMeasure_map (by fun_prop)
+    Measure.isProbabilityMeasure_map measurable_swap.aemeasurable
   exact jarzynski_lintegral _ _ _ _
     (oneStep_crooks initial final forward reverse workWeight freeEnergyWeight
       hwork hreweight hbalance)
@@ -180,7 +186,7 @@ theorem oneStep_jarzynski
 /-! ## Finite-horizon path measures -/
 
 @[reducible]
-private def continuationMeasurableSpace
+private noncomputable def continuationMeasurableSpace
     (Ω : Type u) [MeasurableSpace Ω] :
     (n : ℕ) → MeasurableSpace (Continuation Ω n)
   | 0 => inferInstanceAs (MeasurableSpace PUnit)
@@ -196,23 +202,25 @@ noncomputable instance instMeasurableSpaceContinuation (n : ℕ) :
 /-- Given an endpoint, generate the earlier states in reverse chronological
 order with kernels indexed in forward chronological order. -/
 noncomputable def reverseContinuationKernel :
-    {n : ℕ} → (Fin n → Kernel Ω Ω) → Kernel Ω (Continuation Ω n)
-  | 0, _ => Kernel.deterministic (fun _ => PUnit.unit) measurable_const
+    {n : ℕ} → (Fin n → ProbabilityTheory.Kernel Ω Ω) →
+      ProbabilityTheory.Kernel Ω (Continuation Ω n)
+  | 0, _ =>
+      ProbabilityTheory.Kernel.deterministic (fun _ => PUnit.unit) measurable_const
   | n + 1, K =>
       K (Fin.last n) ⊗ₖ
-        Kernel.prodMkLeft Ω
+        ProbabilityTheory.Kernel.prodMkLeft Ω
           (reverseContinuationKernel (fun i => K i.castSucc))
 
 noncomputable instance instIsMarkovKernelReverseContinuationKernel
-    {n : ℕ} (K : Fin n → Kernel Ω Ω)
+    {n : ℕ} (K : Fin n → ProbabilityTheory.Kernel Ω Ω)
     [hK : ∀ i, IsMarkovKernel (K i)] :
     IsMarkovKernel (reverseContinuationKernel K) := by
-  induction n generalizing K with
+  induction n with
   | zero =>
-      rw [reverseContinuationKernel]
+      simp only [reverseContinuationKernel]
       infer_instance
   | succ n ih =>
-      rw [reverseContinuationKernel]
+      simp only [reverseContinuationKernel]
       letI : ∀ i : Fin n, IsMarkovKernel ((fun j => K j.castSucc) i) :=
         fun i => hK i.castSucc
       haveI : IsMarkovKernel
@@ -223,37 +231,41 @@ noncomputable instance instIsMarkovKernelReverseContinuationKernel
 /-- The reverse-experiment path measure, written in reverse chronological order
 `(xₙ, xₙ₋₁, …, x₀)`. -/
 noncomputable def reversePathMeasure
-    {n : ℕ} (final : Measure Ω) (reverse : Fin n → Kernel Ω Ω) :
+    {n : ℕ} (final : Measure Ω)
+    (reverse : Fin n → ProbabilityTheory.Kernel Ω Ω) :
     Measure (Trajectory Ω n) :=
   final ⊗ₘ reverseContinuationKernel reverse
 
 noncomputable instance instIsProbabilityMeasureReversePathMeasure
-    {n : ℕ} (final : Measure Ω) (reverse : Fin n → Kernel Ω Ω)
+    {n : ℕ} (final : Measure Ω)
+    (reverse : Fin n → ProbabilityTheory.Kernel Ω Ω)
     [IsProbabilityMeasure final] [∀ i, IsMarkovKernel (reverse i)] :
     IsProbabilityMeasure (reversePathMeasure final reverse) := by
   unfold reversePathMeasure
   infer_instance
 
-/-- The forward path measure, also written in reverse chronological order.  At
+/-- The forward path measure, also written in reverse chronological order. At
 each step the new endpoint is sampled from the last forward kernel and moved to
 the front of the recursive trajectory. -/
 noncomputable def reversedForwardPathMeasure :
-    {n : ℕ} → Measure Ω → (Fin n → Kernel Ω Ω) → Measure (Trajectory Ω n)
+    {n : ℕ} → Measure Ω → (Fin n → ProbabilityTheory.Kernel Ω Ω) →
+      Measure (Trajectory Ω n)
   | 0, initial, K => reversePathMeasure initial K
   | n + 1, initial, K =>
       ((reversedForwardPathMeasure initial (fun i => K i.castSucc)) ⊗ₘ
         (K (Fin.last n)).comap Prod.fst measurable_fst).map Prod.swap
 
 noncomputable instance instIsProbabilityMeasureReversedForwardPathMeasure
-    {n : ℕ} (initial : Measure Ω) (forward : Fin n → Kernel Ω Ω)
+    {n : ℕ} (initial : Measure Ω)
+    (forward : Fin n → ProbabilityTheory.Kernel Ω Ω)
     [IsProbabilityMeasure initial] [hK : ∀ i, IsMarkovKernel (forward i)] :
     IsProbabilityMeasure (reversedForwardPathMeasure initial forward) := by
-  induction n generalizing forward with
+  induction n with
   | zero =>
-      rw [reversedForwardPathMeasure]
+      simp only [reversedForwardPathMeasure]
       infer_instance
   | succ n ih =>
-      rw [reversedForwardPathMeasure]
+      simp only [reversedForwardPathMeasure]
       letI : ∀ i : Fin n,
           IsMarkovKernel ((fun j => forward j.castSucc) i) :=
         fun i => hK i.castSucc
@@ -261,10 +273,11 @@ noncomputable instance instIsProbabilityMeasureReversedForwardPathMeasure
           (reversedForwardPathMeasure initial
             (fun i => forward i.castSucc)) :=
         ih (fun i => forward i.castSucc)
-      infer_instance
+      apply Measure.isProbabilityMeasure_map
+      exact measurable_swap.aemeasurable
 
 /-- Product of the work factors along a reverse-oriented finite trajectory. -/
-def reversedWorkWeight :
+noncomputable def reversedWorkWeight :
     {n : ℕ} → (Fin n → Ω → ℝ≥0∞) → Trajectory Ω n → ℝ≥0∞
   | 0, _, _ => 1
   | n + 1, q, γ =>
@@ -272,7 +285,7 @@ def reversedWorkWeight :
         q (Fin.last n) γ.2.1
 
 /-- Product of the scalar free-energy factors over a finite protocol. -/
-def accumulatedFreeEnergyWeight :
+noncomputable def accumulatedFreeEnergyWeight :
     {n : ℕ} → (Fin n → ℝ≥0∞) → ℝ≥0∞
   | 0, _ => 1
   | n + 1, c =>
@@ -283,7 +296,7 @@ theorem measurable_reversedWorkWeight
     {n : ℕ} (q : Fin n → Ω → ℝ≥0∞)
     (hq : ∀ i, Measurable (q i)) :
     Measurable (reversedWorkWeight q) := by
-  induction n generalizing q with
+  induction n with
   | zero =>
       simpa [reversedWorkWeight] using
         (measurable_const : Measurable (fun _ : Trajectory Ω 0 => (1 : ℝ≥0∞)))
@@ -305,13 +318,14 @@ theorem measurable_historyLast (t : ℕ) :
   measurable_pi_apply _
 
 /-- Regard an ordinary Markov kernel as a history-dependent kernel by reading
-only the most recent state.  This is the adapter required by Ionescu–Tulcea. -/
-def historyKernel (K : ℕ → Kernel Ω Ω) (t : ℕ) :
-    Kernel ((i : Finset.Iic t) → Ω) Ω :=
+only the most recent state. This is the adapter required by Ionescu–Tulcea. -/
+def historyKernel (K : ℕ → ProbabilityTheory.Kernel Ω Ω) (t : ℕ) :
+    ProbabilityTheory.Kernel ((i : Finset.Iic t) → Ω) Ω :=
   (K t).comap (historyLast t) (measurable_historyLast t)
 
 instance instIsMarkovKernelHistoryKernel
-    (K : ℕ → Kernel Ω Ω) [∀ t, IsMarkovKernel (K t)] (t : ℕ) :
+    (K : ℕ → ProbabilityTheory.Kernel Ω Ω)
+    [∀ t, IsMarkovKernel (K t)] (t : ℕ) :
     IsMarkovKernel (historyKernel K t) := by
   unfold historyKernel
   infer_instance
@@ -319,12 +333,12 @@ instance instIsMarkovKernelHistoryKernel
 /-- The Ionescu–Tulcea trajectory law of a time-inhomogeneous Markov chain on
 an arbitrary measurable state space. -/
 noncomputable def trajectoryMeasure
-    (μ₀ : Measure Ω) (K : ℕ → Kernel Ω Ω)
+    (μ₀ : Measure Ω) (K : ℕ → ProbabilityTheory.Kernel Ω Ω)
     [∀ t, IsMarkovKernel (K t)] : Measure (ℕ → Ω) :=
-  Kernel.trajMeasure μ₀ (historyKernel K)
+  ProbabilityTheory.Kernel.trajMeasure μ₀ (historyKernel K)
 
 noncomputable instance instIsProbabilityMeasureTrajectoryMeasure
-    (μ₀ : Measure Ω) (K : ℕ → Kernel Ω Ω)
+    (μ₀ : Measure Ω) (K : ℕ → ProbabilityTheory.Kernel Ω Ω)
     [IsProbabilityMeasure μ₀] [∀ t, IsMarkovKernel (K t)] :
     IsProbabilityMeasure (trajectoryMeasure μ₀ K) := by
   unfold trajectoryMeasure
@@ -333,12 +347,12 @@ noncomputable instance instIsProbabilityMeasureTrajectoryMeasure
 /-- Every finite prefix of `trajectoryMeasure` is extended by the prescribed
 next-step Markov kernel. -/
 theorem trajectoryMeasure_step
-    (μ₀ : Measure Ω) (K : ℕ → Kernel Ω Ω)
+    (μ₀ : Measure Ω) (K : ℕ → ProbabilityTheory.Kernel Ω Ω)
     [IsProbabilityMeasure μ₀] [∀ t, IsMarkovKernel (K t)] (t : ℕ) :
     (trajectoryMeasure μ₀ K).map (Preorder.frestrictLe t) ⊗ₘ historyKernel K t =
       (trajectoryMeasure μ₀ K).map
         (fun x => (Preorder.frestrictLe t x, x (t + 1))) := by
-  exact Kernel.map_frestrictLe_trajMeasure_compProd_eq_map_trajMeasure
+  exact ProbabilityTheory.Kernel.map_frestrictLe_trajMeasure_compProd_eq_map_trajMeasure
 
 end Markov
 
