@@ -127,7 +127,9 @@ noncomputable def reversedForwardPathMeasure :
   | 0, initial, K => reversePathMeasure initial K
   | n + 1, initial, K =>
       ((reversedForwardPathMeasure initial (fun i => K i.castSucc)) ⊗ₘ
-        endpointKernel (K (Fin.last n)) n).map (prependEquiv n)
+        endpointKernel (K (Fin.last n)) n).map
+          (MeasurableEquiv.prodComm :
+            (Trajectory Ω n × Ω) ≃ᵐ Ω × Trajectory Ω n)
 
 noncomputable instance instIsProbabilityMeasureReversedForwardPathMeasure
     {n : ℕ} (initial : Measure Ω)
@@ -149,7 +151,8 @@ noncomputable instance instIsProbabilityMeasureReversedForwardPathMeasure
         ih (fun i => forward i.castSucc)
       letI : IsMarkovKernel (forward (Fin.last n)) := hK (Fin.last n)
       apply Measure.isProbabilityMeasure_map
-      exact (prependEquiv (Ω := Ω) n).measurable.aemeasurable
+      exact ((MeasurableEquiv.prodComm :
+        (Trajectory Ω n × Ω) ≃ᵐ Ω × Trajectory Ω n).measurable.aemeasurable)
 
 /-- Product of the work factors along a reverse-oriented finite trajectory. -/
 noncomputable def reversedWorkWeight :
