@@ -25,8 +25,7 @@ namespace Gibbs
 
 variable {Ω : Type*} [MeasurableSpace Ω]
 
-/-- The partition function of an energy landscape relative to a reference
-measure. -/
+/-- The partition function of an energy landscape relative to a reference measure. -/
 noncomputable def partitionFunction
     (base : Measure Ω) (β : ℝ) (energy : Ω → ℝ) : ℝ :=
   ∫ x, Real.exp (-β * energy x) ∂base
@@ -36,8 +35,7 @@ noncomputable def freeEnergy
     (base : Measure Ω) (β : ℝ) (energy : Ω → ℝ) : ℝ :=
   -Real.log (partitionFunction base β energy) / β
 
-/-- The canonical Gibbs measure, implemented as Mathlib's exponential tilt of
-the reference measure. -/
+/-- The canonical Gibbs measure, implemented as Mathlib's exponential tilt of the reference measure. -/
 noncomputable def measure
     (base : Measure Ω) (β : ℝ) (energy : Ω → ℝ) : Measure Ω :=
   base.tilted (fun x => -β * energy x)
@@ -59,8 +57,7 @@ noncomputable def freeEnergyWeight
   ENNReal.ofReal
     (Real.exp (-β * (freeEnergy base β final - freeEnergy base β initial)))
 
-/-- A Gibbs measure is a probability measure whenever the Boltzmann factor is
-integrable and the reference measure is nonzero. -/
+/-- A Gibbs measure is a probability measure whenever the Boltzmann factor is integrable and the reference measure is nonzero. -/
 theorem isProbabilityMeasure_measure
     (base : Measure Ω) [NeZero base] (β : ℝ) (energy : Ω → ℝ)
     (henergy : Integrable (fun x => Real.exp (-β * energy x)) base) :
@@ -76,8 +73,7 @@ theorem measurable_workWeight
   unfold workWeight
   fun_prop
 
-/-- Exponentiating a free-energy difference gives the corresponding
-partition-function ratio. -/
+/-- Exponentiating a free-energy difference gives the corresponding partition-function ratio. -/
 theorem exp_neg_beta_mul_freeEnergy_sub
     (base : Measure Ω) [NeZero base] (β : ℝ) (hβ : β ≠ 0)
     (initial final : Ω → ℝ)
@@ -99,8 +95,7 @@ theorem exp_neg_beta_mul_freeEnergy_sub
   rw [harg, Real.exp_sub, Real.exp_log hZfinal,
     Real.exp_log hZinitial]
 
-/-- Gibbs reweighting under an energy quench, expressed using the ratio of
-partition functions. -/
+/-- Gibbs reweighting under an energy quench, expressed using the ratio of partition functions. -/
 theorem reweight_partitionRatio
     (base : Measure Ω) [NeZero base] (β : ℝ)
     (initial final : Ω → ℝ)
@@ -125,7 +120,7 @@ theorem reweight_partitionRatio
     measurable_workWeight β hinitialMeas hfinalMeas
   unfold measure Measure.tilted partitionRatio partitionFunction
   rw [← withDensity_mul base hdinitial hwork,
-    ← withDensity_smul base
+    ← withDensity_smul (μ := base)
       (ENNReal.ofReal
         ((∫ x, Real.exp (-β * final x) ∂base) /
           ∫ x, Real.exp (-β * initial x) ∂base)) hdfinal]
@@ -166,8 +161,7 @@ theorem reweight_freeEnergy
   exact reweight_partitionRatio base β initial final
     hinitialMeas hfinalMeas hinitial hfinal
 
-/-- The finite-horizon Crooks relation specialized to Gibbs equilibrium
-measures constructed from a common reference measure. -/
+/-- The finite-horizon Crooks relation specialized to Gibbs equilibrium measures constructed from a common reference measure. -/
 theorem multiStep_crooks
     {n : ℕ} (base : Measure Ω) [NeZero base]
     (β : ℝ) (hβ : β ≠ 0)
@@ -206,8 +200,7 @@ theorem multiStep_crooks
         (henergyInt i.castSucc) (henergyInt i.succ))
       (fun i => by simpa [equilibrium] using hbalance i))
 
-/-- The finite-horizon Jarzynski equality for Gibbs equilibrium measures on an
-arbitrary measurable state space. -/
+/-- The finite-horizon Jarzynski equality for Gibbs equilibrium measures on an arbitrary measurable state space. -/
 theorem multiStep_jarzynski
     {n : ℕ} (base : Measure Ω) [NeZero base]
     (β : ℝ) (hβ : β ≠ 0)
