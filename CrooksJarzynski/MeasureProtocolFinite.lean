@@ -176,6 +176,90 @@ theorem measurable_reversedWorkWeight
         ((ih (fun i => q i.castSucc) (fun i => hq i.castSucc)).comp measurable_snd).mul
           ((hq (Fin.last n)).comp (measurable_fst.comp measurable_snd))
 
+/-! ## Transporting local detailed balance through a generated past -/
+
+/-- Local detailed balance remains valid after adjoining an arbitrary Markovian
+law for the already generated past. -/
+theorem liftLocalBalance_past
+    {A : Type*} [MeasurableSpace A]
+    (μ : Measure Ω)
+    (past : ProbabilityTheory.Kernel Ω A)
+    (forward reverse : ProbabilityTheory.Kernel Ω Ω)
+    [IsProbabilityMeasure μ]
+    [IsMarkovKernel past] [IsMarkovKernel forward] [IsMarkovKernel reverse]
+    (hbalance : μ ⊗ₘ forward = (μ ⊗ₘ reverse).map Prod.swap) :
+    ((((μ ⊗ₘ past) ⊗ₘ
+        forward.comap (fun p : Ω × A => p.1) measurable_fst).map
+          MeasurableEquiv.prodComm) =
+      μ ⊗ₘ (reverse ⊗ₖ
+        ProbabilityTheory.Kernel.prodMkLeft Ω past)) := by
+  haveI : IsMarkovKernel
+      (forward.comap (fun p : Ω × A => p.1) measurable_fst) :=
+    ProbabilityTheory.Kernel.IsMarkovKernel.comap _ measurable_fst
+  haveI : IsMarkovKernel
+      (ProbabilityTheory.Kernel.prodMkLeft Ω past) := by
+    unfold ProbabilityTheory.Kernel.prodMkLeft
+    exact ProbabilityTheory.Kernel.IsMarkovKernel.comap _ measurable_snd
+  haveI : IsProbabilityMeasure
+      ((((μ ⊗ₘ past) ⊗ₘ
+        forward.comap (fun p : Ω × A => p.1) measurable_fst).map
+          MeasurableEquiv.prodComm)) :=
+    Measure.isProbabilityMeasure_map
+      (MeasurableEquiv.prodComm.measurable.aemeasurable)
+  apply Measure.ext_prod₃
+  intro s t u hs ht hu
+  let fForward : Ω × A → ℝ≥0∞ := fun p => forward p.1 s
+  have hfForward : Measurable fForward :=
+    (forward.measurable_coe hs).comp measurable_fst
+  let g : Ω × Ω → ℝ≥0∞ := fun p => past p.1 u
+  have hg : Measurable g :=
+    (past.measurable_coe hu).comp measurable_fst
+  let gswap : Ω × Ω → ℝ≥0∞ := fun p => past p.2 u
+  have hgswap : Measurable gswap :=
+    (past.measurable_coe hu).comp measurable_snd
+  have hpre :
+      MeasurableEquiv.prodComm ⁻¹' (s ×ˢ t ×ˢ u) =
+        (t ×ˢ u) ×ˢ s := by
+    ext p
+    simp
+  have hpreLocal :
+      Prod.swap ⁻¹' (t ×ˢ s) = s ×ˢ t := by
+    ext p
+    simp
+  calc
+    ((((μ ⊗ₘ past) ⊗ₘ
+        forward.comap (fun p : Ω × A => p.1) measurable_fst).map
+          MeasurableEquiv.prodComm) (s ×ˢ t ×ˢ u))
+        = ((μ ⊗ₘ past) ⊗ₘ
+            forward.comap (fun p : Ω × A => p.1) measurable_fst)
+              ((t ×ˢ u) ×ˢ s) := by
+          rw [Measure.map_apply MeasurableEquiv.prodComm.measurable
+            (hs.prod (ht.prod hu)), hpre]
+    _ = ∫⁻ p in t ×ˢ u, forward p.1 s ∂(μ ⊗ₘ past) := by
+          rw [Measure.compProd_apply_prod (ht.prod hu) hs]
+          rfl
+    _ = ∫⁻ p in t ×ˢ s, past p.1 u ∂(μ ⊗ₘ forward) := by
+          rw [Measure.setLIntegral_compProd hfForward ht hu,
+            Measure.setLIntegral_compProd hg ht hs]
+          apply setLIntegral_congr_fun ht
+          intro x hx
+          simp [fForward, g, setLIntegral_const, mul_comm]
+    _ = ∫⁻ p in t ×ˢ s, past p.1 u
+          ∂((μ ⊗ₘ reverse).map Prod.swap) := by
+          rw [← hbalance]
+    _ = ∫⁻ p in s ×ˢ t, past p.2 u ∂(μ ⊗ₘ reverse) := by
+          rw [setLIntegral_map (ht.prod hs) hg measurable_swap, hpreLocal]
+          rfl
+    _ = (μ ⊗ₘ (reverse ⊗ₖ
+          ProbabilityTheory.Kernel.prodMkLeft Ω past))
+          (s ×ˢ t ×ˢ u) := by
+          rw [Measure.setLIntegral_compProd hgswap hs ht,
+            Measure.compProd_apply_prod hs (ht.prod hu)]
+          apply setLIntegral_congr_fun hs
+          intro y hy
+          rw [ProbabilityTheory.Kernel.compProd_apply_prod ht hu]
+          rfl
+
 end Markov
 end MeasureProtocol
 end CrooksJarzynski
