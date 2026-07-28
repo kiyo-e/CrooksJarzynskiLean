@@ -41,7 +41,7 @@ theorem measurable_stateAt {n : ℕ} :
       · simpa [stateAt] using
           (measurable_fst :
             Measurable (fun γ : Trajectory Ω (n + 1) => γ.1))
-      · simpa [stateAt] using
+      · simpa [stateAt, Function.comp_apply] using
           ((measurable_pi_apply j).comp
             (ih.comp
               (measurable_snd :
@@ -52,10 +52,9 @@ theorem measurable_ofFn {n : ℕ} :
     Measurable (@ofFn Ω n) := by
   induction n with
   | zero =>
-      simpa [ofFn] using
-        ((measurable_pi_apply (0 : Fin 1)).prodMk
-          (measurable_const :
-            Measurable (fun _ : Fin 1 → Ω => PUnit.unit)))
+      change Measurable (fun f : Fin 1 → Ω =>
+        (f 0, (PUnit.unit : Continuation Ω 0)))
+      exact (measurable_pi_apply (0 : Fin 1)).prodMk measurable_const
   | succ n ih =>
       have htail : Measurable
           (fun f : Fin (n + 2) → Ω =>
@@ -63,9 +62,10 @@ theorem measurable_ofFn {n : ℕ} :
         refine measurable_pi_iff.2 ?_
         intro i
         exact measurable_pi_apply i.succ
-      simpa [ofFn] using
-        ((measurable_pi_apply (0 : Fin (n + 2))).prodMk
-          (ih.comp htail))
+      change Measurable (fun f : Fin (n + 2) → Ω =>
+        (f 0, ofFn (fun i : Fin (n + 1) => f i.succ)))
+      exact (measurable_pi_apply (0 : Fin (n + 2))).prodMk
+        (ih.comp htail)
 
 /-- Reversing a finite trajectory is measurable. -/
 @[fun_prop]
