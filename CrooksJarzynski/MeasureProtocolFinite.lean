@@ -95,8 +95,7 @@ noncomputable instance instIsMarkovKernelReverseContinuationKernel
             (reverseContinuationKernel (fun i => K i.castSucc))) := by
         unfold ProbabilityTheory.Kernel.prodMkLeft
         exact ProbabilityTheory.Kernel.IsMarkovKernel.comap _
-          (measurable_snd : Measurable
-            (fun p : Ω × Ω => p.2))
+          (measurable_snd : Measurable (fun p : Ω × Ω => p.2))
       change IsMarkovKernel
         (K (Fin.last n) ⊗ₖ
           ProbabilityTheory.Kernel.prodMkLeft Ω
@@ -212,7 +211,7 @@ theorem liftLocalBalance_past
       (ProbabilityTheory.Kernel.prodMkLeft Ω past) := by
     unfold ProbabilityTheory.Kernel.prodMkLeft
     exact ProbabilityTheory.Kernel.IsMarkovKernel.comap _
-      (measurable_snd : Measurable (fun p : Ω × A => p.2))
+      (measurable_snd : Measurable (fun p : Ω × Ω => p.2))
   haveI : IsProbabilityMeasure
       ((((μ ⊗ₘ past) ⊗ₘ
         forward.comap (fun p : Ω × A => p.1)
