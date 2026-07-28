@@ -226,15 +226,10 @@ noncomputable instance instIsMarkovKernelReverseContinuationKernel
       haveI : IsMarkovKernel
           (reverseContinuationKernel (fun i => K i.castSucc)) :=
         ih (fun i => K i.castSucc)
-      haveI : IsMarkovKernel
-          (ProbabilityTheory.Kernel.prodMkLeft Ω
-            (reverseContinuationKernel (fun i => K i.castSucc))) := by
-        constructor
-        intro p
-        change IsProbabilityMeasure
-          (reverseContinuationKernel (fun i => K i.castSucc) p.2)
-        infer_instance
-      infer_instance
+      constructor
+      intro x
+      constructor
+      simp [ProbabilityTheory.Kernel.compProd_apply]
 
 /-- The reverse-experiment path measure, written in reverse chronological order
 `(xₙ, xₙ₋₁, …, x₀)`. -/
@@ -281,18 +276,9 @@ noncomputable instance instIsProbabilityMeasureReversedForwardPathMeasure
           (reversedForwardPathMeasure initial
             (fun i => forward i.castSucc)) :=
         ih (fun i => forward i.castSucc)
-      haveI : IsMarkovKernel
-          ((forward (Fin.last n)).comap Prod.fst measurable_fst) := by
-        constructor
-        intro p
-        change IsProbabilityMeasure (forward (Fin.last n) p.1)
-        infer_instance
-      haveI : IsProbabilityMeasure
-          ((reversedForwardPathMeasure initial
-              (fun i => forward i.castSucc)) ⊗ₘ
-            (forward (Fin.last n)).comap Prod.fst measurable_fst) := by
-        infer_instance
-      exact Measure.isProbabilityMeasure_map measurable_swap.aemeasurable
+      constructor
+      rw [Measure.map_apply measurable_swap MeasurableSet.univ]
+      simp [Measure.compProd_apply]
 
 /-- Product of the work factors along a reverse-oriented finite trajectory. -/
 noncomputable def reversedWorkWeight :
