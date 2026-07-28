@@ -41,11 +41,12 @@ theorem measurable_stateAt {n : ℕ} :
       · simpa [stateAt] using
           (measurable_fst :
             Measurable (fun γ : Trajectory Ω (n + 1) => γ.1))
-      · simpa [stateAt, Function.comp_apply] using
-          ((measurable_pi_apply j).comp
-            (ih.comp
-              (measurable_snd :
-                Measurable (fun γ : Trajectory Ω (n + 1) => γ.2))))
+      · change Measurable
+          (fun γ : Trajectory Ω (n + 1) => stateAt γ.2 j)
+        exact (measurable_pi_apply j).comp
+          (ih.comp
+            (measurable_snd :
+              Measurable (fun γ : Trajectory Ω (n + 1) => γ.2)))
 
 /-- Building a recursive trajectory from its vertex function is measurable. -/
 theorem measurable_ofFn {n : ℕ} :
@@ -66,6 +67,17 @@ theorem measurable_ofFn {n : ℕ} :
         (f 0, ofFn (fun i : Fin (n + 1) => f i.succ)))
       exact (measurable_pi_apply (0 : Fin (n + 2))).prodMk
         (ih.comp htail)
+
+/-- Recursive trajectories and vertex-indexed functions are measurably equivalent. -/
+def stateAtMeasurableEquiv (Ω : Type*) [MeasurableSpace Ω] (n : ℕ) :
+    Trajectory Ω n ≃ᵐ (Fin (n + 1) → Ω) where
+  toEquiv :=
+    { toFun := stateAt
+      invFun := ofFn
+      left_inv := ofFn_stateAt
+      right_inv := stateAt_ofFn }
+  measurable_toFun := measurable_stateAt
+  measurable_invFun := measurable_ofFn
 
 /-- Reversing a finite trajectory is measurable. -/
 @[fun_prop]
