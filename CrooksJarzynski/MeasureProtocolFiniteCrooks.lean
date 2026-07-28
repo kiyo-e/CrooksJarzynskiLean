@@ -106,6 +106,15 @@ theorem extendReversedPrefix_crooks
       (hstepWork.comp
         ((measurable_fst : Measurable (fun p : Ω × A => p.1)).comp
           (measurable_snd : Measurable (fun z : Ω × (Ω × A) => z.2))))
+  have hPrefixInput : Measurable
+      (fun p : (Ω × A) × Ω => prefixWork p.1) :=
+    hprefixWork.comp
+      (measurable_fst : Measurable (fun p : (Ω × A) × Ω => p.1))
+  have hStepInput : Measurable
+      (fun p : (Ω × A) × Ω => stepWork p.1.1) :=
+    hstepWork.comp
+      ((measurable_fst : Measurable (fun p : Ω × A => p.1)).comp
+        (measurable_fst : Measurable (fun p : (Ω × A) × Ω => p.1)))
   rw [map_withDensity_equiv
     (prefixForward ⊗ₘ
       forward.comap (fun p : Ω × A => p.1)
@@ -116,19 +125,13 @@ theorem extendReversedPrefix_crooks
     (((prefixForward ⊗ₘ
         forward.comap (fun p : Ω × A => p.1)
           (measurable_fst : Measurable (fun p : Ω × A => p.1))).withDensity
-      (fun p => prefixWork p.1 * stepWork p.1.1)).map
+      ((fun p : (Ω × A) × Ω => prefixWork p.1) *
+        (fun p : (Ω × A) × Ω => stepWork p.1.1))).map
         (MeasurableEquiv.prodComm : ((Ω × A) × Ω) ≃ᵐ Ω × (Ω × A))) =
       (prefixFactor * stepFactor) •
         (next ⊗ₘ (reverse ⊗ₖ
           ProbabilityTheory.Kernel.prodMkLeft Ω past))
-  rw [show (fun p : (Ω × A) × Ω => prefixWork p.1 * stepWork p.1.1) =
-      (fun p => prefixWork p.1) * (fun p => stepWork p.1.1) by rfl,
-    withDensity_mul _
-      (hprefixWork.comp
-        (measurable_fst : Measurable (fun p : (Ω × A) × Ω => p.1)))
-      (hstepWork.comp
-        ((measurable_fst : Measurable (fun p : Ω × A => p.1)).comp
-          (measurable_fst : Measurable (fun p : (Ω × A) × Ω => p.1)))),
+  rw [withDensity_mul _ hPrefixInput hStepInput,
     compProd_withDensity_fst_general prefixForward
       (forward.comap (fun p : Ω × A => p.1)
         (measurable_fst : Measurable (fun p : Ω × A => p.1)))
@@ -236,7 +239,7 @@ theorem multiStep_crooks
         rfl
       rw [hlast] at hext
       simpa [equilibriumPrefix, forwardPrefix, reversePrefix, workPrefix,
-        factorPrefix, reversedForwardPathMeasure, endpointKernel, prependEquiv,
+        factorPrefix, reversedForwardPathMeasure, endpointKernel,
         reversePathMeasure, reverseContinuationKernel, reversedWorkWeight,
         accumulatedFreeEnergyWeight] using hext
 
