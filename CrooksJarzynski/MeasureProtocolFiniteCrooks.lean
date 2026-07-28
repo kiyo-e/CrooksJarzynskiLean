@@ -21,12 +21,10 @@ namespace Markov
 
 variable {Ω : Type*} [MeasurableSpace Ω]
 
-/-! ## Density transport lemmas used by finite-horizon induction -/
-
 /-- Reweighting the first marginal before composing with a kernel is the same
 as reweighting the composition-product by its first coordinate. -/
 theorem compProd_withDensity_fst_general
-    {α : Type*} {β : Type*} [MeasurableSpace α] [MeasurableSpace β]
+    {α β : Type*} [MeasurableSpace α] [MeasurableSpace β]
     (μ : Measure α) (κ : ProbabilityTheory.Kernel α β)
     [SFinite μ] [IsSFiniteKernel κ]
     (q : α → ℝ≥0∞) (hq : Measurable q) :
@@ -51,18 +49,6 @@ theorem compProd_withDensity_fst_general
     rfl
   rw [hindicator, lintegral_indicator hsection]
   simp [MeasureTheory.lintegral_const]
-
-/-- Mapping by a measurable equivalence commutes with a density after pulling
-that density back along the equivalence. -/
-theorem map_withDensity_equiv
-    {α : Type*} {β : Type*} [MeasurableSpace α] [MeasurableSpace β]
-    (μ : Measure α) (e : α ≃ᵐ β) (q : β → ℝ≥0∞) (hq : Measurable q) :
-    (μ.map e).withDensity q = (μ.withDensity (q ∘ e)).map e := by
-  ext s hs
-  rw [withDensity_apply _ hs, setLIntegral_map hs hq e.measurable,
-    Measure.map_apply e.measurable hs,
-    withDensity_apply _ (e.measurable hs)]
-  rfl
 
 /-- Extend a Crooks relation for a reverse-oriented path prefix by one Markov
 step. -/
@@ -115,12 +101,13 @@ theorem extendReversedPrefix_crooks
     hstepWork.comp
       ((measurable_fst : Measurable (fun p : Ω × A => p.1)).comp
         (measurable_fst : Measurable (fun p : (Ω × A) × Ω => p.1)))
-  rw [map_withDensity_equiv
+  rw [map_withDensity
     (prefixForward ⊗ₘ
       forward.comap (fun p : Ω × A => p.1)
         (measurable_fst : Measurable (fun p : Ω × A => p.1)))
     (MeasurableEquiv.prodComm : ((Ω × A) × Ω) ≃ᵐ Ω × (Ω × A))
-    _ hOutput]
+    _ (MeasurableEquiv.prodComm :
+      ((Ω × A) × Ω) ≃ᵐ Ω × (Ω × A)).measurable hOutput]
   change
     (((prefixForward ⊗ₘ
         forward.comap (fun p : Ω × A => p.1)
@@ -238,6 +225,7 @@ theorem multiStep_crooks
         ext
         rfl
       rw [hlast] at hext
+      change @CrooksRelation (Ω × (Ω × Continuation Ω n)) _ _ _ _ _
       simpa [equilibriumPrefix, forwardPrefix, reversePrefix, workPrefix,
         factorPrefix, reversedForwardPathMeasure, endpointKernel,
         reversePathMeasure, reverseContinuationKernel, reversedWorkWeight,
