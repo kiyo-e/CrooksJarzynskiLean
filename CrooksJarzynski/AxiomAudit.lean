@@ -38,6 +38,8 @@ the trusted base of the development.
 #print axioms CrooksJarzynski.MeasureProtocol.Markov.oneStep_crooks
 #print axioms CrooksJarzynski.MeasureProtocol.Markov.oneStep_jarzynski
 #print axioms CrooksJarzynski.MeasureProtocol.Markov.trajectoryMeasure_step
+#print axioms CrooksJarzynski.MeasureProtocol.Markov.reversedFiniteMarginal_eq_reversedForwardPathMeasure
+#print axioms CrooksJarzynski.MeasureProtocol.Markov.finiteMarginal_eq_chronologicalForwardPathMeasure
 #print axioms CrooksJarzynski.MeasureProtocol.Markov.liftLocalBalance_past
 #print axioms CrooksJarzynski.MeasureProtocol.Markov.extendReversedPrefix_crooks
 #print axioms CrooksJarzynski.MeasureProtocol.Markov.multiStep_crooks

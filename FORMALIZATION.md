@@ -23,6 +23,7 @@ declarations. All modules are exported by `CrooksJarzynski.lean`.
 | Chronological-path and path-reversal form | `MeasureProtocol.Markov.multiStep_crooks_chronological` |
 | Ionescu–Tulcea path law | `MeasureProtocol.Markov.trajectoryMeasure` |
 | Finite-prefix evolution law | `MeasureProtocol.Markov.trajectoryMeasure_step` |
+| Finite-dimensional marginal identification | `MeasureProtocol.Markov.finiteMarginal_eq_chronologicalForwardPathMeasure` |
 
 The multi-step theorem assumes a supplied forward kernel, reverse kernel,
 equilibrium probability measure, equilibrium reweighting identity, and
@@ -55,8 +56,6 @@ integrability and nonzero-measure hypotheses are explicit theorem inputs.
 - Time is discrete and the main theorem has a finite horizon.
 - Reverse kernels and local balance are supplied; reverse-kernel existence by
   disintegration is not formalized.
-- The Ionescu–Tulcea infinite path law is not yet identified with every
-  recursive finite-horizon marginal.
 - No continuous-time Crooks theorem is claimed.
 
 `CrooksJarzynski/AxiomAudit.lean` lists the declarations whose kernel axioms are
