@@ -55,7 +55,7 @@ jobs:
               axiom_reports="$(grep -Ec \
                 'depends on axioms:|does not depend on any axioms' \
                 axiom-audit.log)"
-              if [ "$axiom_reports" -ne 17 ]; then
+              if [ "$axiom_reports" -ne 18 ]; then
                 echo "Kernel axiom audit did not report every headline theorem."
                 status=1
               elif sed -n 's/.*depends on axioms: \[\(.*\)\]$/\1/p' \
