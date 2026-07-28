@@ -31,3 +31,8 @@ the trusted base of the development.
 #print axioms CrooksJarzynski.Protocol.reverseProtocol_work_reverse
 #print axioms CrooksJarzynski.Protocol.work_distribution_crooks
 #print axioms CrooksJarzynski.Protocol.work_distribution_crooks_ratio
+#print axioms CrooksJarzynski.MeasureProtocol.jarzynski_lintegral
+#print axioms CrooksJarzynski.MeasureProtocol.Markov.compProd_withDensity_fst
+#print axioms CrooksJarzynski.MeasureProtocol.Markov.oneStep_crooks
+#print axioms CrooksJarzynski.MeasureProtocol.Markov.oneStep_jarzynski
+#print axioms CrooksJarzynski.MeasureProtocol.Markov.trajectoryMeasure_step
