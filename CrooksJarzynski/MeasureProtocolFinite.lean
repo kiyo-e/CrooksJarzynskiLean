@@ -37,12 +37,12 @@ private noncomputable def continuationMeasurableSpace
         continuationMeasurableSpace Ω n
       inferInstanceAs (MeasurableSpace (Ω × Continuation Ω n))
 
-noncomputable instance instMeasurableSpaceContinuation (n : ℕ) :
+noncomputable instance (priority := 100) instMeasurableSpaceContinuation (n : ℕ) :
     MeasurableSpace (Continuation Ω n) :=
   continuationMeasurableSpace Ω n
 
 /-- Swap an existing reverse-oriented path prefix with a newly sampled endpoint. -/
-def prependEquiv (n : ℕ) :
+noncomputable def prependEquiv (n : ℕ) :
     (Trajectory Ω n × Ω) ≃ᵐ Trajectory Ω (n + 1) where
   toEquiv := Equiv.prodComm _ _
   measurable_toFun := measurable_swap
