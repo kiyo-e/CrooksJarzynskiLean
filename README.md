@@ -1,29 +1,64 @@
 # Crooks–Jarzynski in Lean 4
 
-A machine-checked finite-state, discrete-time development of stochastic thermodynamics, together with a path-uniform refinement limit for the two standard discrete work conventions.
+A machine-checked development of stochastic thermodynamics in Lean 4. The library contains a complete finite-state, discrete-time Crooks–Jarzynski theory, a measure-theoretic core for arbitrary measurable state spaces, and a path-uniform refinement limit for the two standard discrete work conventions.
 
 The library proves, without `sorry` or custom axioms:
 
-- normalization and nonnegativity of forward and reverse path probabilities;
-- a multi-step Crooks path identity from local detailed balance;
+- a measure-level Crooks relation on arbitrary measurable trajectory spaces and its Lebesgue-integral Jarzynski consequence;
+- a one-step Crooks theorem and Jarzynski equality on arbitrary measurable state spaces from equilibrium reweighting and measure-theoretic local detailed balance;
+- an Ionescu–Tulcea trajectory measure for time-inhomogeneous Mathlib Markov kernels, together with its finite-prefix evolution law;
+- normalization and nonnegativity of finite forward and reverse path probabilities;
+- a finite-state multi-step Crooks path identity from local detailed balance;
 - the usual Crooks ratio when the reverse path probability is nonzero;
 - an explicit physical reverse protocol with reversed energies, kernels, and trajectories;
 - sign reversal of work under the physical reverse experiment;
 - Crooks' theorem for the probability mass of each exact work value;
 - an exact comparison of the quench-then-transition and transition-then-quench work conventions;
 - a discrete summation-by-parts identity and a path-uniform `O(1/N)` refinement limit for the difference between those conventions;
-- the Jarzynski equality;
+- the finite-state Jarzynski equality;
 - the integral fluctuation theorem for dissipated work;
 - the average-work second law `ΔF ≤ ⟨W⟩`;
 - a deterministic quench constructor and a two-state partition-function example.
 
-The pathwise theorem is stated first in the division-free form
+The finite pathwise theorem is stated first in the division-free form
 
 ```text
 P_F(γ) · exp(β ΔF) = P_R(γ†) · exp(β W(γ)),
 ```
 
 so zero-probability trajectories do not require case splits. The ratio form is a corollary with the expected nonzero hypothesis.
+
+## General measurable state spaces
+
+The module `CrooksJarzynski.MeasureProtocol` moves the probability-theoretic core from finite sums to Mathlib measures and kernels. For an arbitrary measurable trajectory space `Γ`, it represents Crooks' relation by the measure identity
+
+```lean
+forward.withDensity workWeight = freeEnergyWeight • reverse
+```
+
+and proves
+
+```lean
+∫⁻ γ, workWeight γ ∂forward = freeEnergyWeight
+```
+
+whenever `reverse` is a probability measure. The specialization `jarzynski_exponential` uses the physical weights `exp (-β W)` and `exp (-β ΔF)`.
+
+For one Markov step on an arbitrary measurable state space `Ω`, the theorem `MeasureProtocol.Markov.oneStep_crooks` assumes the equilibrium reweighting identity
+
+```lean
+initial.withDensity workWeight = freeEnergyWeight • final
+```
+
+and local detailed balance as an equality of measures on `Ω × Ω`:
+
+```lean
+final ⊗ₘ forward = (final ⊗ₘ reverse).map Prod.swap
+```
+
+It then proves the corresponding Crooks relation for the forward one-step path measure `initial ⊗ₘ forward`; `oneStep_jarzynski` gives the integral equality directly. This formulation does not use singleton masses, ratios, or a finite-state assumption.
+
+For a time-inhomogeneous family `K t : ProbabilityTheory.Kernel Ω Ω`, `MeasureProtocol.Markov.trajectoryMeasure` adapts each ordinary Markov kernel to the history-dependent interface used by Mathlib's Ionescu–Tulcea construction. The resulting probability measure lives on the full path space `ℕ → Ω`. The original finite distributions and kernels are connected back to this construction by `MathlibBridge.trajectoryMeasure`, so the finite layer is a concrete specialization of the general core.
 
 ## Time reversal and discrete-time work
 
@@ -93,6 +128,15 @@ The project is pinned to Lean and Mathlib `v4.32.0`. GitHub Actions preserves th
 ## Main declarations
 
 ```lean
+CrooksJarzynski.MeasureProtocol.CrooksRelation
+CrooksJarzynski.MeasureProtocol.jarzynski_lintegral
+CrooksJarzynski.MeasureProtocol.jarzynski_exponential
+CrooksJarzynski.MeasureProtocol.Markov.compProd_withDensity_fst
+CrooksJarzynski.MeasureProtocol.Markov.oneStep_crooks
+CrooksJarzynski.MeasureProtocol.Markov.oneStep_jarzynski
+CrooksJarzynski.MeasureProtocol.Markov.trajectoryMeasure
+CrooksJarzynski.MeasureProtocol.Markov.trajectoryMeasure_step
+CrooksJarzynski.MathlibBridge.trajectoryMeasure
 CrooksJarzynski.Trajectory.reverse
 CrooksJarzynski.Trajectory.reverse_reverse
 CrooksJarzynski.Protocol.crooks_partition_ratio
@@ -116,9 +160,11 @@ CrooksJarzynski.Protocol.second_law
 
 ## Scope
 
-The Crooks–Jarzynski system is finite-state and discrete in time. Every forward time step consists of an instantaneous energy quench followed by a Markov transition. Forward and reverse kernels are supplied separately and satisfy local detailed balance at the post-quench energy. The explicit physical reverse experiment uses the reversed transition first and the reverse quench second. Reversible dynamics are obtained by choosing the same kernel in both directions.
+The complete multi-step thermodynamic development is finite-state and discrete in time. Every forward time step consists of an instantaneous energy quench followed by a Markov transition. Forward and reverse kernels are supplied separately and satisfy local detailed balance at the post-quench energy. The explicit physical reverse experiment uses the reversed transition first and the reverse quench second. Reversible dynamics are obtained by choosing the same kernel in both directions.
 
-The work-convention refinement theorem has a narrower and more general scope: it is independent of the kernels, path probabilities, and finite-state assumption, but it compares only the two discrete approximations to externally driven work. A measure-theoretic general-state-space Crooks theorem and a genuinely continuous-time stochastic process are outside the current scope.
+The measure-theoretic module removes the finite-state assumption from the trajectory-space Crooks-to-Jarzynski implication, the one-step local-detailed-balance theorem, and the construction of time-inhomogeneous Markov trajectory laws. Deriving the full multi-step general-state-space Crooks relation from a sequence of local detailed-balance assumptions remains the next formalization step. A genuinely continuous-time stochastic-process theorem is also outside the current scope.
+
+The work-convention refinement theorem has a narrower and more general scope: it is independent of the kernels, path probabilities, and finite-state assumption, but it compares only the two discrete approximations to externally driven work.
 
 ## References
 
