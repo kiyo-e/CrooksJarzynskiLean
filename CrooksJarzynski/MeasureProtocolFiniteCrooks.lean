@@ -225,9 +225,17 @@ theorem multiStep_crooks
         ext
         rfl
       rw [hlast] at hext
+      have hendpoint :
+          (forward (Fin.last n)).comap
+              (fun p : Ω × Continuation Ω n => p.1)
+              (measurable_fst : Measurable
+                (fun p : Ω × Continuation Ω n => p.1)) =
+            endpointKernel (forward (Fin.last n)) n := by
+        rfl
+      rw [hendpoint] at hext
       change @CrooksRelation (Ω × (Ω × Continuation Ω n)) _ _ _ _ _
       simpa [equilibriumPrefix, forwardPrefix, reversePrefix, workPrefix,
-        factorPrefix, reversedForwardPathMeasure, endpointKernel,
+        factorPrefix, reversedForwardPathMeasure,
         reversePathMeasure, reverseContinuationKernel, reversedWorkWeight,
         accumulatedFreeEnergyWeight] using hext
 
