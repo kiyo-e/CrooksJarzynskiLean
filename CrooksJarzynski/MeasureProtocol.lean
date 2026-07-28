@@ -3,25 +3,28 @@ Copyright (c) 2026 kiyo-e. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: kiyo-e
 -/
+import Mathlib.MeasureTheory.Integral.Bochner.Basic
 import Mathlib.Probability.Kernel.CompProdEqIff
 import Mathlib.Probability.Kernel.IonescuTulcea.Traj
 
 /-!
 # Measure-theoretic Crooks–Jarzynski infrastructure
 
-This module contains the state-space-independent core of the development.  A
+This module contains the state-space-independent core of the development. A
 Crooks relation is expressed as an equality of measures on an arbitrary
-measurable trajectory space.  Evaluating that equality on the whole space gives
-the Jarzynski equality as a Lebesgue integral.
+measurable trajectory space. Evaluating that equality on the whole space gives
+the Jarzynski equality as a Lebesgue integral. Pushing the equality through a
+measurable observable gives the corresponding fluctuation relation for its
+probability law.
 
 For one Markov step, the module derives the Crooks relation from two
 measure-theoretic hypotheses: equilibrium reweighting under the quench and local
-detailed balance as an equality of composition-product measures.  Both results
+detailed balance as an equality of composition-product measures. Both results
 hold on arbitrary measurable state spaces.
 
 The module also adapts an ordinary time-inhomogeneous family of Mathlib Markov
 kernels `K t : Kernel Ω Ω` to the history-dependent kernels expected by
-Mathlib's Ionescu–Tulcea construction.  Thus `trajectoryMeasure μ₀ K` is the law
+Mathlib's Ionescu–Tulcea construction. Thus `trajectoryMeasure μ₀ K` is the law
 of the full trajectory on `ℕ → Ω` for an arbitrary measurable state space.
 -/
 
@@ -37,11 +40,40 @@ namespace MeasureProtocol
 variable {Γ : Type u} [MeasurableSpace Γ]
 
 /-- A division-free Crooks relation on an arbitrary measurable trajectory
-space.  `workWeight` is the exponential work factor and `freeEnergyWeight` is
+space. `workWeight` is the exponential work factor and `freeEnergyWeight` is
 the corresponding equilibrium factor. -/
 def CrooksRelation (forward reverse : Measure Γ)
     (workWeight : Γ → ℝ≥0∞) (freeEnergyWeight : ℝ≥0∞) : Prop :=
   forward.withDensity workWeight = freeEnergyWeight • reverse
+
+/-- Mapping a measure by a measurable observable commutes with a density that
+depends only on the observable. -/
+theorem map_withDensity
+    {α β : Type*} [MeasurableSpace α] [MeasurableSpace β]
+    (μ : Measure α) (observable : α → β) (q : β → ℝ≥0∞)
+    (hObservable : Measurable observable) (hq : Measurable q) :
+    (μ.map observable).withDensity q =
+      (μ.withDensity (q ∘ observable)).map observable := by
+  ext s hs
+  rw [withDensity_apply _ hs, setLIntegral_map hs hq hObservable,
+    Measure.map_apply hObservable hs,
+    withDensity_apply _ (hObservable hs)]
+  rfl
+
+/-- A Crooks relation descends along every measurable observable. This is the
+measure-theoretic coarse-graining step used to obtain work-distribution
+fluctuation relations without assuming densities or atoms. -/
+theorem CrooksRelation.map
+    {α β : Type*} [MeasurableSpace α] [MeasurableSpace β]
+    (forward reverse : Measure α) (observable : α → β)
+    (q : β → ℝ≥0∞) (freeEnergyWeight : ℝ≥0∞)
+    (hObservable : Measurable observable) (hq : Measurable q)
+    (h : CrooksRelation forward reverse (q ∘ observable) freeEnergyWeight) :
+    CrooksRelation (forward.map observable) (reverse.map observable)
+      q freeEnergyWeight := by
+  unfold CrooksRelation at h ⊢
+  rw [map_withDensity forward observable q hObservable hq, h,
+    Measure.map_smul]
 
 /-- The measure-theoretic Jarzynski equality follows by evaluating the Crooks
 measure identity on the whole trajectory space. -/
@@ -63,6 +95,49 @@ theorem jarzynski_exponential
     ∫⁻ γ, ENNReal.ofReal (Real.exp (-β * work γ)) ∂forward =
       ENNReal.ofReal (Real.exp (-β * ΔF)) :=
   jarzynski_lintegral forward reverse _ _ h
+
+/-- The usual real-valued expectation form of the Jarzynski equality. -/
+theorem jarzynski_integral
+    (forward reverse : Measure Γ) (β ΔF : ℝ) (work : Γ → ℝ)
+    [IsProbabilityMeasure reverse]
+    (hwork : Measurable work)
+    (h : CrooksRelation forward reverse
+      (fun γ => ENNReal.ofReal (Real.exp (-β * work γ)))
+      (ENNReal.ofReal (Real.exp (-β * ΔF)))) :
+    ∫ γ, Real.exp (-β * work γ) ∂forward = Real.exp (-β * ΔF) := by
+  have hmeas : AEStronglyMeasurable
+      (fun γ => Real.exp (-β * work γ)) forward :=
+    (by fun_prop : Measurable (fun γ => Real.exp (-β * work γ))).aestronglyMeasurable
+  calc
+    ∫ γ, Real.exp (-β * work γ) ∂forward =
+        ENNReal.toReal
+          (∫⁻ γ, ENNReal.ofReal (Real.exp (-β * work γ)) ∂forward) :=
+      integral_eq_lintegral_of_nonneg_ae
+        (ae_of_all _ fun γ => (Real.exp_pos (-β * work γ)).le) hmeas
+    _ = ENNReal.toReal (ENNReal.ofReal (Real.exp (-β * ΔF))) :=
+      congrArg ENNReal.toReal
+        (jarzynski_exponential forward reverse β ΔF work h)
+    _ = Real.exp (-β * ΔF) :=
+      ENNReal.toReal_ofReal (Real.exp_pos (-β * ΔF)).le
+
+/-- The Crooks relation for the pushforward law of a real-valued work
+observable. -/
+theorem work_distribution_crooks
+    (forward reverse : Measure Γ) (β ΔF : ℝ) (work : Γ → ℝ)
+    (hwork : Measurable work)
+    (h : CrooksRelation forward reverse
+      (fun γ => ENNReal.ofReal (Real.exp (-β * work γ)))
+      (ENNReal.ofReal (Real.exp (-β * ΔF)))) :
+    CrooksRelation (forward.map work) (reverse.map work)
+      (fun w => ENNReal.ofReal (Real.exp (-β * w)))
+      (ENNReal.ofReal (Real.exp (-β * ΔF))) := by
+  have hq : Measurable
+      (fun w : ℝ => ENNReal.ofReal (Real.exp (-β * w))) := by
+    fun_prop
+  apply CrooksRelation.map forward reverse work
+    (fun w => ENNReal.ofReal (Real.exp (-β * w)))
+    (ENNReal.ofReal (Real.exp (-β * ΔF))) hwork hq
+  simpa [Function.comp_def] using h
 
 namespace Markov
 
@@ -95,8 +170,8 @@ theorem compProd_withDensity_fst
   rw [hindicator, lintegral_indicator hsection]
   simp [MeasureTheory.lintegral_const]
 
-/-- A one-step Crooks relation on an arbitrary measurable state space.  The
-first hypothesis is the Gibbs reweighting identity for the quench.  The second
+/-- A one-step Crooks relation on an arbitrary measurable state space. The
+first hypothesis is the Gibbs reweighting identity for the quench. The second
 is local detailed balance, stated without point masses as equality between the
 forward equilibrium step measure and the swapped reverse equilibrium step
 measure. -/
@@ -143,7 +218,7 @@ theorem measurable_historyLast (t : ℕ) :
   measurable_pi_apply _
 
 /-- Regard an ordinary Markov kernel as a history-dependent kernel by reading
-only the most recent state.  This is the adapter required by Ionescu–Tulcea. -/
+only the most recent state. This is the adapter required by Ionescu–Tulcea. -/
 def historyKernel (K : ℕ → Kernel Ω Ω) (t : ℕ) :
     Kernel ((i : Finset.Iic t) → Ω) Ω :=
   (K t).comap (historyLast t) (measurable_historyLast t)
