@@ -20,7 +20,7 @@ Mathlib's Ionescu–Tulcea construction.  Thus `trajectoryMeasure μ₀ K` is th
 of the full trajectory on `ℕ → Ω` for an arbitrary measurable state space.
 -/
 
-open MeasureTheory ProbabilityTheory MeasurableSpace
+open MeasureTheory ProbabilityTheory
 open scoped ENNReal ProbabilityTheory
 
 namespace CrooksJarzynski
@@ -103,9 +103,9 @@ next-step Markov kernel. -/
 theorem trajectoryMeasure_step
     (μ₀ : Measure Ω) (K : ℕ → Kernel Ω Ω)
     [IsProbabilityMeasure μ₀] [∀ t, IsMarkovKernel (K t)] (t : ℕ) :
-    (trajectoryMeasure μ₀ K).map (frestrictLe t) ⊗ₘ historyKernel K t =
+    (trajectoryMeasure μ₀ K).map (Preorder.frestrictLe t) ⊗ₘ historyKernel K t =
       (trajectoryMeasure μ₀ K).map
-        (fun x => (frestrictLe t x, x (t + 1))) := by
+        (fun x => (Preorder.frestrictLe t x, x (t + 1))) := by
   exact Kernel.map_frestrictLe_trajMeasure_compProd_eq_map_trajMeasure
 
 end Markov
