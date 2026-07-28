@@ -12,8 +12,9 @@ import Mathlib.Probability.Distributions.Gaussian.Real
 This module instantiates the general measurable-state-space theorem on `ℝ`.
 The reference law is a non-degenerate Gaussian measure. The energy has two
 spatial levels separated at the origin, and every transition independently
-resamples the post-quench Gibbs law. Thus the equilibrium laws are genuinely
-non-atomic, while the work observable depends on the sampled state.
+resamples the post-quench Gibbs law. Thus both the state law and the path law
+are genuinely non-atomic, while the work observable depends on the sampled
+state.
 -/
 
 open MeasureTheory ProbabilityTheory Set
@@ -41,7 +42,7 @@ theorem base_singleton (x : ℝ) : base {x} = 0 :=
   measure_singleton x
 
 /-- A spatially varying two-level energy schedule. -/
-def energy {n : ℕ} (left right : Fin (n + 1) → ℝ) :
+noncomputable def energy {n : ℕ} (left right : Fin (n + 1) → ℝ) :
     Fin (n + 1) → ℝ → ℝ :=
   fun i x => if x ≤ 0 then left i else right i
 
@@ -50,7 +51,7 @@ theorem measurable_energy
     {n : ℕ} (left right : Fin (n + 1) → ℝ) (i : Fin (n + 1)) :
     Measurable (energy left right i) := by
   unfold energy
-  fun_prop
+  exact Measurable.ite measurableSet_Iic measurable_const measurable_const
 
 /-- The Boltzmann factor of the two-level energy is integrable under the
 Gaussian reference probability measure. -/
@@ -68,9 +69,14 @@ theorem integrable_boltzmann_energy
     integrable_const (μ := base) _
   have hsum := (hleft.indicator hs).add
     (hright.indicator hs.compl)
-  convert hsum using 1
-  funext x
-  by_cases hx : x ≤ 0 <;> simp [energy, s, hx, Set.indicator]
+  have hfun :
+      (fun x : ℝ => Real.exp (-β * energy left right i x)) =
+        (s.indicator (fun _ : ℝ => Real.exp (-β * left i)) +
+          sᶜ.indicator (fun _ : ℝ => Real.exp (-β * right i))) := by
+    funext x
+    by_cases hx : x ≤ 0 <;> simp [energy, s, hx, Set.indicator]
+  rw [hfun]
+  exact hsum
 
 /-- Every Gibbs equilibrium in the example remains non-atomic. -/
 noncomputable instance instNullSingletonClassEquilibrium
