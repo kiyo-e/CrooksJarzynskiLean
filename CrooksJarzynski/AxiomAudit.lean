@@ -57,6 +57,10 @@ the trusted base of the development.
 #print axioms CrooksJarzynski.MeasureProtocol.MetropolisExample.localBalance
 #print axioms CrooksJarzynski.MeasureProtocol.MetropolisExample.multiStep_crooks
 #print axioms CrooksJarzynski.MeasureProtocol.MetropolisExample.multiStep_jarzynski
+#print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.crooks_of_reference_density
+#print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.map_pathMeasure_involution
+#print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.JumpPath.crooks_of_density_identity
+#print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.JumpPath.jarzynski_of_density_identity
 #print axioms CrooksJarzynski.Protocol.measure_forwardWeight_singleton
 #print axioms CrooksJarzynski.Protocol.measure_reverseWeight_singleton
 #print axioms CrooksJarzynski.Protocol.measure_crooks
