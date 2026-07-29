@@ -5,6 +5,7 @@ Authors: kiyo-e
 -/
 import CrooksJarzynski.MeasureProtocol
 import Mathlib.Data.Fin.Rev
+import Mathlib.MeasureTheory.Constructions.BorelSpace.Basic
 
 /-!
 # Continuous-time jump-process Crooks infrastructure
