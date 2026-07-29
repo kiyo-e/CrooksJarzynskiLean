@@ -12,7 +12,7 @@ import Mathlib.Probability.Distributions.Gaussian.Real
 This module instantiates the general measurable-state-space theorem on `ℝ`.
 The reference law is a non-degenerate Gaussian measure. The energy has two
 spatial levels separated at the origin, and every transition independently
-resamples the post-quench Gibbs law. Thus both the state law and the path law
+resamples the post-quench Gibbs law. The reference and equilibrium state laws
 are genuinely non-atomic, while the work observable depends on the sampled
 state.
 -/

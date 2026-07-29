@@ -21,35 +21,6 @@ namespace Markov
 
 variable {Ω : Type*} [MeasurableSpace Ω]
 
-/-- Reweighting the first marginal before composing with a kernel is the same
-as reweighting the composition-product by its first coordinate. -/
-theorem compProd_withDensity_fst_general
-    {α β : Type*} [MeasurableSpace α] [MeasurableSpace β]
-    (μ : Measure α) (κ : ProbabilityTheory.Kernel α β)
-    [SFinite μ] [IsSFiniteKernel κ]
-    (q : α → ℝ≥0∞) (hq : Measurable q) :
-    (μ ⊗ₘ κ).withDensity (fun p => q p.1) = μ.withDensity q ⊗ₘ κ := by
-  ext s hs
-  rw [withDensity_apply _ hs, Measure.compProd_apply hs]
-  rw [← lintegral_indicator hs]
-  have hqfst : Measurable (fun p : α × β => q p.1) :=
-    hq.comp measurable_fst
-  rw [Measure.lintegral_compProd (hqfst.indicator hs)]
-  rw [lintegral_withDensity_eq_lintegral_mul μ hq
-    (ProbabilityTheory.Kernel.measurable_kernel_prodMk_left hs)]
-  apply lintegral_congr
-  intro a
-  simp only [Pi.mul_apply]
-  have hsection : MeasurableSet (Prod.mk a ⁻¹' s) :=
-    measurable_prodMk_left hs
-  have hindicator :
-      (fun b => s.indicator (fun p => q p.1) (a, b)) =
-        (Prod.mk a ⁻¹' s).indicator (fun _ => q a) := by
-    funext b
-    rfl
-  rw [hindicator, lintegral_indicator hsection]
-  simp [MeasureTheory.lintegral_const]
-
 /-- Extend a Crooks relation for a reverse-oriented path prefix by one Markov
 step. -/
 theorem extendReversedPrefix_crooks
@@ -119,18 +90,18 @@ theorem extendReversedPrefix_crooks
         (next ⊗ₘ (reverse ⊗ₖ
           ProbabilityTheory.Kernel.prodMkLeft Ω past))
   rw [withDensity_mul _ hPrefixInput hStepInput,
-    compProd_withDensity_fst_general prefixForward
+    compProd_withDensity_fst prefixForward
       (forward.comap (fun p : Ω × A => p.1)
         (measurable_fst : Measurable (fun p : Ω × A => p.1)))
       prefixWork hprefixWork,
     hprefix, Measure.compProd_smul_left, withDensity_smul_measure,
-    compProd_withDensity_fst_general (current ⊗ₘ past)
+    compProd_withDensity_fst (current ⊗ₘ past)
       (forward.comap (fun p : Ω × A => p.1)
         (measurable_fst : Measurable (fun p : Ω × A => p.1)))
       (fun p => stepWork p.1)
       (hstepWork.comp
         (measurable_fst : Measurable (fun p : Ω × A => p.1))),
-    compProd_withDensity_fst_general current past stepWork hstepWork,
+    compProd_withDensity_fst current past stepWork hstepWork,
     hreweight, Measure.compProd_smul_left, Measure.compProd_smul_left,
     Measure.map_smul, Measure.map_smul,
     liftLocalBalance_past next past forward reverse hbalance]

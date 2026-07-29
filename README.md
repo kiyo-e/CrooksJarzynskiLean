@@ -12,6 +12,7 @@ The library proves, without `sorry` or custom axioms:
 - a non-atomic example on `ℝ` built from a Gaussian base measure;
 - a bridge deriving the general measure theorem from the original finite-state protocol;
 - an Ionescu–Tulcea trajectory measure for time-inhomogeneous Mathlib Markov kernels, together with its finite-prefix evolution law;
+- an identification of every finite-dimensional marginal of that infinite path measure with the recursive finite-horizon forward path measure;
 - normalization and nonnegativity of finite forward and reverse path probabilities;
 - a finite-state multi-step Crooks path identity from local detailed balance;
 - the usual Crooks ratio when the reverse path probability is nonzero;
@@ -74,21 +75,28 @@ reweighting identity. The resulting physical theorem
 `Gibbs.multiStep_crooks_physical` uses the standard weights
 `exp (-β W)` and `exp (-β ΔF)`. The same layer proves a real-integral
 Jarzynski equality and a work-distribution Crooks relation stated as a
-pushforward-measure identity, without assuming a density for the work law.
+pushforward-measure identity, without assuming a density for the work law. Its
+reverse-hand side is explicitly the reverse-work law pushed forward by
+`w ↦ -w`, i.e. the measure-theoretic form of `P_R(-W)`.
 
 `MeasureProtocol.GaussianExample` applies the theory on `ℝ` using a Gaussian
 base measure and independently resampled Gibbs kernels. Every singleton has
-measure zero, so the example exercises genuinely non-atomic state spaces.
+zero mass under the base and equilibrium state measures, so the example
+exercises genuinely non-atomic state spaces.
 `MeasureProtocolFiniteBridge` proves that the original finite protocol supplies
 the measure-level reweighting and local-balance hypotheses and is therefore a
-specialization of the general theorem.
+specialization of the general theorem. It also proves pointwise that the
+general chronological forward and time-reversed reverse path measures recover
+the legacy `forwardWeight` and `reverseWeight`.
 
 For a time-inhomogeneous family `K t : ProbabilityTheory.Kernel Ω Ω`,
 `MeasureProtocol.Markov.trajectoryMeasure` adapts each ordinary Markov kernel
 to the history-dependent interface used by Mathlib's Ionescu–Tulcea
 construction. The resulting probability measure lives on the full path space
-`ℕ → Ω`. Its complete finite-dimensional identification with the recursive
-finite-horizon path measure is not yet formalized.
+`ℕ → Ω`. The theorem
+`finiteMarginal_eq_chronologicalForwardPathMeasure` proves that its first
+`n + 1` coordinates, for every `n`, have exactly the recursively constructed
+chronological finite-horizon path law.
 
 ## Time reversal and discrete-time work
 
@@ -169,6 +177,7 @@ CrooksJarzynski.MeasureProtocol.Markov.multiStep_jarzynski
 CrooksJarzynski.MeasureProtocol.Markov.multiStep_crooks_chronological
 CrooksJarzynski.MeasureProtocol.Markov.trajectoryMeasure
 CrooksJarzynski.MeasureProtocol.Markov.trajectoryMeasure_step
+CrooksJarzynski.MeasureProtocol.Markov.finiteMarginal_eq_chronologicalForwardPathMeasure
 CrooksJarzynski.MeasureProtocol.Gibbs.reweight_freeEnergy
 CrooksJarzynski.MeasureProtocol.Gibbs.multiStep_crooks_physical
 CrooksJarzynski.MeasureProtocol.Gibbs.multiStep_jarzynski_integral
@@ -178,6 +187,8 @@ CrooksJarzynski.MeasureProtocol.GaussianExample.multiStep_jarzynski
 CrooksJarzynski.MathlibBridge.trajectoryMeasure
 CrooksJarzynski.Protocol.measure_crooks
 CrooksJarzynski.Protocol.measure_jarzynski_integral
+CrooksJarzynski.Protocol.measure_forwardWeight_singleton
+CrooksJarzynski.Protocol.measure_reverseWeight_singleton
 CrooksJarzynski.Trajectory.reverse
 CrooksJarzynski.Trajectory.reverse_reverse
 CrooksJarzynski.Protocol.crooks_partition_ratio
@@ -209,9 +220,7 @@ disintegration. The Gibbs specialization assumes the integrability and
 nonvanishing conditions needed by Mathlib's exponentially tilted measures.
 
 A genuinely continuous-time stochastic-process theorem is outside the current
-scope. The Ionescu–Tulcea infinite path measure is present, but its finite
-dimensional marginals have not yet been identified with the recursive
-finite-horizon path measures used by the multi-step theorem.
+scope.
 
 The work-convention refinement theorem has a narrower and more general scope: it is independent of the kernels, path probabilities, and finite-state assumption, but it compares only the two discrete approximations to externally driven work.
 

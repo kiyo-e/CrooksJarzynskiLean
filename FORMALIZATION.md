@@ -23,6 +23,7 @@ declarations. All modules are exported by `CrooksJarzynski.lean`.
 | Chronological-path and path-reversal form | `MeasureProtocol.Markov.multiStep_crooks_chronological` |
 | Ionescu–Tulcea path law | `MeasureProtocol.Markov.trajectoryMeasure` |
 | Finite-prefix evolution law | `MeasureProtocol.Markov.trajectoryMeasure_step` |
+| Finite-dimensional marginal identification | `MeasureProtocol.Markov.finiteMarginal_eq_chronologicalForwardPathMeasure` |
 
 The multi-step theorem assumes a supplied forward kernel, reverse kernel,
 equilibrium probability measure, equilibrium reweighting identity, and
@@ -36,7 +37,7 @@ finite or countable state spaces or transition densities.
 | Gibbs reweighting by a quench | `MeasureProtocol.Gibbs.reweight_freeEnergy` |
 | Physical `exp (-β W)` Crooks relation | `MeasureProtocol.Gibbs.multiStep_crooks_physical` |
 | Physical real-integral Jarzynski equality | `MeasureProtocol.Gibbs.multiStep_jarzynski_integral` |
-| Work-law Crooks relation | `MeasureProtocol.Gibbs.multiStep_work_distribution_crooks` |
+| Work-law Crooks relation with explicit `P_R(-W)` | `MeasureProtocol.Gibbs.multiStep_work_distribution_crooks` |
 
 The Gibbs construction uses Mathlib's exponentially tilted measures. Its
 integrability and nonzero-measure hypotheses are explicit theorem inputs.
@@ -49,14 +50,14 @@ integrability and nonzero-measure hypotheses are explicit theorem inputs.
 | Non-atomic Gaussian-state Jarzynski equality | `MeasureProtocol.GaussianExample.multiStep_jarzynski` |
 | Original finite protocol satisfies measure Crooks | `Protocol.measure_crooks` |
 | Original finite protocol satisfies real-integral Jarzynski | `Protocol.measure_jarzynski_integral` |
+| General forward path singleton mass equals legacy `forwardWeight` | `Protocol.measure_forwardWeight_singleton` |
+| General reverse path singleton mass equals legacy `reverseWeight` | `Protocol.measure_reverseWeight_singleton` |
 
 ## Explicit scope boundaries
 
 - Time is discrete and the main theorem has a finite horizon.
 - Reverse kernels and local balance are supplied; reverse-kernel existence by
   disintegration is not formalized.
-- The Ionescu–Tulcea infinite path law is not yet identified with every
-  recursive finite-horizon marginal.
 - No continuous-time Crooks theorem is claimed.
 
 `CrooksJarzynski/AxiomAudit.lean` lists the declarations whose kernel axioms are

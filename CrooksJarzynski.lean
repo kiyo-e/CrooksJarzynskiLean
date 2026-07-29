@@ -12,6 +12,7 @@ import CrooksJarzynski.MeasureProtocol
 import CrooksJarzynski.MeasureProtocolFiniteCrooks
 import CrooksJarzynski.MeasureProtocolGibbs
 import CrooksJarzynski.MeasureProtocolPaths
+import CrooksJarzynski.MeasureProtocolMarginals
 import CrooksJarzynski.MeasureProtocolPhysical
 import CrooksJarzynski.MeasureProtocolGaussianExample
 import CrooksJarzynski.MathlibBridge
@@ -30,8 +31,10 @@ specialization constructed from Mathlib's exponentially tilted measures,
 measurable chronological path reversal, physical total-work and endpoint
 free-energy forms, a non-atomic Gaussian example on `ℝ`, an
 Ionescu–Tulcea trajectory-measure adapter for time-inhomogeneous Mathlib Markov
-kernels, and a bridge proving that the original finite protocol satisfies the
-new measure-level hypotheses.
+kernels, an identification of all of its finite-dimensional marginals with the
+finite-horizon path measures, and a bridge proving that the original finite
+protocol satisfies the new measure-level hypotheses and that the new path
+measures recover its legacy singleton weights.
 
 The finite-state results include explicit time reversal, both standard
 discrete-time work conventions, a path-uniform `O(1/N)` continuous-time limit
@@ -40,6 +43,8 @@ Mathlib's measure-theoretic Markov-kernel API, and Physlib's finite
 canonical-ensemble API. The main results include `Protocol.crooks`,
 `Protocol.jarzynski`, `Protocol.measure_crooks`,
 `Protocol.measure_jarzynski_integral`,
+`Protocol.measure_forwardWeight_singleton`,
+`Protocol.measure_reverseWeight_singleton`,
 `MeasureProtocol.Markov.multiStep_crooks`,
 `MeasureProtocol.Markov.multiStep_crooks_chronological`,
 `MeasureProtocol.Gibbs.multiStep_crooks_physical`,
@@ -48,6 +53,7 @@ canonical-ensemble API. The main results include `Protocol.crooks`,
 `MeasureProtocol.GaussianExample.multiStep_crooks`,
 `MeasureProtocol.GaussianExample.multiStep_jarzynski`,
 `MeasureProtocol.Markov.trajectoryMeasure`,
+`MeasureProtocol.Markov.finiteMarginal_eq_chronologicalForwardPathMeasure`,
 `Protocol.work_distribution_crooks`,
 `WorkConvention.discrepancy_uniform_tendsto_zero`, and `Protocol.second_law`.
 -/
