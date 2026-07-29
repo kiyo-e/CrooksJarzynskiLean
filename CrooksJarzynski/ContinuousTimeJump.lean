@@ -141,6 +141,21 @@ states and holding intervals, including the terminal no-jump interval. -/
 abbrev JumpPath (Ω : Type u) (n : ℕ) :=
   (Fin (n + 1) → Ω) × (Fin (n + 1) → ℝ≥0)
 
+/-- The canonical product σ-algebra on fixed-jump-count paths.
+
+Mathlib's measurable structure on a function space expects a function-valued
+family of measurable structures. For the constant state and holding-time
+families, these instances are supplied explicitly here. -/
+@[instance_reducible]
+instance instMeasurableSpaceJumpPath
+    (Ω : Type u) [MeasurableSpace Ω] (n : ℕ) :
+    MeasurableSpace (JumpPath Ω n) := by
+  letI : (i : Fin (n + 1)) → MeasurableSpace Ω :=
+    fun _ => inferInstance
+  letI : (i : Fin (n + 1)) → MeasurableSpace ℝ≥0 :=
+    fun _ => inferInstance
+  exact Prod.instMeasurableSpace
+
 namespace JumpPath
 
 variable {Ω : Type u} [MeasurableSpace Ω] {n : ℕ}
