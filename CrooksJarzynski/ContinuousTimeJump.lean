@@ -139,7 +139,7 @@ theorem crooks_of_reversal_density
 for the holding interval `holdingTimes i`. For `n` jumps there are `n + 1`
 states and holding intervals, including the terminal no-jump interval. -/
 abbrev JumpPath (Ω : Type u) (n : ℕ) :=
-  (Fin (n + 1) → Ω) × (Fin (n + 1) → ℝ≥0)
+  (Fin (n + 1) → Ω) × (Fin (n + 1) → NNReal)
 
 /-- The canonical product σ-algebra on fixed-jump-count paths.
 
@@ -152,7 +152,7 @@ instance instMeasurableSpaceJumpPath
     MeasurableSpace (JumpPath Ω n) := by
   letI : (i : Fin (n + 1)) → MeasurableSpace Ω :=
     fun _ => inferInstance
-  letI : (i : Fin (n + 1)) → MeasurableSpace ℝ≥0 :=
+  letI : (i : Fin (n + 1)) → MeasurableSpace NNReal :=
     fun _ => inferInstance
   exact Prod.instMeasurableSpace
 
@@ -167,7 +167,7 @@ def reverse (γ : JumpPath Ω n) : JumpPath Ω n :=
 @[fun_prop]
 theorem measurable_reverse :
     Measurable (reverse (Ω := Ω) (n := n)) := by
-  apply Measurable.prod_mk
+  apply Measurable.prodMk
   · rw [measurable_pi_iff]
     intro i
     exact (measurable_pi_apply i.rev).comp measurable_fst
@@ -198,7 +198,7 @@ definition deliberately separates the path-space measure theory from a later
 choice of time-homogeneous or time-inhomogeneous rate model. -/
 noncomputable def density
     (initialWeight : Ω → ℝ≥0∞)
-    (holdingWeight : Fin (n + 1) → Ω → ℝ≥0 → ℝ≥0∞)
+    (holdingWeight : Fin (n + 1) → Ω → NNReal → ℝ≥0∞)
     (jumpWeight : Fin n → Ω → Ω → ℝ≥0∞)
     (γ : JumpPath Ω n) : ℝ≥0∞ :=
   initialWeight (γ.1 0) *
