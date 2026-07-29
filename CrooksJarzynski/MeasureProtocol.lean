@@ -141,18 +141,17 @@ theorem work_distribution_crooks
 
 namespace Markov
 
-variable {Ω : Type u} [MeasurableSpace Ω]
-
 /-- Reweighting the first marginal before composing with a kernel is the same
 as reweighting the resulting one-step path measure by the first coordinate. -/
 theorem compProd_withDensity_fst
-    (μ : Measure Ω) (κ : Kernel Ω Ω) [SFinite μ] [IsSFiniteKernel κ]
-    (q : Ω → ℝ≥0∞) (hq : Measurable q) :
+    {α β : Type*} [MeasurableSpace α] [MeasurableSpace β]
+    (μ : Measure α) (κ : Kernel α β) [SFinite μ] [IsSFiniteKernel κ]
+    (q : α → ℝ≥0∞) (hq : Measurable q) :
     (μ ⊗ₘ κ).withDensity (fun p => q p.1) = μ.withDensity q ⊗ₘ κ := by
   ext s hs
   rw [withDensity_apply _ hs, Measure.compProd_apply hs]
   rw [← lintegral_indicator hs]
-  have hqfst : Measurable (fun p : Ω × Ω => q p.1) :=
+  have hqfst : Measurable (fun p : α × β => q p.1) :=
     hq.comp measurable_fst
   rw [Measure.lintegral_compProd (hqfst.indicator hs)]
   rw [lintegral_withDensity_eq_lintegral_mul μ hq
@@ -169,6 +168,8 @@ theorem compProd_withDensity_fst
     rfl
   rw [hindicator, lintegral_indicator hsection]
   simp [MeasureTheory.lintegral_const]
+
+variable {Ω : Type u} [MeasurableSpace Ω]
 
 /-- A one-step Crooks relation on an arbitrary measurable state space. The
 first hypothesis is the Gibbs reweighting identity for the quench. The second

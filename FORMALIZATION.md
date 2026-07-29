@@ -37,7 +37,7 @@ finite or countable state spaces or transition densities.
 | Gibbs reweighting by a quench | `MeasureProtocol.Gibbs.reweight_freeEnergy` |
 | Physical `exp (-β W)` Crooks relation | `MeasureProtocol.Gibbs.multiStep_crooks_physical` |
 | Physical real-integral Jarzynski equality | `MeasureProtocol.Gibbs.multiStep_jarzynski_integral` |
-| Work-law Crooks relation | `MeasureProtocol.Gibbs.multiStep_work_distribution_crooks` |
+| Work-law Crooks relation with explicit `P_R(-W)` | `MeasureProtocol.Gibbs.multiStep_work_distribution_crooks` |
 
 The Gibbs construction uses Mathlib's exponentially tilted measures. Its
 integrability and nonzero-measure hypotheses are explicit theorem inputs.
@@ -50,6 +50,8 @@ integrability and nonzero-measure hypotheses are explicit theorem inputs.
 | Non-atomic Gaussian-state Jarzynski equality | `MeasureProtocol.GaussianExample.multiStep_jarzynski` |
 | Original finite protocol satisfies measure Crooks | `Protocol.measure_crooks` |
 | Original finite protocol satisfies real-integral Jarzynski | `Protocol.measure_jarzynski_integral` |
+| General forward path singleton mass equals legacy `forwardWeight` | `Protocol.measure_forwardWeight_singleton` |
+| General reverse path singleton mass equals legacy `reverseWeight` | `Protocol.measure_reverseWeight_singleton` |
 
 ## Explicit scope boundaries
 

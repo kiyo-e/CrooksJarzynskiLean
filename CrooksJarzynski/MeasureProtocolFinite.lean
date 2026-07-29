@@ -42,6 +42,27 @@ noncomputable instance (priority := 100) instMeasurableSpaceContinuation (n : �
     MeasurableSpace (Continuation Ω n) :=
   continuationMeasurableSpace Ω n
 
+noncomputable instance instMeasurableSingletonClassContinuation
+    [MeasurableSingletonClass Ω] (n : ℕ) :
+    MeasurableSingletonClass (Continuation Ω n) := by
+  induction n with
+  | zero =>
+      constructor
+      intro x
+      have hx : ({x} : Set (Continuation Ω 0)) = Set.univ := by
+        ext y
+        constructor
+        · intro _
+          exact Set.mem_univ y
+        · intro _
+          cases x
+          cases y
+          rfl
+      exact hx.symm ▸ MeasurableSet.univ
+  | succ n ih =>
+      change MeasurableSingletonClass (Ω × Continuation Ω n)
+      infer_instance
+
 /-- Swap an existing reverse-oriented path prefix with a newly sampled endpoint. -/
 noncomputable def prependEquiv (n : ℕ) :
     (Trajectory Ω n × Ω) ≃ᵐ Trajectory Ω (n + 1) where
@@ -69,7 +90,8 @@ noncomputable def reverseContinuationKernel :
     {n : ℕ} → (Fin n → ProbabilityTheory.Kernel Ω Ω) →
       ProbabilityTheory.Kernel Ω (Continuation Ω n)
   | 0, _ =>
-      ProbabilityTheory.Kernel.deterministic (fun _ => PUnit.unit) measurable_const
+      ProbabilityTheory.Kernel.deterministic
+        (fun _ => (PUnit.unit : Continuation Ω 0)) measurable_const
   | n + 1, K =>
       K (Fin.last n) ⊗ₖ
         ProbabilityTheory.Kernel.prodMkLeft Ω
@@ -127,9 +149,7 @@ noncomputable def reversedForwardPathMeasure :
   | 0, initial, K => reversePathMeasure initial K
   | n + 1, initial, K =>
       ((reversedForwardPathMeasure initial (fun i => K i.castSucc)) ⊗ₘ
-        endpointKernel (K (Fin.last n)) n).map
-          (MeasurableEquiv.prodComm :
-            (Trajectory Ω n × Ω) ≃ᵐ Ω × Trajectory Ω n)
+        endpointKernel (K (Fin.last n)) n).map (prependEquiv n)
 
 noncomputable instance instIsProbabilityMeasureReversedForwardPathMeasure
     {n : ℕ} (initial : Measure Ω)

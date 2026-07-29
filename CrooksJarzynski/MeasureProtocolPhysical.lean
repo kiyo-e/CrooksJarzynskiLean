@@ -171,6 +171,21 @@ theorem measurable_pathWork
     (fun i x => energy i.succ x - energy i.castSucc x) hstep).comp
       Trajectory.measurable_reverse
 
+/-- Work performed in the reverse experiment on its chronological path.
+Reversing the path and the protocol changes the sign of the forward work. -/
+noncomputable def reversePathWork
+    {n : ℕ} (energy : Fin (n + 1) → Ω → ℝ)
+    (γ : Trajectory Ω n) : ℝ :=
+  -pathWork energy (Trajectory.reverse γ)
+
+/-- Measurability of reverse-protocol work. -/
+theorem measurable_reversePathWork
+    {n : ℕ} (energy : Fin (n + 1) → Ω → ℝ)
+    (henergy : ∀ i, Measurable (energy i)) :
+    Measurable (reversePathWork energy) := by
+  exact ((measurable_pathWork energy henergy).comp
+    Trajectory.measurable_reverse).neg
+
 /-- The chronological work factor is exactly `exp (-β W)`. -/
 theorem chronologicalWorkWeight_eq_exp_pathWork
     {n : ℕ} (β : ℝ) (energy : Fin (n + 1) → Ω → ℝ)
@@ -285,7 +300,9 @@ theorem multiStep_jarzynski_integral
       henergyMeas henergyInt hbalance)
 
 /-- Crooks' relation for the pushforward law of total work, without an
-assumption that the work law has a density or atoms. -/
+assumption that the work law has a density or atoms. The reverse-hand measure
+is explicitly the law of `-W_R`: reverse paths are first mapped to their
+reverse-protocol work and then through negation. -/
 theorem multiStep_work_distribution_crooks
     {n : ℕ} (base : Measure Ω) [NeZero base]
     (β : ℝ) (hβ : β ≠ 0)
@@ -302,15 +319,29 @@ theorem multiStep_work_distribution_crooks
     CrooksRelation
       ((Markov.chronologicalForwardPathMeasure
         (measure base β (energy 0)) forward).map (pathWork energy))
-      ((Markov.timeReversedReversePathMeasure
-        (measure base β (energy (Fin.last n))) reverse).map (pathWork energy))
+      (((Markov.reversePathMeasure
+          (measure base β (energy (Fin.last n))) reverse).map
+            (reversePathWork energy)).map fun w => -w)
       (fun w => ENNReal.ofReal (Real.exp (-β * w)))
       (ENNReal.ofReal
         (Real.exp (-β * deltaFreeEnergy base β energy))) := by
-  exact work_distribution_crooks _ _ β (deltaFreeEnergy base β energy)
+  have h := work_distribution_crooks _ _ β (deltaFreeEnergy base β energy)
     (pathWork energy) (measurable_pathWork energy henergyMeas)
     (multiStep_crooks_physical base β hβ energy forward reverse
       henergyMeas henergyInt hbalance)
+  unfold Markov.timeReversedReversePathMeasure at h
+  change CrooksRelation
+    ((Markov.chronologicalForwardPathMeasure
+      (measure base β (energy 0)) forward).map (pathWork energy))
+    ((Markov.reversePathMeasure
+      (measure base β (energy (Fin.last n))) reverse).map
+        Trajectory.reverse |>.map (pathWork energy))
+    _ _ at h
+  rw [Measure.map_map (measurable_pathWork energy henergyMeas)
+    Trajectory.measurable_reverse] at h
+  rw [Measure.map_map measurable_neg
+    (measurable_reversePathWork energy henergyMeas)]
+  simpa [reversePathWork, Function.comp_def] using h
 
 end Gibbs
 end MeasureProtocol

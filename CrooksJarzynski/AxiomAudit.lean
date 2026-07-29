@@ -51,5 +51,7 @@ the trusted base of the development.
 #print axioms CrooksJarzynski.MeasureProtocol.Gibbs.multiStep_work_distribution_crooks
 #print axioms CrooksJarzynski.MeasureProtocol.GaussianExample.multiStep_crooks
 #print axioms CrooksJarzynski.MeasureProtocol.GaussianExample.multiStep_jarzynski
+#print axioms CrooksJarzynski.Protocol.measure_forwardWeight_singleton
+#print axioms CrooksJarzynski.Protocol.measure_reverseWeight_singleton
 #print axioms CrooksJarzynski.Protocol.measure_crooks
 #print axioms CrooksJarzynski.Protocol.measure_jarzynski_integral

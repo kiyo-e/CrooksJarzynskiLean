@@ -75,14 +75,19 @@ reweighting identity. The resulting physical theorem
 `Gibbs.multiStep_crooks_physical` uses the standard weights
 `exp (-β W)` and `exp (-β ΔF)`. The same layer proves a real-integral
 Jarzynski equality and a work-distribution Crooks relation stated as a
-pushforward-measure identity, without assuming a density for the work law.
+pushforward-measure identity, without assuming a density for the work law. Its
+reverse-hand side is explicitly the reverse-work law pushed forward by
+`w ↦ -w`, i.e. the measure-theoretic form of `P_R(-W)`.
 
 `MeasureProtocol.GaussianExample` applies the theory on `ℝ` using a Gaussian
 base measure and independently resampled Gibbs kernels. Every singleton has
-measure zero, so the example exercises genuinely non-atomic state spaces.
+zero mass under the base and equilibrium state measures, so the example
+exercises genuinely non-atomic state spaces.
 `MeasureProtocolFiniteBridge` proves that the original finite protocol supplies
 the measure-level reweighting and local-balance hypotheses and is therefore a
-specialization of the general theorem.
+specialization of the general theorem. It also proves pointwise that the
+general chronological forward and time-reversed reverse path measures recover
+the legacy `forwardWeight` and `reverseWeight`.
 
 For a time-inhomogeneous family `K t : ProbabilityTheory.Kernel Ω Ω`,
 `MeasureProtocol.Markov.trajectoryMeasure` adapts each ordinary Markov kernel
@@ -182,6 +187,8 @@ CrooksJarzynski.MeasureProtocol.GaussianExample.multiStep_jarzynski
 CrooksJarzynski.MathlibBridge.trajectoryMeasure
 CrooksJarzynski.Protocol.measure_crooks
 CrooksJarzynski.Protocol.measure_jarzynski_integral
+CrooksJarzynski.Protocol.measure_forwardWeight_singleton
+CrooksJarzynski.Protocol.measure_reverseWeight_singleton
 CrooksJarzynski.Trajectory.reverse
 CrooksJarzynski.Trajectory.reverse_reverse
 CrooksJarzynski.Protocol.crooks_partition_ratio
