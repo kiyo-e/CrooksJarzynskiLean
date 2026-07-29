@@ -112,10 +112,7 @@ theorem Markov.accumulatedStepSum_telescope
           rfl
         · rfl
       rw [hprefix, ih (value := fun j => value j.castSucc)]
-      have hlast : (Fin.last n).succ = Fin.last (n + 1) := by
-        ext
-        rfl
-      rw [← hlast]
+      rw [← Fin.succ_last]
       simp
 
 /-- Scalar exponential step factors multiply to the exponential of their

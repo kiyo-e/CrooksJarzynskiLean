@@ -50,11 +50,6 @@ theorem extendReversedPrefix_crooks
         ProbabilityTheory.Kernel.prodMkLeft Ω past))
       (fun z => prefixWork z.2 * stepWork z.2.1)
       (prefixFactor * stepFactor) := by
-  haveI : IsMarkovKernel
-      (forward.comap (fun p : Ω × A => p.1)
-        (measurable_fst : Measurable (fun p : Ω × A => p.1))) :=
-    ProbabilityTheory.Kernel.IsMarkovKernel.comap _
-      (measurable_fst : Measurable (fun p : Ω × A => p.1))
   unfold CrooksRelation at hprefix ⊢
   have hOutput : Measurable
       (fun z : Ω × (Ω × A) => prefixWork z.2 * stepWork z.2.1) :=
@@ -192,10 +187,7 @@ theorem multiStep_crooks
           dsimp [equilibriumPrefix]
           exact hreweight (Fin.last n))
         (hbalance (Fin.last n))
-      have hlast : (Fin.last n).succ = Fin.last (n + 1) := by
-        ext
-        rfl
-      rw [hlast] at hext
+      rw [Fin.succ_last] at hext
       have hendpoint :
           (forward (Fin.last n)).comap
               (fun p : Ω × Continuation Ω n => p.1)

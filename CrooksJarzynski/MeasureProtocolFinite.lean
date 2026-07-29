@@ -81,8 +81,7 @@ instance instIsMarkovKernelEndpointKernel
     (K : ProbabilityTheory.Kernel Ω Ω) [IsMarkovKernel K] (n : ℕ) :
     IsMarkovKernel (endpointKernel K n) := by
   unfold endpointKernel
-  exact ProbabilityTheory.Kernel.IsMarkovKernel.comap _
-    (measurable_fst : Measurable (fun γ : Trajectory Ω n => γ.1))
+  infer_instance
 
 /-- Given an endpoint, generate the earlier states in reverse chronological
 order with kernels indexed in forward chronological order. -/
@@ -112,12 +111,6 @@ noncomputable instance instIsMarkovKernelReverseContinuationKernel
           (reverseContinuationKernel (fun i => K i.castSucc)) :=
         ih (fun i => K i.castSucc)
       letI : IsMarkovKernel (K (Fin.last n)) := hK (Fin.last n)
-      haveI : IsMarkovKernel
-          (ProbabilityTheory.Kernel.prodMkLeft Ω
-            (reverseContinuationKernel (fun i => K i.castSucc))) := by
-        unfold ProbabilityTheory.Kernel.prodMkLeft
-        exact ProbabilityTheory.Kernel.IsMarkovKernel.comap _
-          (measurable_snd : Measurable (fun p : Ω × Ω => p.2))
       change IsMarkovKernel
         (K (Fin.last n) ⊗ₖ
           ProbabilityTheory.Kernel.prodMkLeft Ω
@@ -225,16 +218,6 @@ theorem liftLocalBalance_past
             ((Ω × A) × Ω) ≃ᵐ Ω × (Ω × A))) =
       μ ⊗ₘ (reverse ⊗ₖ
         ProbabilityTheory.Kernel.prodMkLeft Ω past)) := by
-  haveI : IsMarkovKernel
-      (forward.comap (fun p : Ω × A => p.1)
-        (measurable_fst : Measurable (fun p : Ω × A => p.1))) :=
-    ProbabilityTheory.Kernel.IsMarkovKernel.comap _
-      (measurable_fst : Measurable (fun p : Ω × A => p.1))
-  haveI : IsMarkovKernel
-      (ProbabilityTheory.Kernel.prodMkLeft Ω past) := by
-    unfold ProbabilityTheory.Kernel.prodMkLeft
-    exact ProbabilityTheory.Kernel.IsMarkovKernel.comap _
-      (measurable_snd : Measurable (fun p : Ω × Ω => p.2))
   haveI : IsProbabilityMeasure
       ((((μ ⊗ₘ past) ⊗ₘ
         forward.comap (fun p : Ω × A => p.1)

@@ -48,14 +48,20 @@ theorem compProd_toKernel_singleton
     (x y : Ω) :
     (μ.toMeasure ⊗ₘ toKernel K) {(x, y)} =
       ENNReal.ofReal (μ x * K x y) := by
-  rw [← singleton_prod_singleton]
-  rw [Measure.compProd_apply_prod (measurableSet_singleton x)
-    (measurableSet_singleton y)]
-  rw [lintegral_singleton]
-  rw [toKernel_singleton, FiniteDistribution.toMeasure_singleton]
-  rw [← ENNReal.ofReal_mul ((K x).nonneg y)]
-  congr 1
-  ring
+  rw [compProd_singleton, toKernel_singleton,
+    FiniteDistribution.toMeasure_singleton,
+    ← ENNReal.ofReal_mul (μ.nonneg x)]
+
+omit [Fintype Ω] in
+private theorem reverseContinuationKernel_zero_singleton
+    (K : Fin 0 → ProbabilityTheory.Kernel Ω Ω) (x : Ω)
+    (c : Continuation Ω 0) :
+    MeasureProtocol.Markov.reverseContinuationKernel K x {c} = 1 := by
+  cases c
+  simp [MeasureProtocol.Markov.reverseContinuationKernel,
+    ProbabilityTheory.Kernel.deterministic_apply,
+    Measure.dirac_apply']
+  rfl
 
 /-- The recursively constructed reverse-oriented forward path law assigns the
 expected elementary product weight to every finite path. -/
@@ -74,15 +80,7 @@ theorem reversedForwardPathMeasure_singleton
       rw [MeasureProtocol.Markov.reversedForwardPathMeasure,
         MeasureProtocol.Markov.reversePathMeasure, compProd_singleton,
         FiniteDistribution.toMeasure_singleton]
-      have hkernel :
-          (MeasureProtocol.Markov.reverseContinuationKernel
-            (fun i : Fin 0 => toKernel (K i))) x {c} = 1 := by
-        cases c
-        simp [MeasureProtocol.Markov.reverseContinuationKernel,
-          ProbabilityTheory.Kernel.deterministic_apply,
-          Measure.dirac_apply']
-        rfl
-      rw [hkernel, mul_one]
+      rw [reverseContinuationKernel_zero_singleton, mul_one]
       cases c
       simp [finalState, reverseTransitionWeight]
   | succ n ih =>
@@ -90,20 +88,8 @@ theorem reversedForwardPathMeasure_singleton
       rw [Measure.map_apply
         (MeasureProtocol.Markov.prependEquiv n).measurable
         (measurableSet_singleton γ)]
-      have hpre :
-          MeasureProtocol.Markov.prependEquiv n ⁻¹'
-              ({γ} : Set (Trajectory Ω (n + 1))) =
-            {(MeasureProtocol.Markov.prependEquiv n).symm γ} := by
-        ext p
-        simp only [Set.mem_preimage, Set.mem_singleton_iff]
-        constructor
-        · intro h
-          simpa using congrArg
-            (MeasureProtocol.Markov.prependEquiv n).symm h
-        · intro h
-          rw [h]
-          exact (MeasureProtocol.Markov.prependEquiv n).apply_symm_apply γ
-      rw [hpre]
+      rw [← (MeasureProtocol.Markov.prependEquiv n).image_symm,
+        Set.image_singleton]
       rcases γ with ⟨z, ⟨y, rest⟩⟩
       change
         ((MeasureProtocol.Markov.reversedForwardPathMeasure μ.toMeasure
@@ -136,11 +122,9 @@ theorem reverseContinuationKernel_singleton
   classical
   induction n generalizing x with
   | zero =>
+      rw [reverseContinuationKernel_zero_singleton]
       cases c
-      simp [MeasureProtocol.Markov.reverseContinuationKernel,
-        ProbabilityTheory.Kernel.deterministic_apply,
-        Measure.dirac_apply', transitionWeight]
-      rfl
+      simp [transitionWeight]
   | succ n ih =>
       rcases c with ⟨y, rest⟩
       rw [MeasureProtocol.Markov.reverseContinuationKernel]
@@ -191,20 +175,8 @@ theorem chronologicalForwardPathMeasure_singleton
   rw [Measure.map_apply
     (Trajectory.reverseMeasurableEquiv Ω n).measurable
     (measurableSet_singleton γ)]
-  have hpre :
-      (Trajectory.reverseMeasurableEquiv Ω n) ⁻¹'
-          ({γ} : Set (Trajectory Ω n)) =
-        {(Trajectory.reverseMeasurableEquiv Ω n).symm γ} := by
-    ext δ
-    simp only [Set.mem_preimage, Set.mem_singleton_iff]
-    constructor
-    · intro h
-      simpa using congrArg
-        (Trajectory.reverseMeasurableEquiv Ω n).symm h
-    · intro h
-      rw [h]
-      exact (Trajectory.reverseMeasurableEquiv Ω n).apply_symm_apply γ
-  rw [hpre, reversedForwardPathMeasure_singleton]
+  rw [← (Trajectory.reverseMeasurableEquiv Ω n).image_symm,
+    Set.image_singleton, reversedForwardPathMeasure_singleton]
   change ENNReal.ofReal
       (μ (finalState (Trajectory.reverse γ).1 (Trajectory.reverse γ).2) *
         reverseTransitionWeight (fun i => K i.rev)
@@ -231,20 +203,8 @@ theorem timeReversedReversePathMeasure_singleton
   rw [Measure.map_apply
     (Trajectory.reverseMeasurableEquiv Ω n).measurable
     (measurableSet_singleton γ)]
-  have hpre :
-      (Trajectory.reverseMeasurableEquiv Ω n) ⁻¹'
-          ({γ} : Set (Trajectory Ω n)) =
-        {(Trajectory.reverseMeasurableEquiv Ω n).symm γ} := by
-    ext δ
-    simp only [Set.mem_preimage, Set.mem_singleton_iff]
-    constructor
-    · intro h
-      simpa using congrArg
-        (Trajectory.reverseMeasurableEquiv Ω n).symm h
-    · intro h
-      rw [h]
-      exact (Trajectory.reverseMeasurableEquiv Ω n).apply_symm_apply γ
-  rw [hpre, reversePathMeasure_singleton]
+  rw [← (Trajectory.reverseMeasurableEquiv Ω n).image_symm,
+    Set.image_singleton, reversePathMeasure_singleton]
   change ENNReal.ofReal
       (ν (Trajectory.reverse γ).1 *
         transitionWeight (fun i => K i.rev)
@@ -271,11 +231,9 @@ theorem localBalance_toMeasure
   rw [compProd_toKernel_singleton]
   rw [Measure.map_apply measurable_swap (measurableSet_singleton (x, y))]
   have hpre : Prod.swap ⁻¹' ({(x, y)} : Set (Ω × Ω)) = {(y, x)} := by
-    ext p
-    rcases p with ⟨a, b⟩
-    simp only [Set.mem_preimage, Set.mem_singleton_iff,
-      Prod.swap_prod_mk, Prod.mk.injEq]
-    constructor <;> rintro ⟨h₁, h₂⟩ <;> exact ⟨h₂, h₁⟩
+    simpa using
+      ((Equiv.prodComm Ω Ω).image_symm_eq_preimage
+        ({(x, y)} : Set (Ω × Ω))).symm
   rw [hpre, compProd_toKernel_singleton, hbalance x y]
 
 end MathlibBridge
