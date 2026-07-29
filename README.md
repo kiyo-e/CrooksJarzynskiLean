@@ -9,7 +9,9 @@ The library proves, without `sorry` or custom axioms:
 - a finite-horizon, multi-step Crooks theorem on arbitrary measurable state spaces, with chronological paths and measurable path reversal;
 - Gibbs specialization from a base measure and measurable energies, including the physical `exp (-β W)` and `exp (-β ΔF)` form;
 - real-integral Jarzynski and density-free work-distribution Crooks theorems;
+- the average-work second law `ΔF ≤ ⟨W⟩` on arbitrary measurable state spaces, by Jensen's inequality from the general Jarzynski equality;
 - a non-atomic example on `ℝ` built from a Gaussian base measure;
+- a Metropolis–Hastings construction with a machine-checked detailed-balance proof, instantiated on `ℝ` with Lebesgue reference measure, Gaussian random-walk proposals, and quadratic energies;
 - a bridge deriving the general measure theorem from the original finite-state protocol;
 - an Ionescu–Tulcea trajectory measure for time-inhomogeneous Mathlib Markov kernels, together with its finite-prefix evolution law;
 - an identification of every finite-dimensional marginal of that infinite path measure with the recursive finite-horizon forward path measure;
@@ -79,10 +81,28 @@ pushforward-measure identity, without assuming a density for the work law. Its
 reverse-hand side is explicitly the reverse-work law pushed forward by
 `w ↦ -w`, i.e. the measure-theoretic form of `P_R(-W)`.
 
+The same layer derives the average-work second law
+`Gibbs.multiStep_second_law`, `ΔF ≤ ⟨W⟩`, from the real-integral Jarzynski
+equality by Jensen's inequality, under an explicit integrability hypothesis on
+the total work.
+
 `MeasureProtocol.GaussianExample` applies the theory on `ℝ` using a Gaussian
 base measure and independently resampled Gibbs kernels. Every singleton has
 zero mass under the base and equilibrium state measures, so the example
 exercises genuinely non-atomic state spaces.
+
+`MeasureProtocol.MetropolisHastings` constructs the Metropolis–Hastings
+kernel of a measurable energy from any Markov proposal kernel that is
+symmetric with respect to the reference measure, as the sum of an
+accepted-move subkernel and a rejection subkernel concentrated at the current
+state. The theorem `MetropolisHastings.detailedBalance` proves measure-level
+detailed balance for the corresponding Gibbs measure: the accepted part
+carries the symmetric joint density `min (exp (-β E x)) (exp (-β E y))`, and
+the rejected part lives on the diagonal. `MeasureProtocol.MetropolisExample`
+instantiates this on `ℝ` with Lebesgue reference measure, unit-variance
+Gaussian random-walk proposals, and quadratic energies `x ↦ c_i · x²`, giving
+a Crooks relation and Jarzynski equality whose transition kernels genuinely
+depend on the current state.
 `MeasureProtocolFiniteBridge` proves that the original finite protocol supplies
 the measure-level reweighting and local-balance hypotheses and is therefore a
 specialization of the general theorem. It also proves pointwise that the
@@ -181,9 +201,13 @@ CrooksJarzynski.MeasureProtocol.Markov.finiteMarginal_eq_chronologicalForwardPat
 CrooksJarzynski.MeasureProtocol.Gibbs.reweight_freeEnergy
 CrooksJarzynski.MeasureProtocol.Gibbs.multiStep_crooks_physical
 CrooksJarzynski.MeasureProtocol.Gibbs.multiStep_jarzynski_integral
+CrooksJarzynski.MeasureProtocol.Gibbs.multiStep_second_law
 CrooksJarzynski.MeasureProtocol.Gibbs.multiStep_work_distribution_crooks
 CrooksJarzynski.MeasureProtocol.GaussianExample.multiStep_crooks
 CrooksJarzynski.MeasureProtocol.GaussianExample.multiStep_jarzynski
+CrooksJarzynski.MeasureProtocol.MetropolisHastings.detailedBalance
+CrooksJarzynski.MeasureProtocol.MetropolisExample.multiStep_crooks
+CrooksJarzynski.MeasureProtocol.MetropolisExample.multiStep_jarzynski
 CrooksJarzynski.MathlibBridge.trajectoryMeasure
 CrooksJarzynski.Protocol.measure_crooks
 CrooksJarzynski.Protocol.measure_jarzynski_integral

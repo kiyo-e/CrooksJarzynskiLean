@@ -20,7 +20,8 @@ abstract: >-
   measurable state spaces directly with Mathlib measures and Markov kernels,
   specializes them to Gibbs measures and standard physical work and
   free-energy weights, and provides real-integral, work-distribution,
-  non-atomic Gaussian, and finite-state specializations. It also formalizes an
+  average-work second-law, non-atomic Gaussian, Metropolis–Hastings, and
+  finite-state specializations. It also formalizes an
   explicit physical time-reversal protocol, compares discrete-time work
   conventions, and proves a path-uniform O(1/N) refinement bound. No sorry
   placeholders or custom axioms.

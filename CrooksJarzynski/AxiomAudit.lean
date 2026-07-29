@@ -48,9 +48,15 @@ the trusted base of the development.
 #print axioms CrooksJarzynski.MeasureProtocol.Gibbs.reweight_freeEnergy
 #print axioms CrooksJarzynski.MeasureProtocol.Gibbs.multiStep_crooks_physical
 #print axioms CrooksJarzynski.MeasureProtocol.Gibbs.multiStep_jarzynski_integral
+#print axioms CrooksJarzynski.MeasureProtocol.Gibbs.multiStep_second_law
 #print axioms CrooksJarzynski.MeasureProtocol.Gibbs.multiStep_work_distribution_crooks
 #print axioms CrooksJarzynski.MeasureProtocol.GaussianExample.multiStep_crooks
 #print axioms CrooksJarzynski.MeasureProtocol.GaussianExample.multiStep_jarzynski
+#print axioms CrooksJarzynski.MeasureProtocol.MetropolisHastings.detailedBalance
+#print axioms CrooksJarzynski.MeasureProtocol.MetropolisExample.proposal_symmetry
+#print axioms CrooksJarzynski.MeasureProtocol.MetropolisExample.localBalance
+#print axioms CrooksJarzynski.MeasureProtocol.MetropolisExample.multiStep_crooks
+#print axioms CrooksJarzynski.MeasureProtocol.MetropolisExample.multiStep_jarzynski
 #print axioms CrooksJarzynski.Protocol.measure_forwardWeight_singleton
 #print axioms CrooksJarzynski.Protocol.measure_reverseWeight_singleton
 #print axioms CrooksJarzynski.Protocol.measure_crooks

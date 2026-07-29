@@ -5,6 +5,7 @@ Authors: kiyo-e
 -/
 import CrooksJarzynski.MeasureProtocolPaths
 import CrooksJarzynski.MeasureProtocolGibbs
+import Mathlib.Analysis.Convex.Integral
 
 /-!
 # Physical finite-horizon Crooks and Jarzynski statements
@@ -295,6 +296,59 @@ theorem multiStep_jarzynski_integral
     (pathWork energy) (measurable_pathWork energy henergyMeas)
     (multiStep_crooks_physical base β hβ energy forward reverse
       henergyMeas henergyInt hbalance)
+
+/-- The average-work form of the second law on a general measurable state
+space, derived from the real-valued Jarzynski equality by Jensen's inequality. -/
+theorem multiStep_second_law
+    {n : ℕ} (base : Measure Ω) [NeZero base]
+    (β : ℝ) (hβ : 0 < β)
+    (energy : Fin (n + 1) → Ω → ℝ)
+    (forward reverse : Fin n → ProbabilityTheory.Kernel Ω Ω)
+    [∀ i, IsMarkovKernel (forward i)]
+    [∀ i, IsMarkovKernel (reverse i)]
+    (henergyMeas : ∀ i, Measurable (energy i))
+    (henergyInt : ∀ i,
+      Integrable (fun x => Real.exp (-β * energy i x)) base)
+    (hbalance : ∀ i,
+      measure base β (energy i.succ) ⊗ₘ forward i =
+        (measure base β (energy i.succ) ⊗ₘ reverse i).map Prod.swap)
+    (hworkInt : Integrable (pathWork energy)
+      (Markov.chronologicalForwardPathMeasure
+        (measure base β (energy 0)) forward)) :
+    deltaFreeEnergy base β energy ≤
+      ∫ γ, pathWork energy γ
+        ∂Markov.chronologicalForwardPathMeasure
+          (measure base β (energy 0)) forward := by
+  let μ := Markov.chronologicalForwardPathMeasure
+    (measure base β (energy 0)) forward
+  letI : IsProbabilityMeasure (measure base β (energy 0)) :=
+    isProbabilityMeasure_measure base β (energy 0) (henergyInt 0)
+  have hjarzynski := multiStep_jarzynski_integral base β hβ.ne'
+    energy forward reverse henergyMeas henergyInt hbalance
+  have hexpInt : Integrable
+      (fun γ => Real.exp (-β * pathWork energy γ)) μ := by
+    by_contra h
+    rw [MeasureTheory.integral_undef h] at hjarzynski
+    exact (Real.exp_ne_zero _ hjarzynski.symm)
+  have hlinearInt : Integrable
+      (fun γ => -β * pathWork energy γ) μ := by
+    simpa [μ] using hworkInt.const_mul (-β)
+  have hjensen :
+      Real.exp (∫ γ, -β * pathWork energy γ ∂μ) ≤
+        ∫ γ, Real.exp (-β * pathWork energy γ) ∂μ := by
+    simpa [Function.comp_def] using
+      (convexOn_exp.map_integral_le Real.continuousOn_exp isClosed_univ
+        (by simp) hlinearInt hexpInt)
+  rw [show (∫ γ, Real.exp (-β * pathWork energy γ) ∂μ) =
+      Real.exp (-β * deltaFreeEnergy base β energy) by
+        simpa [μ] using hjarzynski,
+    integral_const_mul] at hjensen
+  have hscaled :
+      -β * (∫ γ, pathWork energy γ ∂μ) ≤
+        -β * deltaFreeEnergy base β energy :=
+    Real.exp_le_exp.mp hjensen
+  dsimp [μ] at hscaled ⊢
+  nlinarith
 
 /-- Crooks' relation for the pushforward law of total work, without an
 assumption that the work law has a density or atoms. The reverse-hand measure

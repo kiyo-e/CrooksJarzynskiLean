@@ -15,6 +15,7 @@ import CrooksJarzynski.MeasureProtocolPaths
 import CrooksJarzynski.MeasureProtocolMarginals
 import CrooksJarzynski.MeasureProtocolPhysical
 import CrooksJarzynski.MeasureProtocolGaussianExample
+import CrooksJarzynski.MeasureProtocolMetropolisExample
 import CrooksJarzynski.MathlibBridge
 import CrooksJarzynski.MeasureProtocolFiniteBridge
 import CrooksJarzynski.PhyslibBridge
@@ -30,6 +31,7 @@ the corresponding Lebesgue and real-integral Jarzynski equalities, a Gibbs
 specialization constructed from Mathlib's exponentially tilted measures,
 measurable chronological path reversal, physical total-work and endpoint
 free-energy forms, a non-atomic Gaussian example on `ℝ`, an
+explicit Lebesgue-based Metropolis--Hastings example on `ℝ`, an
 Ionescu–Tulcea trajectory-measure adapter for time-inhomogeneous Mathlib Markov
 kernels, an identification of all of its finite-dimensional marginals with the
 finite-horizon path measures, and a bridge proving that the original finite
@@ -49,9 +51,12 @@ canonical-ensemble API. The main results include `Protocol.crooks`,
 `MeasureProtocol.Markov.multiStep_crooks_chronological`,
 `MeasureProtocol.Gibbs.multiStep_crooks_physical`,
 `MeasureProtocol.Gibbs.multiStep_jarzynski_integral`,
+`MeasureProtocol.Gibbs.multiStep_second_law`,
 `MeasureProtocol.Gibbs.multiStep_work_distribution_crooks`,
 `MeasureProtocol.GaussianExample.multiStep_crooks`,
 `MeasureProtocol.GaussianExample.multiStep_jarzynski`,
+`MeasureProtocol.MetropolisExample.multiStep_crooks`,
+`MeasureProtocol.MetropolisExample.multiStep_jarzynski`,
 `MeasureProtocol.Markov.trajectoryMeasure`,
 `MeasureProtocol.Markov.finiteMarginal_eq_chronologicalForwardPathMeasure`,
 `Protocol.work_distribution_crooks`,
