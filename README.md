@@ -7,7 +7,9 @@ library contains:
 - a measure-theoretic discrete-time theory on arbitrary measurable state
   spaces;
 - a finite-jump continuous-time path-space theory with fixed-horizon Crooks and
-  Jarzynski statements for segmentwise jump rates; and
+  Jarzynski statements for segmentwise jump rates;
+- a nonzero fixed-horizon simplex reference construction and a normalized,
+  non-explosive two-state continuous-time Markov chain example; and
 - a path-uniform refinement limit for the two standard discrete work
   conventions.
 
@@ -36,12 +38,17 @@ The library proves:
 - a dependent-sum path space containing every finite jump count, together with
   the countable sum of the sector measures;
 - a measurable fixed-time horizon condition that is invariant under reversal;
+- a positive-volume simplex parametrization that builds the horizon condition
+  into the holding-time law and yields a nonzero reversal-invariant reference;
 - factorized continuous-time path densities built from endpoint weights,
   survival factors, and jump-rate factors;
 - a path-density Crooks identity derived from endpoint reweighting, cancellation
   of aligned waiting-time factors, and local jump balance;
 - fixed-sector, all-sector, and fixed-horizon Crooks and Jarzynski theorems for
   segmentwise constant escape and jump rates;
+- a symmetric unit-rate two-state CTMC whose `n`-jump sector has Poisson mass,
+  whose complete finite-jump path law is normalized and non-explosive, and
+  which satisfies full-path Crooks and Jarzynski theorems;
 - the original finite-state pathwise Crooks ratio, Jarzynski equality, integral
   fluctuation theorem, explicit reverse protocol, and work-distribution Crooks
   theorem; and
@@ -139,6 +146,40 @@ The elapsed-time observable is the sum of all holding intervals. The set
 is measurable and invariant under reversal. Crooks relations can therefore be
 restricted to a common physical horizon and then summed over all jump counts.
 
+### Nonzero fixed-horizon simplex reference
+
+Restricting an ambient product Lebesgue measure to the equality slice
+`∑ᵢ τᵢ = T` would normally produce the zero measure. The module
+`ContinuousTimeJumpSimplex` instead starts from `n` free unit-interval
+coordinates satisfying
+
+```text
+∑ᵢ<n uᵢ ≤ 1,
+```
+
+conditions the finite product Lebesgue measure on this positive-volume simplex,
+and defines
+
+```text
+τᵢ = T uᵢ              for i < n,
+τₙ = T - ∑ᵢ<n τᵢ.
+```
+
+Consequently, the total holding time is exactly `T` by construction. Averaging
+the resulting path probability with its time reversal produces a probability
+measure that is reversal invariant. Scaling it by any positive finite mass
+gives a genuinely nonzero fixed-horizon reference. The principal declarations
+are:
+
+```lean
+MeasureProtocol.ContinuousTimeJump.Simplex.volume_freeSimplexSet_pos
+MeasureProtocol.ContinuousTimeJump.Simplex.sum_holdingTimesOfFree
+MeasureProtocol.ContinuousTimeJump.Simplex.rawPathProbability_ae_horizon
+MeasureProtocol.ContinuousTimeJump.Simplex.map_reference_reverse
+MeasureProtocol.ContinuousTimeJump.Simplex.reference_ne_zero
+MeasureProtocol.ContinuousTimeJump.Simplex.reference_ae_horizon
+```
+
 ### Rate-level density identity
 
 For segmentwise constant escape rates `λᵢ(x)` and jump rates `kᵢ(x,y)`, the
@@ -175,6 +216,41 @@ MeasureProtocol.ContinuousTimeJump.FullPath.crooks_restrict_horizon_of_rate_loca
 MeasureProtocol.ContinuousTimeJump.FullPath.jarzynski_restrict_horizon_of_rate_local_balance
 ```
 
+### Normalized two-state CTMC
+
+`ContinuousTimeJumpTwoStateNormalization` instantiates the construction for the
+symmetric chain on two states with generator
+
+```text
+Q(x,y) = 1    when y is the other state,
+Q(x,x) = -1.
+```
+
+The state flips at every jump, the escape rate is one, and the work observable
+is identically one. The fixed-horizon `n`-jump reference has simplex mass
+`T^n / n!`; multiplication by the survival factor `exp (-T)` gives exactly the
+Poisson jump-count mass
+
+```text
+exp (-T) T^n / n!.
+```
+
+These masses sum to one, so the measure on
+`Σ n, JumpPath State n` is a probability measure. In this concrete model, this
+is the non-explosion result: the complete path law is supported on finite-jump
+sectors. The forward and reverse laws coincide at equilibrium, and the library
+proves:
+
+```lean
+MeasureProtocol.ContinuousTimeJump.TwoState.sectorLaw_univ_eq_poisson
+MeasureProtocol.ContinuousTimeJump.TwoState.tsum_sectorLaw_univ
+MeasureProtocol.ContinuousTimeJump.TwoState.reversePathLaw_eq_pathLaw
+MeasureProtocol.ContinuousTimeJump.TwoState.pathLaw_crooks
+MeasureProtocol.ContinuousTimeJump.TwoState.pathLaw_jarzynski
+MeasureProtocol.ContinuousTimeJump.TwoState.generator_escape_eq_one
+MeasureProtocol.ContinuousTimeJump.TwoState.generator_row_sum
+```
+
 ## Discrete work conventions and refinement
 
 The finite-state protocol formalizes both quench-then-transition and
@@ -206,13 +282,17 @@ arbitrary finite horizon. Forward and reverse kernels and their local-balance
 identity are supplied; reverse-kernel existence by disintegration is not
 formalized.
 
-The continuous-time development covers finite-jump trajectories, the countable
-sum over all finite jump counts, and a measurable fixed-horizon restriction. It
-provides path-density Crooks and Jarzynski theorems for segmentwise constant
-escape and jump rates. The sector reference measures, normalization across all
-jump counts, and non-explosion are explicit hypotheses rather than being
-constructed from an infinitesimal generator. General calendar-time-dependent
-integrated hazards and Langevin/SDE path laws are not yet formalized.
+The generic continuous-time development covers finite-jump trajectories, the
+countable sum over all finite jump counts, a measurable fixed horizon, and
+path-density Crooks and Jarzynski theorems for segmentwise constant escape and
+jump rates. The library constructs a nonzero reversal-invariant simplex
+reference on the fixed horizon. It also constructs and normalizes the full path
+law of the symmetric unit-rate two-state CTMC, proves its Poisson jump-count
+law and non-explosion, and connects its rates to a conservative generator.
+
+A generator-to-path-law construction and a general non-explosion theorem for an
+arbitrary CTMC remain outside this PR. General calendar-time-dependent
+integrated hazards and Langevin/SDE path laws are not formalized.
 
 ## Build
 
