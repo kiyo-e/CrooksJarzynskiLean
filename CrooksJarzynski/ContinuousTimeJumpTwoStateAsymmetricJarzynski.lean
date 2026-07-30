@@ -1298,8 +1298,8 @@ theorem forwardSectorLaw_initialState_pos (T : NNReal) (x : State) :
     (ENNReal.mul_pos (gibbsInitialWeight_pos x).ne'
       (sectorMass_zero_pos T x).ne').ne'
 
-/-- On a path with no jumps, the work weight is the boundary factor of its
-constant state. -/
+/-- On a path with no jumps, the work weight is the boundary factor of
+the single occupied state. -/
 theorem rateWorkWeight_zeroJump (γ : JumpPath State 0) :
     JumpPath.rateWorkWeight boundaryWork jumpWork γ =
       boundaryWork (γ.1 0) (γ.1 0) := by
