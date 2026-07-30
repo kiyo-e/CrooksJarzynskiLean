@@ -59,7 +59,8 @@ theorem measurable_weight
   intro s hs
   apply MeasurableSpace.measurableSet_iInf.mpr
   intro n
-  simpa [weight] using hq n hs
+  change MeasurableSet ((q n) ⁻¹' s)
+  exact hq n hs
 
 /-- Lifting a sector measure commutes with reweighting by a sectorwise density. -/
 theorem liftMeasure_withDensity
