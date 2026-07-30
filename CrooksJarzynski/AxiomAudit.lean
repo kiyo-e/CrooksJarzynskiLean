@@ -35,6 +35,7 @@ the trusted base of the development.
 #print axioms CrooksJarzynski.MeasureProtocol.jarzynski_toReal_integral
 #print axioms CrooksJarzynski.MeasureProtocol.jarzynski_integral
 #print axioms CrooksJarzynski.MeasureProtocol.work_distribution_crooks
+#print axioms CrooksJarzynski.MeasureProtocol.second_law_of_crooks
 #print axioms CrooksJarzynski.MeasureProtocol.Markov.compProd_withDensity_fst
 #print axioms CrooksJarzynski.MeasureProtocol.Markov.oneStep_crooks
 #print axioms CrooksJarzynski.MeasureProtocol.Markov.oneStep_jarzynski
@@ -95,7 +96,6 @@ the trusted base of the development.
 #print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.TwoState.generator_row_sum
 #print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.sector_crooks
 #print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.fullWorkWeight_not_ae_const
-#print axioms CrooksJarzynski.MeasureProtocol.second_law_of_crooks
 #print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.TwoState.tsum_sectorLawFrom_univ
 #print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.TwoState.map_pathLawFrom_terminalState
 #print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.TwoState.pathLawFrom_terminalState_eq_exp_generator
@@ -110,11 +110,16 @@ the trusted base of the development.
 #print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.full_crooks
 #print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.full_jarzynski_lintegral
 #print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.full_jarzynski_toReal
+#print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.physicalGenerator_row_sum
 #print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.physical_detailedBalance
+#print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.equilibriumProbability_stationary
+#print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.physicalDeltaFreeEnergy_eq
 #print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.freeEnergyWeight_eq_exp_delta
 #print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.fullWorkWeight_eq_exp_thermodynamicWork
 #print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.full_crooks_physical
+#print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.full_jarzynski_physical
 #print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.full_jarzynski_physical_eq_two
+#print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.full_work_distribution_crooks
 #print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.full_second_law
 #print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.full_entropyProduction_integral_fluctuation
 #print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.TwoState.map_pathLaw_jumpCount
