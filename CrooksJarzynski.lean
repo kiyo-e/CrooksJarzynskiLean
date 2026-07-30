@@ -17,6 +17,7 @@ import CrooksJarzynski.MeasureProtocolPhysical
 import CrooksJarzynski.MeasureProtocolGaussianExample
 import CrooksJarzynski.MeasureProtocolMetropolisExample
 import CrooksJarzynski.ContinuousTimeJumpRateFull
+import CrooksJarzynski.ContinuousTimeJumpTwoStateNormalization
 import CrooksJarzynski.MathlibBridge
 import CrooksJarzynski.MeasureProtocolFiniteBridge
 import CrooksJarzynski.PhyslibBridge
@@ -42,11 +43,15 @@ measures recover its legacy singleton weights.
 The continuous-time jump layer represents an `n`-jump path by its state and
 holding-time sequences, proves measurable involutive reversal, and constructs
 path laws from densities against reversal-invariant references. It sums all
-finite jump-count sectors into one dependent-sum path law, restricts sectors to
-a measurable fixed-time horizon, instantiates exponential survival and jump
-factors for segmentwise constant rates, derives the path-density identity from
-endpoint reweighting, waiting-time cancellation, and local jump balance, and
-proves fixed-sector, full-path, fixed-horizon Crooks and Jarzynski statements.
+finite jump-count sectors into one dependent-sum path law, constructs a
+nonzero fixed-horizon simplex reference instead of restricting an ambient
+Lebesgue law to a null slice, instantiates exponential survival and jump
+factors, derives the path-density identity from endpoint reweighting,
+waiting-time cancellation, and local jump balance, and proves fixed-sector,
+full-path and fixed-horizon Crooks and Jarzynski statements.  A normalized
+unit-rate two-state CTMC example identifies every jump-count sector with its
+Poisson probability and proves non-explosion by constructing a probability law
+on the disjoint union of all finite-jump sectors.
 
 The finite-state results include explicit time reversal, both standard
 discrete-time work conventions, a path-uniform `O(1/N)` continuous-time limit
@@ -73,7 +78,10 @@ canonical-ensemble API. The main results include `Protocol.crooks`,
 `MeasureProtocol.ContinuousTimeJump.JumpPath.crooks_of_rate_local_balance`,
 `MeasureProtocol.ContinuousTimeJump.FullPath.crooks_of_sector_relations`,
 `MeasureProtocol.ContinuousTimeJump.FullPath.crooks_of_rate_local_balance`,
-`MeasureProtocol.ContinuousTimeJump.FullPath.crooks_restrict_horizon_of_rate_local_balance`,
+`MeasureProtocol.ContinuousTimeJump.Simplex.map_reference_reverse`,
+`MeasureProtocol.ContinuousTimeJump.TwoState.pathLaw_crooks`,
+`MeasureProtocol.ContinuousTimeJump.TwoState.pathLaw_jarzynski`,
+`MeasureProtocol.ContinuousTimeJump.TwoState.sectorLaw_univ_eq_poisson`,
 `Protocol.work_distribution_crooks`,
 `WorkConvention.discrepancy_uniform_tendsto_zero`, and `Protocol.second_law`.
 -/
