@@ -8,11 +8,13 @@ library contains:
   spaces;
 - a finite-jump continuous-time path-space theory with fixed-horizon Crooks and
   Jarzynski statements for segmentwise jump rates;
-- a fixed-horizon simplex reference with derived volume `1 / n!`, a
-  normalized, non-explosive two-state continuous-time Markov chain example
-  whose Poisson jump-count kernel is identified with `exp (TQ)`, a normalized
-  nonequilibrium asymmetric two-state example with a genuinely nonconstant
-  work observable; and
+- a fixed-horizon simplex reference with derived volume `1 / n!`;
+- a normalized, non-explosive two-state continuous-time Markov chain whose
+  fixed-initial terminal laws form a Markov kernel with entries `exp (TQ)`;
+- a normalized asymmetric reversible two-state chain followed by an explicit
+  energy quench, with real work, free-energy difference, physical Crooks and
+  Jarzynski relations, work-distribution Crooks, the second law, and an entropy
+  production fluctuation theorem; and
 - a path-uniform refinement limit for the two standard discrete work
   conventions.
 
@@ -25,6 +27,9 @@ The library proves:
 
 - Crooks' relation as a measure identity on an arbitrary measurable trajectory
   space and its nonnegative-integral and real-integral Jarzynski consequences;
+- a density-free Crooks relation for every measurable pushforward observable;
+- an average-work second law `ΔF ≤ ⟨W⟩` derived from any normalized physical
+  measure-level Crooks relation by Jensen's inequality;
 - one-step and finite-horizon multi-step Crooks theorems on arbitrary measurable
   state spaces from equilibrium reweighting and measure-level local detailed
   balance;
@@ -33,7 +38,7 @@ The library proves:
   with the recursive finite-horizon path laws;
 - Gibbs specializations with the physical factors `exp (-β W)` and
   `exp (-β ΔF)`, a density-free work-distribution theorem, and the average-work
-  second law `ΔF ≤ ⟨W⟩`;
+  second law;
 - non-atomic Gaussian examples and a Metropolis–Hastings specialization on
   `ℝ` with Gaussian random-walk proposals and quadratic energies;
 - fixed-jump-count continuous-time paths represented by state sequences and
@@ -51,22 +56,19 @@ The library proves:
 - fixed-sector, all-sector, and fixed-horizon Crooks and Jarzynski theorems for
   segmentwise constant escape and jump rates;
 - a symmetric unit-rate two-state CTMC whose `n`-jump sector has Poisson mass,
-  whose complete finite-jump path law is normalized and non-explosive, which
-  satisfies full-path Crooks and Jarzynski theorems, whose jump-count
-  marginal is Poisson, and whose fixed-initial terminal-state marginal is
-  identified with the matrix exponential `exp (TQ)` of its conservative
-  generator, with Chapman--Kolmogorov for the explicit transition
-  probabilities;
-- an asymmetric two-state chain with escape rates two and one, a Gibbs initial
-  state, a nonconstant work observable, and free-energy factor two, whose
-  forward and dynamically constructed reverse path laws are both proved to be
-  probability measures by a telescoping simplex-integral evaluation, and which
-  satisfies normalized nonequilibrium full-path Crooks, Jarzynski, and
-  real-integral Jarzynski theorems, with an explicit thermodynamic model
-  (energies, `β = 1`, partition functions) whose free-energy factor and
-  Gibbs densities reproduce the weights of the path theorem;
-- an average-work second law `ΔF ≤ ⟨W⟩` derived from any measure-level
-  Crooks relation by Jensen's inequality;
+  whose complete finite-jump path law is normalized and non-explosive, and
+  which satisfies full-path Crooks and Jarzynski theorems;
+- normalized fixed-initial versions of that path law whose actual terminal-state
+  pushforwards form a Mathlib Markov kernel, equal the rows of `exp (TQ)`, and
+  satisfy Chapman--Kolmogorov;
+- an asymmetric two-state generator with rates `q(0,1)=2` and `q(1,0)=1`, whose
+  Gibbs distribution is explicitly normalized, reversible, and stationary;
+- a normalized final-quench experiment with partition functions `Z₀=3` and
+  `Z₁=6`, free-energy difference `ΔF=-log 2`, and a genuinely nonconstant real
+  work observable;
+- physical full-path Crooks and Jarzynski relations for this quench, a
+  density-free Crooks relation for its work laws, the average-work second law,
+  and the integral fluctuation theorem for entropy production;
 - the original finite-state pathwise Crooks ratio, Jarzynski equality, integral
   fluctuation theorem, explicit reverse protocol, and work-distribution Crooks
   theorem; and
@@ -90,8 +92,21 @@ probability measure, evaluating this identity on the whole path space gives
 ∫⁻ γ, workWeight γ ∂forward = freeEnergyWeight
 ```
 
-through `MeasureProtocol.jarzynski_lintegral`. The real-valued physical form is
-provided by `MeasureProtocol.jarzynski_integral`.
+through `MeasureProtocol.jarzynski_lintegral`. The physical real-valued form
+
+```text
+∫ exp (-β W) dP_F = exp (-β ΔF)
+```
+
+is provided by `MeasureProtocol.jarzynski_integral`. For normalized forward and
+reverse laws, positive `β`, and integrable real work,
+`MeasureProtocol.second_law_of_crooks` derives
+
+```text
+ΔF ≤ ∫ W dP_F
+```
+
+directly from the same measure identity.
 
 This formulation avoids ratios on zero-probability trajectories and lets the
 same measure algebra serve discrete-time kernels, continuous-time jump-path
@@ -141,8 +156,8 @@ JumpPath Ω n =
 ```
 
 The first component stores the occupied states, and the second component stores
-the holding intervals, including the terminal no-jump interval. Reversal acts on
-both finite sequences and is proved measurable and involutive.
+the holding intervals, including the terminal no-jump interval. Reversal acts
+on both finite sequences and is proved measurable and involutive.
 
 All finite jump counts are assembled into
 
@@ -190,6 +205,7 @@ gives a genuinely nonzero fixed-horizon reference. The principal declarations
 are:
 
 ```lean
+MeasureProtocol.ContinuousTimeJump.Simplex.volume_freeSimplexSet
 MeasureProtocol.ContinuousTimeJump.Simplex.volume_freeSimplexSet_pos
 MeasureProtocol.ContinuousTimeJump.Simplex.sum_holdingTimesOfFree
 MeasureProtocol.ContinuousTimeJump.Simplex.rawPathProbability_ae_horizon
@@ -234,7 +250,7 @@ MeasureProtocol.ContinuousTimeJump.FullPath.crooks_restrict_horizon_of_rate_loca
 MeasureProtocol.ContinuousTimeJump.FullPath.jarzynski_restrict_horizon_of_rate_local_balance
 ```
 
-### Normalized two-state CTMC
+### Normalized symmetric two-state CTMC
 
 `ContinuousTimeJumpTwoStateNormalization` instantiates the construction for the
 symmetric chain on two states with generator
@@ -246,9 +262,9 @@ Q(x,x) = -1.
 
 The state flips at every jump, the escape rate is one, and the work observable
 is identically one. The fixed-horizon `n`-jump reference has simplex mass
-`T^n / n!`, derived from the proved unit-simplex volume
-`volume_freeSimplexSet : volume = ofReal (1 / n!)`; multiplication by the
-survival factor `exp (-T)` gives exactly the Poisson jump-count mass
+`T^n / n!`, derived from the proved unit-simplex volume `1 / n!`.
+Multiplication by the survival factor `exp (-T)` gives exactly the Poisson
+jump-count mass
 
 ```text
 exp (-T) T^n / n!.
@@ -256,69 +272,85 @@ exp (-T) T^n / n!.
 
 These masses sum to one, so the measure on
 `Σ n, JumpPath State n` is a probability measure. In this concrete model, this
-is the non-explosion result: the complete path law is supported on finite-jump
-sectors. The forward and reverse laws coincide at equilibrium, and the library
-proves:
+is the non-explosion result: every finite horizon is exhausted by finite-jump
+sectors. The forward and reverse laws coincide at equilibrium.
+
+The connection to the generator is made at the level of actual normalized path
+laws. For each fixed initial state `x`, `pathLawFrom T x` records `x` in its
+initial coordinate almost surely, has Poisson jump count, and its terminal-state
+pushforward is the corresponding row of `exp (TQ)`. These terminal laws are
+packaged as a Mathlib Markov kernel and satisfy Chapman--Kolmogorov:
 
 ```lean
-MeasureProtocol.ContinuousTimeJump.TwoState.sectorLaw_univ_eq_poisson
-MeasureProtocol.ContinuousTimeJump.TwoState.tsum_sectorLaw_univ
-MeasureProtocol.ContinuousTimeJump.TwoState.reversePathLaw_eq_pathLaw
-MeasureProtocol.ContinuousTimeJump.TwoState.pathLaw_crooks
-MeasureProtocol.ContinuousTimeJump.TwoState.pathLaw_jarzynski
-MeasureProtocol.ContinuousTimeJump.TwoState.generator_escape_eq_one
-MeasureProtocol.ContinuousTimeJump.TwoState.generator_row_sum
-```
-
-The construction is identified with the conservative generator: the jump-count
-marginal of the path law is the Poisson distribution, and flipping any fixed
-seed state once per counted jump reproduces the Poisson-flip law whose point
-masses are exactly the entries of the matrix exponential `exp (TQ)`, computed
-by diagonalizing `Q`.  The stronger statement also holds: for the normalized
-path law started from a fixed initial state, the pushforward of the actual
-terminal-state coordinate is exactly the corresponding row of `exp (TQ)`, and
-the explicit transition probabilities satisfy Chapman--Kolmogorov:
-
-```lean
-MeasureProtocol.ContinuousTimeJump.TwoState.map_pathLaw_jumpCount
-MeasureProtocol.ContinuousTimeJump.TwoState.conditionalTerminalLaw_eq_exp_generator
+MeasureProtocol.ContinuousTimeJump.TwoState.tsum_sectorLawFrom_univ
+MeasureProtocol.ContinuousTimeJump.TwoState.map_pathLawFrom_jumpCount
 MeasureProtocol.ContinuousTimeJump.TwoState.map_pathLawFrom_terminalState
 MeasureProtocol.ContinuousTimeJump.TwoState.pathLawFrom_terminalState_eq_exp_generator
-MeasureProtocol.ContinuousTimeJump.TwoState.transitionProbability_chapman_kolmogorov
+MeasureProtocol.ContinuousTimeJump.TwoState.transitionKernel_real_singleton_eq_exp_generator
+MeasureProtocol.ContinuousTimeJump.TwoState.transitionKernel_chapman_kolmogorov
 ```
 
-### Normalized nonequilibrium asymmetric example
+### Asymmetric reversible chain and final quench
 
-`ContinuousTimeJumpTwoStateAsymmetric` and its companion modules drive the
-two-state chain out of equilibrium: the escape rates are two at `zero` and one
-at `one`, the initial density is the Gibbs density `(2/3, 4/3)` relative to
-the uniform reference, the final density is uniform, and the work observable
-is a genuinely nonconstant product of a boundary factor and per-jump factors.
-The free-energy factor is two, so neither side of Crooks' relation
-degenerates.  Nondegeneracy holds on the support of the normalized law
-itself: the work values `3` and `3/2` each carry positive probability under
-the forward path law, so the work observable is not almost-everywhere
-constant (`fullWorkWeight_not_ae_const`).
+The asymmetric example uses the conservative two-state generator
 
-Normalization is proved by a telescoping evaluation of weighted simplex
-integrals: integrating out the last free coordinate shows that consecutive
-arrival integrals differ by exactly one sector integral, the partial sums
-telescope, and the `(2T)^n / n!` tail bound kills the remainder, giving
-`∑' n, sectorMass T x n = 1` for every initial state. An affine involution of
-the free simplex proves that the raw (unsymmetrized) reference is already
-reversal invariant, which upgrades both the forward law and the dynamically
-constructed reverse law — the time reversal of the reverse-experiment density,
-not a definitional tilt — to probability measures:
+```text
+q(0,1) = 2,    q(1,0) = 1,
+q(0,0) = -2,   q(1,1) = -1.
+```
+
+Its equilibrium probabilities are `(1/3, 2/3)`. The development proves their
+normalization, detailed balance, and stationarity. The initial and final energy
+landscapes at `β=1` are
+
+```text
+E₀(0) = 0,        E₀(1) = -log 2,
+E₁(0) = -log 3,   E₁(1) = -log 3.
+```
+
+Thus `Z₀=3`, `Z₁=6`, and `ΔF=-log 2`, so `exp (-β ΔF)=2`. The initial Gibbs
+density relative to the uniform state reference is `(2/3,4/3)`, and the final
+density is one.
+
+Normalization is proved directly from the continuous-time path construction.
+For each initial state, integrating out the last free simplex coordinate makes
+consecutive arrival integrals differ by one sector integral. The partial sums
+telescope, and the `(2T)^n/n!` bound makes the remainder vanish. An affine
+involution of the free simplex proves that the raw reference is reversal
+invariant. Therefore, both the forward law and the dynamically constructed
+reverse law are probability measures; the reverse law is not defined as a
+formal tilt of the forward law.
+
+The factorized endpoint and jump work weights telescope pointwise to a terminal
+potential. This potential is exactly the Boltzmann factor of the real-valued
+final-quench work
+
+```text
+W(γ) = E₁(x_T) - E₀(x_T).
+```
+
+The work values `-log 3` and `log (2/3)` both have positive probability under
+the normalized forward law; equivalently, the exponential weights `3` and
+`3/2` both have positive probability. The observable is therefore not almost
+everywhere constant on the physical support.
+
+The resulting statements include:
 
 ```lean
-MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.tsum_sectorMass
-MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.map_rawSectorReference_reverse
-MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.tsum_forwardSectorLaw_univ
-MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.tsum_reverseSectorLaw_univ
-MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.full_crooks
-MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.full_jarzynski_lintegral
-MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.full_jarzynski_toReal
+MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.physicalGenerator_row_sum
+MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.physical_detailedBalance
+MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.equilibriumProbability_stationary
+MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.initial_partitionFunction
+MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.final_partitionFunction
+MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.physicalDeltaFreeEnergy_eq
 MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.fullWorkWeight_not_ae_const
+MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.fullWorkWeight_eq_exp_thermodynamicWork
+MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.full_crooks_physical
+MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.full_jarzynski_physical
+MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.full_jarzynski_physical_eq_two
+MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.full_work_distribution_crooks
+MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.full_second_law
+MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.full_entropyProduction_integral_fluctuation
 ```
 
 ## Discrete work conventions and refinement
@@ -342,8 +374,8 @@ state. Under uniform bounds
 
 The resulting convergence is uniform over paths. This refinement result is
 separate from the continuous-time jump-process construction; it compares two
-discrete externally driven work conventions and is not an
-Itô–Stratonovich conversion theorem.
+discrete externally driven work conventions and is not an Itô–Stratonovich
+conversion theorem.
 
 ## Scope
 
@@ -356,16 +388,20 @@ The generic continuous-time development covers finite-jump trajectories, the
 countable sum over all finite jump counts, a measurable fixed horizon, and
 path-density Crooks and Jarzynski theorems for segmentwise constant escape and
 jump rates. The library constructs a nonzero reversal-invariant simplex
-reference on the fixed horizon with derived volume `1 / n!`. It constructs and
-normalizes the full path law of the symmetric unit-rate two-state CTMC, proves
-its Poisson jump-count law and non-explosion, and identifies the Poisson-flip
-kernel of its jump count with the matrix exponential of its conservative
-generator, and identifies the terminal-state marginal of the fixed-initial
-normalized path law with the corresponding row of `exp (TQ)`. It
-also constructs the nonequilibrium asymmetric two-state example, proves that
-its forward and dynamically constructed reverse path laws are probability
-measures, and derives normalized full-path Crooks, Jarzynski, and
-real-integral Jarzynski equalities with free-energy factor two.
+reference on the fixed horizon with derived volume `1 / n!`.
+
+For the symmetric unit-rate two-state CTMC, the library constructs normalized
+full and fixed-initial path laws, proves their Poisson jump-count law and
+non-explosion, identifies the actual fixed-initial terminal-state marginal with
+`exp (TQ)`, and packages those terminal laws as a Markov kernel satisfying
+Chapman--Kolmogorov.
+
+For the asymmetric two-state model, the library connects the normalized path
+construction to a conservative reversible generator and an explicit energy
+quench. It derives Gibbs equilibrium, partition functions, free-energy
+difference, real work, physical Crooks and Jarzynski relations,
+work-distribution Crooks, the average-work second law, and the entropy-production
+integral fluctuation theorem.
 
 A generator-to-path-law construction and a general non-explosion theorem for an
 arbitrary CTMC remain outside this PR. General calendar-time-dependent
