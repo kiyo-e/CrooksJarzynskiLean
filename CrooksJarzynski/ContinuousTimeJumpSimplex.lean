@@ -200,6 +200,7 @@ theorem isProbabilityMeasure_symmetrizePathMeasure
     Measure.isProbabilityMeasure_map JumpPath.measurable_reverse.aemeasurable
   constructor
   simp [symmetrizePathMeasure]
+  norm_num
 
 /-- The nontrivial, reversal-invariant fixed-horizon path probability used as a
 canonical simplex reference. -/
@@ -228,11 +229,17 @@ theorem rawPathProbability_ae_horizon
     (T : NNReal) (stateLaw : Measure (Fin (n + 1) → Ω)) :
     ∀ᵐ γ ∂rawPathProbability T stateLaw,
       γ ∈ JumpPath.horizonSet (Ω := Ω) (n := n) T := by
-  let f := assemblePath (Ω := Ω) (n := n) T
-  have hf : Measurable f := measurable_assemblePath T
-  rw [rawPathProbability, ae_map_iff hf.aemeasurable
-    (JumpPath.measurableSet_horizonSet T)]
-  apply (ae_prod_iff_ae_ae (hf (JumpPath.measurableSet_horizonSet T))).2
+  have hf : Measurable (assemblePath (Ω := Ω) (n := n) T) :=
+    measurable_assemblePath T
+  change ∀ᵐ γ ∂rawPathProbability T stateLaw,
+    JumpPath.totalHoldingTime γ = T
+  unfold rawPathProbability
+  rw [ae_map_iff hf.aemeasurable (by
+    simpa [JumpPath.horizonSet] using
+      (JumpPath.measurableSet_horizonSet (Ω := Ω) (n := n) T))]
+  apply (ae_prod_iff_ae_ae (hf (by
+    simpa [JumpPath.horizonSet] using
+      (JumpPath.measurableSet_horizonSet (Ω := Ω) (n := n) T)))).2
   refine ae_of_all stateLaw fun states => ?_
   have hmem : ∀ᵐ u ∂freeSimplexProbability n, u ∈ freeSimplexSet n := by
     unfold freeSimplexProbability
@@ -248,15 +255,23 @@ theorem pathProbability_ae_horizon
     ∀ᵐ γ ∂pathProbability T stateLaw,
       γ ∈ JumpPath.horizonSet (Ω := Ω) (n := n) T := by
   have hraw := rawPathProbability_ae_horizon T stateLaw
+  have hraw' :
+      ∀ᵐ γ ∂rawPathProbability T stateLaw,
+        JumpPath.totalHoldingTime γ = T := by
+    simpa [JumpPath.horizonSet] using hraw
   have hreverse :
       ∀ᵐ γ ∂(rawPathProbability T stateLaw).map JumpPath.reverse,
         γ ∈ JumpPath.horizonSet (Ω := Ω) (n := n) T := by
-    rw [ae_map_iff JumpPath.measurable_reverse.aemeasurable
-      (JumpPath.measurableSet_horizonSet T)]
-    exact hraw.mono fun γ hγ => by
-      simpa [JumpPath.horizonSet] using hγ
+    change ∀ᵐ γ ∂(rawPathProbability T stateLaw).map JumpPath.reverse,
+      JumpPath.totalHoldingTime γ = T
+    rw [ae_map_iff JumpPath.measurable_reverse.aemeasurable (by
+      simpa [JumpPath.horizonSet] using
+        (JumpPath.measurableSet_horizonSet (Ω := Ω) (n := n) T))]
+    exact hraw'.mono fun γ hγ => by
+      simpa using hγ
   unfold pathProbability symmetrizePathMeasure
-  exact ae_smul_measure ((ae_add_measure_iff).2 ⟨hraw, hreverse⟩) _
+  exact Measure.ae_smul_measure
+    ((ae_add_measure_iff).2 ⟨hraw, hreverse⟩) _
 
 /-- Scale the canonical horizon probability to obtain a reference measure of a
 prescribed finite mass. -/
@@ -288,7 +303,8 @@ theorem reference_ne_zero
     (T : NNReal) (stateLaw : Measure (Fin (n + 1) → Ω))
     [IsProbabilityMeasure stateLaw] {mass : ℝ≥0∞} (hmass : mass ≠ 0) :
     reference T stateLaw mass ≠ 0 := by
-  rw [Ne, Measure.ennreal_smul_eq_zero]
+  unfold reference
+  rw [Measure.ennreal_smul_eq_zero]
   exact not_or_intro hmass (IsProbabilityMeasure.ne_zero _)
 
 /-- The scaled reference remains concentrated on the physical horizon. -/
@@ -298,7 +314,7 @@ theorem reference_ae_horizon
     (mass : ℝ≥0∞) :
     ∀ᵐ γ ∂reference T stateLaw mass,
       γ ∈ JumpPath.horizonSet (Ω := Ω) (n := n) T :=
-  ae_smul_measure (pathProbability_ae_horizon T stateLaw) mass
+  Measure.ae_smul_measure (pathProbability_ae_horizon T stateLaw) mass
 
 end Simplex
 end ContinuousTimeJump
