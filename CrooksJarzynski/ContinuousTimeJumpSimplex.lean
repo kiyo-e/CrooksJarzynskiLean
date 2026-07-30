@@ -106,12 +106,15 @@ theorem volume_freeSimplexSet_pos (n : ℕ) :
     rw [Measure.pi_pi]
     simp [unitInterval.volume_Iic]
   have hBpos : 0 < (volume : Measure (Fin n → I)) B := by
-    rw [hBmass]
-    apply Finset.prod_pos
-    intro i hi
-    exact ENNReal.ofReal_pos.2 (by
+    rw [hBmass, ← ENNReal.ofReal_prod_of_nonneg]
+    · exact ENNReal.ofReal_pos.2 (by
+        apply Finset.prod_pos
+        intro i hi
+        dsimp [interiorRadius]
+        positivity)
+    · intro i hi
       dsimp [interiorRadius]
-      positivity)
+      positivity
   exact hBpos.trans_le (measure_mono hB)
 
 /-- The uniform probability law on the free-coordinate simplex.  It is the
@@ -253,9 +256,11 @@ theorem rawPathProbability_ae_horizon
   rw [ae_map_iff hf.aemeasurable (by
     simpa [JumpPath.horizonSet] using
       (JumpPath.measurableSet_horizonSet (Ω := Ω) (n := n) T))]
-  apply (Measure.ae_prod_iff_ae_ae (hf (by
-    simpa [JumpPath.horizonSet] using
-      (JumpPath.measurableSet_horizonSet (Ω := Ω) (n := n) T)))).2
+  apply (Measure.ae_prod_iff_ae_ae
+    (μ := stateLaw) (ν := freeSimplexProbability n)
+    (hf (by
+      simpa [JumpPath.horizonSet] using
+        (JumpPath.measurableSet_horizonSet (Ω := Ω) (n := n) T)))).2
   refine ae_of_all stateLaw fun states => ?_
   have hmem : ∀ᵐ u ∂freeSimplexProbability n, u ∈ freeSimplexSet n := by
     unfold freeSimplexProbability
