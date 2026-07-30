@@ -91,7 +91,7 @@ noncomputable def horizonMeasure (T : NNReal)
 /-- The mass of a horizon-restricted measure is the mass of its horizon sector. -/
 theorem horizonMeasure_univ (T : NNReal) (μ : Measure (JumpPath Ω n)) :
     horizonMeasure T μ Set.univ = μ (horizonSet T) := by
-  simp [horizonMeasure, Measure.restrict_apply_univ]
+  simp [horizonMeasure]
 
 /-- A probability measure concentrated on the horizon remains a probability
 measure after explicit restriction to that horizon. -/
@@ -109,10 +109,16 @@ theorem map_horizonMeasure_reverse
     (T : NNReal) (μ : Measure (JumpPath Ω n))
     (hμ : μ.map reverse = μ) :
     (horizonMeasure T μ).map reverse = horizonMeasure T μ := by
-  have h := (reverseEquiv (Ω := Ω) (n := n)).restrict_map μ
-    (horizonSet (Ω := Ω) (n := n) T)
-  rw [hμ] at h
-  simpa [horizonMeasure, reverseEquiv] using h.symm
+  let e := reverseEquiv (Ω := Ω) (n := n)
+  let S := horizonSet (Ω := Ω) (n := n) T
+  have h := e.restrict_map μ S
+  have hmap : μ.map e = μ := by
+    simpa [e, reverseEquiv] using hμ
+  have hpre : e ⁻¹' S = S := by
+    simpa [e, S, reverseEquiv] using
+      (preimage_horizonSet_reverse (Ω := Ω) (n := n) T)
+  rw [hmap, hpre] at h
+  simpa [horizonMeasure, e, S, reverseEquiv] using h.symm
 
 /-- A Crooks relation remains valid after both path laws are restricted to the
 same measurable horizon sector. -/
@@ -122,8 +128,10 @@ theorem crooks_restrict_horizon
     (h : CrooksRelation forward reverseMeasure workWeight freeEnergyWeight) :
     CrooksRelation (horizonMeasure T forward)
       (horizonMeasure T reverseMeasure) workWeight freeEnergyWeight := by
-  unfold CrooksRelation horizonMeasure at h ⊢
+  unfold CrooksRelation at h ⊢
   let S := horizonSet (Ω := Ω) (n := n) T
+  change (forward.restrict S).withDensity workWeight =
+    freeEnergyWeight • reverseMeasure.restrict S
   have hS : MeasurableSet S := measurableSet_horizonSet T
   calc
     (forward.restrict S).withDensity workWeight =
