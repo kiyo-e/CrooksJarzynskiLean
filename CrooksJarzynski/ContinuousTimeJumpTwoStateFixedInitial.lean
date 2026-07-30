@@ -427,9 +427,11 @@ theorem transitionProbability_chapman_kolmogorov
         transitionProbability (T : ℝ) z y) =
       transitionProbability ((S + T : NNReal) : ℝ) x y := by
   have hmul :
-      Real.exp (-(S : ℝ) * 2) * Real.exp (-(T : ℝ) * 2) =
-        Real.exp (-(S : ℝ) * 2 - (T : ℝ) * 2) := by
+      Real.exp (-(2 * (S : ℝ))) * Real.exp (-(2 * (T : ℝ))) =
+        Real.exp (-(2 * ((S : ℝ) + (T : ℝ)))) := by
     rw [← Real.exp_add]
+    congr 1
+    ring
   rw [show (Finset.univ : Finset State) = {.zero, .one} by decide,
     Finset.sum_pair (by decide)]
   cases x <;> cases y <;>
