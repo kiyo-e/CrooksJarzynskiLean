@@ -1,58 +1,81 @@
 # Crooks–Jarzynski in Lean 4
 
-A machine-checked development of stochastic thermodynamics in Lean 4. The library contains a complete finite-state, discrete-time Crooks–Jarzynski theory, a measure-theoretic core for arbitrary measurable state spaces, and a path-uniform refinement limit for the two standard discrete work conventions.
+A machine-checked development of stochastic thermodynamics in Lean 4. The
+library contains:
 
-The library proves, without `sorry` or custom axioms:
+- a complete finite-state, discrete-time Crooks–Jarzynski theory;
+- a measure-theoretic discrete-time theory on arbitrary measurable state
+  spaces;
+- a finite-jump continuous-time path-space theory with fixed-horizon Crooks and
+  Jarzynski statements for segmentwise jump rates; and
+- a path-uniform refinement limit for the two standard discrete work
+  conventions.
 
-- a measure-level Crooks relation on arbitrary measurable trajectory spaces and its Lebesgue-integral Jarzynski consequence;
-- a one-step Crooks theorem and Jarzynski equality on arbitrary measurable state spaces from equilibrium reweighting and measure-theoretic local detailed balance;
-- a finite-horizon, multi-step Crooks theorem on arbitrary measurable state spaces, with chronological paths and measurable path reversal;
-- Gibbs specialization from a base measure and measurable energies, including the physical `exp (-β W)` and `exp (-β ΔF)` form;
-- real-integral Jarzynski and density-free work-distribution Crooks theorems;
-- the average-work second law `ΔF ≤ ⟨W⟩` on arbitrary measurable state spaces, by Jensen's inequality from the general Jarzynski equality;
-- a non-atomic example on `ℝ` built from a Gaussian base measure;
-- a Metropolis–Hastings construction with a machine-checked detailed-balance proof, instantiated on `ℝ` with Lebesgue reference measure, Gaussian random-walk proposals, and quadratic energies;
-- a bridge deriving the general measure theorem from the original finite-state protocol;
-- an Ionescu–Tulcea trajectory measure for time-inhomogeneous Mathlib Markov kernels, together with its finite-prefix evolution law;
-- an identification of every finite-dimensional marginal of that infinite path measure with the recursive finite-horizon forward path measure;
-- normalization and nonnegativity of finite forward and reverse path probabilities;
-- a finite-state multi-step Crooks path identity from local detailed balance;
-- the usual Crooks ratio when the reverse path probability is nonzero;
-- an explicit physical reverse protocol with reversed energies, kernels, and trajectories;
-- sign reversal of work under the physical reverse experiment;
-- Crooks' theorem for the probability mass of each exact work value;
-- an exact comparison of the quench-then-transition and transition-then-quench work conventions;
-- a discrete summation-by-parts identity and a path-uniform `O(1/N)` refinement limit for the difference between those conventions;
-- the finite-state Jarzynski equality;
-- the integral fluctuation theorem for dissipated work;
-- the average-work second law `ΔF ≤ ⟨W⟩`;
-- a deterministic quench constructor and a two-state partition-function example.
+The development contains no `sorry` placeholders and introduces no custom
+axioms.
 
-The finite pathwise theorem is stated first in the division-free form
+## Main results
 
-```text
-P_F(γ) · exp(β ΔF) = P_R(γ†) · exp(β W(γ)),
-```
+The library proves:
 
-so zero-probability trajectories do not require case splits. The ratio form is a corollary with the expected nonzero hypothesis.
+- Crooks' relation as a measure identity on an arbitrary measurable trajectory
+  space and its nonnegative-integral and real-integral Jarzynski consequences;
+- one-step and finite-horizon multi-step Crooks theorems on arbitrary measurable
+  state spaces from equilibrium reweighting and measure-level local detailed
+  balance;
+- measurable chronological paths, explicit path reversal, and an
+  Ionescu–Tulcea trajectory measure whose finite-dimensional marginals agree
+  with the recursive finite-horizon path laws;
+- Gibbs specializations with the physical factors `exp (-β W)` and
+  `exp (-β ΔF)`, a density-free work-distribution theorem, and the average-work
+  second law `ΔF ≤ ⟨W⟩`;
+- non-atomic Gaussian examples and a Metropolis–Hastings specialization on
+  `ℝ` with Gaussian random-walk proposals and quadratic energies;
+- fixed-jump-count continuous-time paths represented by state sequences and
+  holding-time sequences, with measurable involutive reversal;
+- a dependent-sum path space containing every finite jump count, together with
+  the countable sum of the sector measures;
+- a measurable fixed-time horizon condition that is invariant under reversal;
+- factorized continuous-time path densities built from endpoint weights,
+  survival factors, and jump-rate factors;
+- a path-density Crooks identity derived from endpoint reweighting, cancellation
+  of aligned waiting-time factors, and local jump balance;
+- fixed-sector, all-sector, and fixed-horizon Crooks and Jarzynski theorems for
+  segmentwise constant escape and jump rates;
+- the original finite-state pathwise Crooks ratio, Jarzynski equality, integral
+  fluctuation theorem, explicit reverse protocol, and work-distribution Crooks
+  theorem; and
+- an exact summation-by-parts comparison and a path-uniform `O(1/N)` refinement
+  bound for the quench-then-transition and transition-then-quench work
+  conventions.
 
-## General measurable state spaces
+## Abstract measure formulation
 
-The module `CrooksJarzynski.MeasureProtocol` moves the probability-theoretic core from finite sums to Mathlib measures and kernels. For an arbitrary measurable trajectory space `Γ`, it represents Crooks' relation by the measure identity
+For an arbitrary measurable trajectory space `Γ`, Crooks' relation is expressed
+without division as
 
 ```lean
 forward.withDensity workWeight = freeEnergyWeight • reverse
 ```
 
-and proves
+by `CrooksJarzynski.MeasureProtocol.CrooksRelation`. If `reverse` is a
+probability measure, evaluating this identity on the whole path space gives
 
 ```lean
 ∫⁻ γ, workWeight γ ∂forward = freeEnergyWeight
 ```
 
-whenever `reverse` is a probability measure. The specialization `jarzynski_exponential` uses the physical weights `exp (-β W)` and `exp (-β ΔF)`.
+through `MeasureProtocol.jarzynski_lintegral`. The real-valued physical form is
+provided by `MeasureProtocol.jarzynski_integral`.
 
-For one Markov step on an arbitrary measurable state space `Ω`, the theorem `MeasureProtocol.Markov.oneStep_crooks` assumes the equilibrium reweighting identity
+This formulation avoids ratios on zero-probability trajectories and lets the
+same measure algebra serve discrete-time kernels, continuous-time jump-path
+densities, and future path-measure constructions.
+
+## Discrete time on arbitrary measurable state spaces
+
+For one Markov step, `MeasureProtocol.Markov.oneStep_crooks` assumes the
+equilibrium reweighting identity
 
 ```lean
 initial.withDensity workWeight = freeEnergyWeight • final
@@ -64,115 +87,132 @@ and local detailed balance as an equality of measures on `Ω × Ω`:
 final ⊗ₘ forward = (final ⊗ₘ reverse).map Prod.swap
 ```
 
-It then proves the corresponding Crooks relation for the forward one-step path measure `initial ⊗ₘ forward`; `oneStep_jarzynski` gives the integral equality directly. This formulation does not use singleton masses, ratios, or a finite-state assumption.
-
-The finite-horizon theorem `MeasureProtocol.Markov.multiStep_crooks` iterates
-the same two hypotheses over an arbitrary number of steps. Its chronological
-form, `multiStep_crooks_chronological`, transports the internal recursive path
-representation to `Fin (n + 1) → Ω` and an explicit measurable path reversal.
+The theorem derives the corresponding Crooks relation for the forward one-step
+path measure. `MeasureProtocol.Markov.multiStep_crooks` iterates these
+hypotheses over an arbitrary finite protocol, and
+`multiStep_crooks_chronological` transports the result to chronological paths
+with explicit measurable reversal.
 
 `MeasureProtocol.Gibbs` constructs equilibrium measures by exponential tilting
-of a base measure and proves that their quench weights satisfy the required
-reweighting identity. The resulting physical theorem
-`Gibbs.multiStep_crooks_physical` uses the standard weights
-`exp (-β W)` and `exp (-β ΔF)`. The same layer proves a real-integral
-Jarzynski equality and a work-distribution Crooks relation stated as a
-pushforward-measure identity, without assuming a density for the work law. Its
-reverse-hand side is explicitly the reverse-work law pushed forward by
-`w ↦ -w`, i.e. the measure-theoretic form of `P_R(-W)`.
+of a base measure and proves the physical total-work and endpoint-free-energy
+forms. `MeasureProtocol.GaussianExample` exercises a genuinely non-atomic state
+space, while `MeasureProtocol.MetropolisHastings` and
+`MeasureProtocol.MetropolisExample` construct state-dependent transition
+kernels and prove their measure-level detailed balance.
 
-The same layer derives the average-work second law
-`Gibbs.multiStep_second_law`, `ΔF ≤ ⟨W⟩`, from the real-integral Jarzynski
-equality by Jensen's inequality, under an explicit integrability hypothesis on
-the total work.
+For a time-inhomogeneous family of Mathlib kernels,
+`MeasureProtocol.Markov.trajectoryMeasure` constructs the law on `ℕ → Ω`.
+`finiteMarginal_eq_chronologicalForwardPathMeasure` identifies every finite
+dimensional marginal with the finite-horizon path measure used by the Crooks
+theorem.
 
-`MeasureProtocol.GaussianExample` applies the theory on `ℝ` using a Gaussian
-base measure and independently resampled Gibbs kernels. Every singleton has
-zero mass under the base and equilibrium state measures, so the example
-exercises genuinely non-atomic state spaces.
+## Continuous-time jump paths
 
-`MeasureProtocol.MetropolisHastings` constructs the Metropolis–Hastings
-kernel of a measurable energy from any Markov proposal kernel that is
-symmetric with respect to the reference measure, as the sum of an
-accepted-move subkernel and a rejection subkernel concentrated at the current
-state. The theorem `MetropolisHastings.detailedBalance` proves measure-level
-detailed balance for the corresponding Gibbs measure: the accepted part
-carries the symmetric joint density `min (exp (-β E x)) (exp (-β E y))`, and
-the rejected part lives on the diagonal. `MeasureProtocol.MetropolisExample`
-instantiates this on `ℝ` with Lebesgue reference measure, unit-variance
-Gaussian random-walk proposals, and quadratic energies `x ↦ c_i · x²`, giving
-a Crooks relation and Jarzynski equality whose transition kernels genuinely
-depend on the current state.
-`MeasureProtocolFiniteBridge` proves that the original finite protocol supplies
-the measure-level reweighting and local-balance hypotheses and is therefore a
-specialization of the general theorem. It also proves pointwise that the
-general chronological forward and time-reversed reverse path measures recover
-the legacy `forwardWeight` and `reverseWeight`.
+For exactly `n` jumps, the path type is
 
-For a time-inhomogeneous family `K t : ProbabilityTheory.Kernel Ω Ω`,
-`MeasureProtocol.Markov.trajectoryMeasure` adapts each ordinary Markov kernel
-to the history-dependent interface used by Mathlib's Ionescu–Tulcea
-construction. The resulting probability measure lives on the full path space
-`ℕ → Ω`. The theorem
-`finiteMarginal_eq_chronologicalForwardPathMeasure` proves that its first
-`n + 1` coordinates, for every `n`, have exactly the recursively constructed
-chronological finite-horizon path law.
-
-## Time reversal and discrete-time work
-
-A forward step first quenches the energy from `E_t` to `E_{t+1}` while the state remains `x_t`, and then applies a Markov transition at `E_{t+1}`. Its physical time reverse therefore traverses the reverse transition from `x_{t+1}` to `x_t` at `E_{t+1}` and performs the reverse quench only afterward.
-
-The formalization defines trajectory reversal as an involution and constructs this transition-then-quench reverse protocol explicitly. It proves
-
-```text
-P_rev(γ†) = P_R(γ†),
-W_rev(γ†) = -W(γ).
+```lean
+JumpPath Ω n =
+  (Fin (n + 1) → Ω) × (Fin (n + 1) → NNReal)
 ```
 
-For the same forward schedule, the alternative transition-then-quench convention evaluates each quench at `x_{t+1}` instead of `x_t`. The theorem `Protocol.workConvention_difference` gives the exact trajectory-wise difference between the two conventions, and `Protocol.workConvention_eq_of_stationary` shows that they agree when no transition changes the state.
+The first component stores the occupied states, and the second component stores
+the holding intervals, including the terminal no-jump interval. Reversal acts on
+both finite sequences and is proved measurable and involutive.
 
-### Path-uniform continuous-time refinement limit
+All finite jump counts are assembled into
 
-The module `CrooksJarzynski.WorkConventionLimit` separates this comparison from the stochastic protocol. It needs only an energy schedule and a path. Write
-
-```text
-q_i(x) = E_{i+1}(x) - E_i(x)
+```lean
+FullPath Ω = Σ n : ℕ, JumpPath Ω n
 ```
 
-for the energy increment across mesh edge `i`, and let `D_N` be the transition-then-quench work minus the quench-then-transition work on an `N`-edge path. The theorem `WorkConvention.discrepancy_summation_by_parts` proves the discrete summation-by-parts identity
+and `ContinuousTimeJump.FullPath.measure` sums the lifted sector measures.
+`FullPath.crooks_of_sector_relations` proves that sectorwise Crooks relations
+with a common free-energy factor sum to a Crooks relation on the complete
+finite-jump path space.
+
+The elapsed-time observable is the sum of all holding intervals. The set
 
 ```text
-D_N = q_{N-1}(x_N) - q_0(x_0)
-    + ∑_{i=1}^{N-1} (q_{i-1}(x_i) - q_i(x_i)).
+{γ | totalHoldingTime γ = T}
 ```
 
-The interior expression compares two temporal increments at the same state. In particular, it contains no state increment and requires no continuity, finite-jump, or probabilistic assumption on the path.
+is measurable and invariant under reversal. Crooks relations can therefore be
+restricted to a common physical horizon and then summed over all jump counts.
 
-Suppose that a uniform mesh has width `h = T / N` and that the energy increments obey the path-independent bounds
+### Rate-level density identity
+
+For segmentwise constant escape rates `λᵢ(x)` and jump rates `kᵢ(x,y)`, the
+forward density has the factorized form
 
 ```text
-|q_i(x)| ≤ M h,
-|q_i(x) - q_{i+1}(x)| ≤ L h².
+initialWeight(x₀)
+  · ∏ᵢ [exp (-λᵢ(xᵢ) τᵢ) · kᵢ(xᵢ,xᵢ₊₁)]
+  · exp (-λₙ(xₙ) τₙ).
 ```
 
-Then `WorkConvention.discrepancy_uniform_grid_abs_le` proves, for every path,
+The local-balance theorem assumes:
+
+```text
+initialWeight(x₀) · boundaryWork(x₀,xₙ)
+  = freeEnergyWeight · finalWeight(xₙ),
+
+forwardEscapeᵢ(x) = alignedReverseEscapeᵢ(x),
+
+forwardJumpᵢ(x,y) · jumpWorkᵢ(x,y)
+  = alignedReverseJumpᵢ(y,x).
+```
+
+The equality of aligned escape rates cancels every waiting-time survival
+factor. The endpoint and jump identities then multiply into the full pathwise
+Radon–Nikodym identity. The principal declarations are:
+
+```lean
+MeasureProtocol.ContinuousTimeJump.JumpPath.crooks_of_rate_local_balance
+MeasureProtocol.ContinuousTimeJump.JumpPath.jarzynski_of_rate_local_balance
+MeasureProtocol.ContinuousTimeJump.FullPath.crooks_of_rate_local_balance
+MeasureProtocol.ContinuousTimeJump.FullPath.jarzynski_of_rate_local_balance
+MeasureProtocol.ContinuousTimeJump.FullPath.crooks_restrict_horizon_of_rate_local_balance
+MeasureProtocol.ContinuousTimeJump.FullPath.jarzynski_restrict_horizon_of_rate_local_balance
+```
+
+## Discrete work conventions and refinement
+
+The finite-state protocol formalizes both quench-then-transition and
+transition-then-quench work. Their exact trajectory-wise difference is reduced
+by discrete summation by parts to temporal increments evaluated at the same
+state. Under uniform bounds
+
+```text
+|qᵢ(x)| ≤ M h,
+|qᵢ(x) - qᵢ₊₁(x)| ≤ L h²,
+```
+
+`WorkConvention.discrepancy_uniform_grid_abs_le` proves
 
 ```text
 |D_N| ≤ 2 M h + (N - 1) L h²
       ≤ (2 M T + L T²) / N.
 ```
 
-Consequently, `WorkConvention.discrepancy_uniform_tendsto_zero` proves directly that, for every `ε > 0`, all paths on every sufficiently fine mesh have discrepancy less than `ε`. The theorem `WorkConvention.discrepancy_tendsto_zero` gives the corresponding convergence for any chosen sequence of paths. Since the bound is independent of the paths and their probability laws, the convergence is path-uniform. This is a finite-variation time-discretization result for externally driven work; it is not an Itô–Stratonovich conversion statement, and it does not assert a continuous-time Crooks theorem.
+The resulting convergence is uniform over paths. This refinement result is
+separate from the continuous-time jump-process construction; it compares two
+discrete externally driven work conventions and is not an
+Itô–Stratonovich conversion theorem.
 
-## Work-distribution Crooks theorem
+## Scope
 
-For an exact work value `w`, let `p_F(w)` be the total forward weight of trajectories with work `w`, and let `p_R(-w)` be the corresponding mass in the explicit reverse experiment. The library proves the division-free identity
+The discrete-time development permits arbitrary measurable state spaces and an
+arbitrary finite horizon. Forward and reverse kernels and their local-balance
+identity are supplied; reverse-kernel existence by disintegration is not
+formalized.
 
-```text
-p_F(w) · exp(β ΔF) = p_R(-w) · exp(β w),
-```
-
-and derives the usual ratio whenever `p_R(-w) ≠ 0`.
+The continuous-time development covers finite-jump trajectories, the countable
+sum over all finite jump counts, and a measurable fixed-horizon restriction. It
+provides path-density Crooks and Jarzynski theorems for segmentwise constant
+escape and jump rates. The sector reference measures, normalization across all
+jump counts, and non-explosion are explicit hypotheses rather than being
+constructed from an infinitesimal generator. General calendar-time-dependent
+integrated hazards and Langevin/SDE path laws are not yet formalized.
 
 ## Build
 
@@ -181,84 +221,33 @@ lake exe cache get
 lake build
 ```
 
-The project is pinned to Lean and Mathlib `v4.32.0`. GitHub Actions preserves the complete compiler log as the `lean-build-log` artifact on every build attempt.
+The project is pinned to Lean and Mathlib `v4.32.0`. GitHub Actions also checks
+for proof placeholders and custom axioms and prints the kernel axioms of the
+headline theorems.
 
-## Main declarations
+## Theorem map
 
-```lean
-CrooksJarzynski.MeasureProtocol.CrooksRelation
-CrooksJarzynski.MeasureProtocol.jarzynski_lintegral
-CrooksJarzynski.MeasureProtocol.jarzynski_exponential
-CrooksJarzynski.MeasureProtocol.Markov.compProd_withDensity_fst
-CrooksJarzynski.MeasureProtocol.Markov.oneStep_crooks
-CrooksJarzynski.MeasureProtocol.Markov.oneStep_jarzynski
-CrooksJarzynski.MeasureProtocol.Markov.multiStep_crooks
-CrooksJarzynski.MeasureProtocol.Markov.multiStep_jarzynski
-CrooksJarzynski.MeasureProtocol.Markov.multiStep_crooks_chronological
-CrooksJarzynski.MeasureProtocol.Markov.trajectoryMeasure
-CrooksJarzynski.MeasureProtocol.Markov.trajectoryMeasure_step
-CrooksJarzynski.MeasureProtocol.Markov.finiteMarginal_eq_chronologicalForwardPathMeasure
-CrooksJarzynski.MeasureProtocol.Gibbs.reweight_freeEnergy
-CrooksJarzynski.MeasureProtocol.Gibbs.multiStep_crooks_physical
-CrooksJarzynski.MeasureProtocol.Gibbs.multiStep_jarzynski_integral
-CrooksJarzynski.MeasureProtocol.Gibbs.multiStep_second_law
-CrooksJarzynski.MeasureProtocol.Gibbs.multiStep_work_distribution_crooks
-CrooksJarzynski.MeasureProtocol.GaussianExample.multiStep_crooks
-CrooksJarzynski.MeasureProtocol.GaussianExample.multiStep_jarzynski
-CrooksJarzynski.MeasureProtocol.MetropolisHastings.detailedBalance
-CrooksJarzynski.MeasureProtocol.MetropolisExample.multiStep_crooks
-CrooksJarzynski.MeasureProtocol.MetropolisExample.multiStep_jarzynski
-CrooksJarzynski.MathlibBridge.trajectoryMeasure
-CrooksJarzynski.Protocol.measure_crooks
-CrooksJarzynski.Protocol.measure_jarzynski_integral
-CrooksJarzynski.Protocol.measure_forwardWeight_singleton
-CrooksJarzynski.Protocol.measure_reverseWeight_singleton
-CrooksJarzynski.Trajectory.reverse
-CrooksJarzynski.Trajectory.reverse_reverse
-CrooksJarzynski.Protocol.crooks_partition_ratio
-CrooksJarzynski.Protocol.crooks
-CrooksJarzynski.Protocol.crooks_ratio
-CrooksJarzynski.Protocol.reverseProtocol
-CrooksJarzynski.Protocol.reverseProtocol_forwardWeight_reverse
-CrooksJarzynski.Protocol.reverseProtocol_work_reverse
-CrooksJarzynski.Protocol.workConvention_difference
-CrooksJarzynski.WorkConvention.discrepancy_summation_by_parts
-CrooksJarzynski.WorkConvention.discrepancy_abs_le
-CrooksJarzynski.WorkConvention.discrepancy_uniform_grid_abs_le
-CrooksJarzynski.WorkConvention.discrepancy_uniform_tendsto_zero
-CrooksJarzynski.WorkConvention.discrepancy_tendsto_zero
-CrooksJarzynski.Protocol.work_distribution_crooks
-CrooksJarzynski.Protocol.work_distribution_crooks_ratio
-CrooksJarzynski.Protocol.jarzynski
-CrooksJarzynski.Protocol.integral_fluctuation_theorem
-CrooksJarzynski.Protocol.second_law
-```
-
-## Scope
-
-The complete finite-horizon, multi-step Crooks–Jarzynski development is
-discrete in time but permits arbitrary measurable state spaces. Forward and
-reverse kernels are supplied separately and satisfy measure-level local
-detailed balance; this library does not construct reverse kernels by
-disintegration. The Gibbs specialization assumes the integrability and
-nonvanishing conditions needed by Mathlib's exponentially tilted measures.
-
-A genuinely continuous-time stochastic-process theorem is outside the current
-scope.
-
-The work-convention refinement theorem has a narrower and more general scope: it is independent of the kernels, path probabilities, and finite-state assumption, but it compares only the two discrete approximations to externally driven work.
+See [`FORMALIZATION.md`](FORMALIZATION.md) for a paper-level-to-Lean declaration
+map covering the abstract, discrete-time, Gibbs, concrete-example, and
+continuous-time jump-process layers.
 
 ## References
 
-The formalized results correspond to the finite-state, discrete-time versions of:
+The formalized results build on the fluctuation-theorem literature, including:
 
-- C. Jarzynski, *Nonequilibrium equality for free energy differences*, Phys. Rev. Lett. **78**, 2690 (1997). [doi:10.1103/PhysRevLett.78.2690](https://doi.org/10.1103/PhysRevLett.78.2690)
-- G. E. Crooks, *Nonequilibrium measurements of free energy differences for microscopically reversible Markovian systems*, J. Stat. Phys. **90**, 1481 (1998). [doi:10.1023/A:1023208217925](https://doi.org/10.1023/A:1023208217925)
-- G. E. Crooks, *Entropy production fluctuation theorem and the nonequilibrium work relation for free energy differences*, Phys. Rev. E **60**, 2721 (1999). [doi:10.1103/PhysRevE.60.2721](https://doi.org/10.1103/PhysRevE.60.2721)
-- G. E. Crooks, *Path-ensemble averages in systems driven far from equilibrium*, Phys. Rev. E **61**, 2361 (2000). [doi:10.1103/PhysRevE.61.2361](https://doi.org/10.1103/PhysRevE.61.2361)
-- L. Peliti and S. Pigolotti, *Stochastic Thermodynamics: An Introduction*, Princeton University Press (2021) — for the discrete-time conventions.
-- P. Hack, S. Gottwald, and D. A. Braun, *Jarzynski's equality and Crooks' fluctuation theorem for general Markov chains with application to decision-making systems*, Entropy **24**, 1731 (2022). [doi:10.3390/e24121731](https://doi.org/10.3390/e24121731) — the closest modern treatment; its discussion of the discrete-time work asymmetry corresponds to `Protocol.workConvention_difference` here.
+- C. Jarzynski, *Nonequilibrium equality for free energy differences*, Phys.
+  Rev. Lett. **78**, 2690 (1997).
+- G. E. Crooks, *Nonequilibrium measurements of free energy differences for
+  microscopically reversible Markovian systems*, J. Stat. Phys. **90**, 1481
+  (1998).
+- G. E. Crooks, *Entropy production fluctuation theorem and the nonequilibrium
+  work relation for free energy differences*, Phys. Rev. E **60**, 2721 (1999).
+- G. E. Crooks, *Path-ensemble averages in systems driven far from
+  equilibrium*, Phys. Rev. E **61**, 2361 (2000).
+- L. Peliti and S. Pigolotti, *Stochastic Thermodynamics: An Introduction*,
+  Princeton University Press (2021).
 
 ## License
 
-Released under the Apache License 2.0 (see [LICENSE](LICENSE)), matching the licensing of [Mathlib](https://github.com/leanprover-community/mathlib4) and [Physlib](https://github.com/leanprover-community/physlib). See [CITATION.cff](CITATION.cff) for how to cite this repository.
+Released under the Apache License 2.0. See [`LICENSE`](LICENSE) and
+[`CITATION.cff`](CITATION.cff).
