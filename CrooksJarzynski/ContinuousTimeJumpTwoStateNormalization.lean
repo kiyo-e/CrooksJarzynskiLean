@@ -73,7 +73,8 @@ theorem rawPathProbability_ae_alternates (T : NNReal) (n : ℕ) :
   have hf : Measurable f := Simplex.measurable_assemblePath T
   rw [Simplex.rawPathProbability,
     ae_map_iff hf.aemeasurable (measurableSet_pathAlternatesSet n)]
-  apply (ae_prod_iff_ae_ae
+  apply (Measure.ae_prod_iff_ae_ae
+    (μ := alternatingStateLaw n) (ν := Simplex.freeSimplexProbability n)
     (hf (measurableSet_pathAlternatesSet n))).2
   exact (alternatingStateLaw_ae_alternates n).mono fun states hstates =>
     ae_of_all (Simplex.freeSimplexProbability n) fun u => by
@@ -94,13 +95,13 @@ theorem pathProbability_ae_alternates (T : NNReal) (n : ℕ) :
       change Alternates (fun i => γ.1 i.rev)
       exact alternates_reverse hγ
   unfold Simplex.pathProbability Simplex.symmetrizePathMeasure
-  exact ae_smul_measure ((ae_add_measure_iff).2 ⟨hraw, hreverse⟩) _
+  exact Measure.ae_smul_measure ((ae_add_measure_iff).2 ⟨hraw, hreverse⟩) _
 
 /-- The scaled CTMC reference is concentrated on alternating paths. -/
 theorem ctmcReference_ae_alternates (T : NNReal) (n : ℕ) :
     ∀ᵐ γ ∂ctmcReference T n, Alternates γ.1 := by
   unfold ctmcReference Simplex.reference
-  exact ae_smul_measure (pathProbability_ae_alternates T n) _
+  exact Measure.ae_smul_measure (pathProbability_ae_alternates T n) _
 
 /-- The CTMC reference is concentrated on the physical horizon. -/
 theorem ctmcReference_ae_horizon (T : NNReal) (n : ℕ) :
