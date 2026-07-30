@@ -4,20 +4,19 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: kiyo-e
 -/
 import CrooksJarzynski.ContinuousTimeJumpTwoStateFixedInitial
-import Mathlib.Probability.Kernel.Basic
+import Mathlib.Probability.Kernel.Composition.Comp
 
 /-!
 # The two-state transition semigroup as a Mathlib Markov kernel
 
 The terminal-state laws of the normalized fixed-initial path measures are
-packaged as a genuine `ProbabilityTheory.Kernel`.  Its singleton probabilities
-are the entries of `exp (TQ)`, and the previously proved explicit
-Chapman--Kolmogorov identity becomes the entrywise semigroup law for this
-kernel.
+packaged as a genuine `ProbabilityTheory.Kernel`. Its singleton probabilities
+are the entries of `exp (TQ)`. The kernel at time zero is the identity kernel,
+and kernel composition satisfies the Chapman--Kolmogorov semigroup law.
 -/
 
 open MeasureTheory ProbabilityTheory
-open scoped ENNReal BigOperators Matrix
+open scoped ENNReal BigOperators Matrix ProbabilityTheory
 
 namespace CrooksJarzynski
 namespace MeasureProtocol
@@ -72,6 +71,20 @@ theorem transitionKernel_real_singleton_eq_exp_generator
   rw [transitionKernel_apply]
   exact pathLawFrom_terminalState_eq_exp_generator T x y
 
+/-- The explicit transition probabilities are nonnegative at every
+nonnegative time. -/
+theorem transitionProbability_nonneg
+    (T : NNReal) (x y : State) :
+    0 ≤ transitionProbability (T : ℝ) x y := by
+  have hnonpos : -2 * (T : ℝ) ≤ 0 := by
+    nlinarith [T.2]
+  have hle : Real.exp (-2 * (T : ℝ)) ≤ 1 :=
+    Real.exp_le_one_iff.2 hnonpos
+  unfold transitionProbability
+  split_ifs
+  · positivity
+  · exact div_nonneg (sub_nonneg.mpr hle) (by norm_num)
+
 /-- ENNReal-valued singleton form of the explicit transition probability. -/
 theorem transitionKernel_singleton
     (T : NNReal) (x y : State) :
@@ -90,6 +103,59 @@ theorem transitionKernel_chapman_kolmogorov
       (transitionKernel (S + T) x).real {y} := by
   simpa only [transitionKernel_real_singleton] using
     transitionProbability_chapman_kolmogorov S T x y
+
+/-- The transition kernel at time zero is the identity kernel. -/
+theorem transitionKernel_zero :
+    transitionKernel 0 = (Kernel.id : Kernel State State) := by
+  apply Kernel.ext
+  intro x
+  apply Measure.ext_of_singleton
+  intro y
+  rw [transitionKernel_singleton, transitionProbability_zero]
+  by_cases hxy : x = y
+  · subst y
+    simp [Kernel.id_apply]
+  · simp [Kernel.id_apply, hxy]
+
+/-- The fixed-initial terminal laws form a Markov semigroup under Mathlib kernel
+composition. The rightmost kernel acts first. -/
+theorem transitionKernel_add (S T : NNReal) :
+    transitionKernel (S + T) =
+      transitionKernel T ∘ₖ transitionKernel S := by
+  symm
+  apply Kernel.ext
+  intro x
+  apply Measure.ext_of_singleton
+  intro y
+  rw [Kernel.comp_apply' _ _ _ (MeasurableSet.singleton y),
+    MeasureTheory.lintegral_fintype]
+  simp_rw [transitionKernel_singleton]
+  calc
+    (∑ z : State,
+        ENNReal.ofReal (transitionProbability (T : ℝ) z y) *
+          ENNReal.ofReal (transitionProbability (S : ℝ) x z)) =
+      ∑ z : State,
+        ENNReal.ofReal
+          (transitionProbability (S : ℝ) x z *
+            transitionProbability (T : ℝ) z y) := by
+      apply Finset.sum_congr rfl
+      intro z _
+      rw [← ENNReal.ofReal_mul (transitionProbability_nonneg T z y)]
+      congr 1
+      ring
+    _ = ENNReal.ofReal
+        (∑ z : State,
+          transitionProbability (S : ℝ) x z *
+            transitionProbability (T : ℝ) z y) := by
+      exact (ENNReal.ofReal_sum_of_nonneg
+        (s := Finset.univ)
+        (fun z _ => mul_nonneg
+          (transitionProbability_nonneg S x z)
+          (transitionProbability_nonneg T z y))).symm
+    _ = ENNReal.ofReal
+        (transitionProbability ((S + T : NNReal) : ℝ) x y) :=
+      congrArg ENNReal.ofReal
+        (transitionProbability_chapman_kolmogorov S T x y)
 
 end TwoState
 end ContinuousTimeJump
