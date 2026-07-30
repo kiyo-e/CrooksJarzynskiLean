@@ -10,10 +10,10 @@ import CrooksJarzynski.ContinuousTimeJumpTwoStateGenerator
 
 This module upgrades the generator comparison for the symmetric two-state chain
 from a Poisson-flip calculation to an identity for an actual normalized path
-law started from a prescribed state.  The path law is constructed sector by
+law started from a prescribed state. The path law is constructed sector by
 sector from the fixed-horizon simplex chart, is concentrated on paths whose
 initial coordinate is the prescribed state, and has Poisson jump-count
-marginal.  Pushing its real terminal coordinate forward gives the corresponding
+marginal. Pushing its real terminal coordinate forward gives the corresponding
 row of `exp (TQ)`.
 
 The explicit transition probabilities are also shown to satisfy the
@@ -110,10 +110,21 @@ theorem fixedInitialPathProbability_ae_initialState
     (T : NNReal) (x : State) (n : ℕ) :
     ∀ᵐ γ ∂fixedInitialPathProbability T x n, γ.1 0 = x := by
   have hf := measurable_assembleAlternatingPath (n := n) T x
+  have hmeas : Measurable (fun γ : JumpPath State n => γ.1 0) :=
+    (measurable_pi_apply 0).comp measurable_fst
   unfold fixedInitialPathProbability
-  rw [ae_map_iff hf.aemeasurable (by
-    exact (((measurable_pi_apply 0).comp measurable_fst).eq_const x).setOf)]
+  rw [ae_map_iff hf.aemeasurable (hmeas.eq_const x).setOf]
   exact ae_of_all _ fun _ => rfl
+
+/-- The fixed-initial geometric sector law is concentrated on alternating state
+sequences. -/
+theorem fixedInitialPathProbability_ae_alternates
+    (T : NNReal) (x : State) (n : ℕ) :
+    ∀ᵐ γ ∂fixedInitialPathProbability T x n, Alternates γ.1 := by
+  have hf := measurable_assembleAlternatingPath (n := n) T x
+  unfold fixedInitialPathProbability
+  rw [ae_map_iff hf.aemeasurable (measurableSet_pathAlternatesSet n)]
+  exact ae_of_all _ fun _ => alternatingStates_alternates n x
 
 /-- The terminal coordinate in the `n`-jump fixed-initial geometric sector is
 the `n`-fold flip of the prescribed initial state. -/
@@ -122,11 +133,13 @@ theorem fixedInitialPathProbability_ae_terminalState
     ∀ᵐ γ ∂fixedInitialPathProbability T x n,
       γ.1 (Fin.last n) = iterateFlip n x := by
   have hf := measurable_assembleAlternatingPath (n := n) T x
+  have hmeas : Measurable
+      (fun γ : JumpPath State n => γ.1 (Fin.last n)) :=
+    (measurable_pi_apply (Fin.last n)).comp measurable_fst
   unfold fixedInitialPathProbability
-  rw [ae_map_iff hf.aemeasurable (by
-    exact (((measurable_pi_apply (Fin.last n)).comp measurable_fst).eq_const
-      (iterateFlip n x)).setOf)]
-  exact ae_of_all _ fun u => by
+  rw [ae_map_iff hf.aemeasurable
+    (hmeas.eq_const (iterateFlip n x)).setOf]
+  exact ae_of_all _ fun _ => by
     simp [assembleAlternatingPath, alternatingStates]
 
 /-- Scale the fixed-initial geometric probability by the physical simplex
@@ -161,6 +174,15 @@ theorem fixedInitialSectorReference_ae_initialState
   exact Measure.ae_smul_measure
     (fixedInitialPathProbability_ae_initialState T x n) _
 
+/-- The fixed-initial sector reference is concentrated on alternating state
+sequences. -/
+theorem fixedInitialSectorReference_ae_alternates
+    (T : NNReal) (x : State) (n : ℕ) :
+    ∀ᵐ γ ∂fixedInitialSectorReference T x n, Alternates γ.1 := by
+  unfold fixedInitialSectorReference
+  exact Measure.ae_smul_measure
+    (fixedInitialPathProbability_ae_alternates T x n) _
+
 /-- The fixed-initial sector reference has the deterministic terminal state
 prescribed by the jump count. -/
 theorem fixedInitialSectorReference_ae_terminalState
@@ -177,8 +199,9 @@ theorem fixedInitialRateDensity_ae_eq_survivalWeight
     (T : NNReal) (x : State) (n : ℕ) :
     JumpPath.rateDensity endpointWeight escapeRate jumpRate =ᵐ[
       fixedInitialSectorReference T x n] fun _ => survivalWeight T := by
-  filter_upwards [fixedInitialSectorReference_ae_horizon T x n] with γ hγ
-  exact rateDensity_eq_survivalWeight γ (alternatingStates_alternates n x) hγ
+  filter_upwards [fixedInitialSectorReference_ae_alternates T x n,
+    fixedInitialSectorReference_ae_horizon T x n] with γ halternates hhorizon
+  exact rateDensity_eq_survivalWeight γ halternates hhorizon
 
 /-- The actual symmetric CTMC law in one jump-count sector, started from `x`. -/
 noncomputable def sectorLawFrom (T : NNReal) (x : State) (n : ℕ) :
@@ -300,9 +323,10 @@ private theorem liftMeasure_ae_initialState
     (T : NNReal) (x : State) (n : ℕ) :
     ∀ᵐ γ ∂FullPath.liftMeasure n (sectorLawFrom T x n),
       FullPath.initialState γ = x := by
-  unfold FullPath.liftMeasure
-  rw [ae_map_iff (FullPath.measurable_mk n).aemeasurable (by
-    exact (FullPath.measurable_initialState.eq_const x).setOf)]
+  change ∀ᵐ γ ∂Measure.map (Sigma.mk n) (sectorLawFrom T x n),
+    FullPath.initialState γ = x
+  rw [ae_map_iff (FullPath.measurable_mk n).aemeasurable
+    (FullPath.measurable_initialState.eq_const x).setOf]
   exact (sectorLawFrom_ae_initialState T x n).mono fun γ hγ => by
     simpa [FullPath.initialState] using hγ
 
@@ -315,18 +339,21 @@ theorem pathLawFrom_ae_initialState (T : NNReal) (x : State) :
     FullPath.measurable_initialState (measurableSet_singleton x)
   have hbad : MeasurableSet
       {γ : FullPath State | ¬ FullPath.initialState γ = x} := by
-    simpa using heq.compl
+    change MeasurableSet
+      ({γ : FullPath State | FullPath.initialState γ = x}ᶜ)
+    exact heq.compl
   apply ae_iff.mpr
   unfold pathLawFrom FullPath.measure
-  rw [Measure.sum_apply _ hbad]
-  apply tsum_eq_zero
+  rw [Measure.sum_apply _ hbad, ENNReal.tsum_eq_zero]
   intro n
   exact ae_iff.mp (liftMeasure_ae_initialState T x n)
 
 private theorem measurable_expectedTerminal (x : State) :
     Measurable (fun γ : FullPath State =>
       iterateFlip (FullPath.jumpCount γ) x) :=
-  Measurable.of_discrete.comp FullPath.measurable_jumpCount
+  ((Measurable.of_discrete :
+      Measurable (fun n : ℕ => iterateFlip n x)).comp
+    FullPath.measurable_jumpCount)
 
 private theorem liftMeasure_ae_terminalState
     (T : NNReal) (x : State) (n : ℕ) :
@@ -335,7 +362,8 @@ private theorem liftMeasure_ae_terminalState
   have heq : MeasurableSet {γ : FullPath State |
       FullPath.terminalState γ = iterateFlip (FullPath.jumpCount γ) x} :=
     (FullPath.measurable_terminalState.eq (measurable_expectedTerminal x)).setOf
-  unfold FullPath.liftMeasure
+  change ∀ᵐ γ ∂Measure.map (Sigma.mk n) (sectorLawFrom T x n),
+    FullPath.terminalState γ = iterateFlip (FullPath.jumpCount γ) x
   rw [ae_map_iff (FullPath.measurable_mk n).aemeasurable heq]
   exact (sectorLawFrom_ae_terminalState T x n).mono fun γ hγ => by
     simpa [FullPath.terminalState, FullPath.jumpCount] using hγ
@@ -350,11 +378,12 @@ theorem pathLawFrom_ae_terminalState (T : NNReal) (x : State) :
     (FullPath.measurable_terminalState.eq (measurable_expectedTerminal x)).setOf
   have hbad : MeasurableSet {γ : FullPath State |
       ¬ FullPath.terminalState γ = iterateFlip (FullPath.jumpCount γ) x} := by
-    simpa using heq.compl
+    change MeasurableSet ({γ : FullPath State |
+      FullPath.terminalState γ = iterateFlip (FullPath.jumpCount γ) x}ᶜ)
+    exact heq.compl
   apply ae_iff.mpr
   unfold pathLawFrom FullPath.measure
-  rw [Measure.sum_apply _ hbad]
-  apply tsum_eq_zero
+  rw [Measure.sum_apply _ hbad, ENNReal.tsum_eq_zero]
   intro n
   exact ae_iff.mp (liftMeasure_ae_terminalState T x n)
 
@@ -397,16 +426,14 @@ theorem transitionProbability_chapman_kolmogorov
       transitionProbability (S : ℝ) x z *
         transitionProbability (T : ℝ) z y) =
       transitionProbability ((S + T : NNReal) : ℝ) x y := by
-  have hexp : Real.exp (-2 * ((S + T : NNReal) : ℝ)) =
-      Real.exp (-2 * (S : ℝ)) * Real.exp (-2 * (T : ℝ)) := by
-    rw [show -2 * ((S + T : NNReal) : ℝ) =
-        (-2 * (S : ℝ)) + (-2 * (T : ℝ)) by
-      push_cast
-      ring, Real.exp_add]
+  have hmul :
+      Real.exp (-(S : ℝ) * 2) * Real.exp (-(T : ℝ) * 2) =
+        Real.exp (-(S : ℝ) * 2 - (T : ℝ) * 2) := by
+    rw [← Real.exp_add]
   rw [show (Finset.univ : Finset State) = {.zero, .one} by decide,
     Finset.sum_pair (by decide)]
   cases x <;> cases y <;>
-    simp [transitionProbability, hexp] <;> ring
+    simp [transitionProbability] <;> nlinarith [hmul]
 
 end TwoState
 end ContinuousTimeJump
