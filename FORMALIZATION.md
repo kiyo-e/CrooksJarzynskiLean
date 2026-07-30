@@ -12,6 +12,7 @@ declarations. All modules are exported by `CrooksJarzynski.lean`.
 | Real-integral Jarzynski equality | `MeasureProtocol.jarzynski_integral` |
 | Crooks relation for a pushed-forward observable | `MeasureProtocol.CrooksRelation.map` |
 | Density-free work-distribution relation | `MeasureProtocol.work_distribution_crooks` |
+| Average-work second law from a physical measure-level Crooks relation | `MeasureProtocol.second_law_of_crooks` |
 
 ## Markov paths on arbitrary measurable state spaces
 
@@ -59,7 +60,6 @@ integrability and nonzero-measure hypotheses are explicit theorem inputs.
 | Fixed-horizon segmentwise-rate full-path Crooks theorem | `MeasureProtocol.ContinuousTimeJump.FullPath.crooks_restrict_horizon_of_rate_local_balance` |
 | Fixed-horizon segmentwise-rate full-path Jarzynski equality | `MeasureProtocol.ContinuousTimeJump.FullPath.jarzynski_restrict_horizon_of_rate_local_balance` |
 | Real-integral Jarzynski equality from a Crooks relation | `MeasureProtocol.jarzynski_toReal_integral` |
-| Average-work second law from a measure-level Crooks relation | `MeasureProtocol.second_law_of_crooks` |
 | Real-integral full-path Jarzynski for segmentwise rates | `MeasureProtocol.ContinuousTimeJump.FullPath.jarzynski_toReal_of_rate_local_balance` |
 
 The generic continuous-time layer uses a common reversal-invariant reference
@@ -94,7 +94,7 @@ last holding time is the residual `T - ∑ᵢ<n τᵢ`.
 | Non-atomic Gaussian-state Jarzynski equality | `MeasureProtocol.GaussianExample.multiStep_jarzynski` |
 | Metropolis–Hastings detailed balance for a Gibbs measure | `MeasureProtocol.MetropolisHastings.detailedBalance` |
 | Metropolis random-walk Crooks theorem on `ℝ` | `MeasureProtocol.MetropolisExample.multiStep_crooks` |
-| Metropolis random-walk Jarzynski equality on `ℝ` | `MeasureProtocol.MetropolisExample.multiStep_jarzynski` |
+| Metropolis random-walk Jarzynski equality | `MeasureProtocol.MetropolisExample.multiStep_jarzynski` |
 | Two-state CTMC sector mass is the Poisson jump-count mass | `MeasureProtocol.ContinuousTimeJump.TwoState.sectorLaw_univ_eq_poisson` |
 | The two-state sector masses sum to one | `MeasureProtocol.ContinuousTimeJump.TwoState.tsum_sectorLaw_univ` |
 | The complete two-state finite-jump path law is a probability measure | `MeasureProtocol.ContinuousTimeJump.TwoState.instIsProbabilityMeasurePathLaw` |
@@ -119,11 +119,17 @@ last holding time is the residual `T - ∑ᵢ<n τᵢ`.
 | Nonequilibrium full-path Jarzynski equality | `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.full_jarzynski_lintegral` |
 | Nonequilibrium real-integral Jarzynski equality | `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.full_jarzynski_toReal` |
 | The work observable is not a.e. constant under the forward law | `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.fullWorkWeight_not_ae_const` |
+| The asymmetric generator is conservative | `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.physicalGenerator_row_sum` |
 | The asymmetric rates satisfy detailed balance for an explicit Gibbs state | `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.physical_detailedBalance` |
+| The Gibbs distribution is stationary for the asymmetric generator | `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.equilibriumProbability_stationary` |
+| The initial and final partition functions are `3` and `6` | `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.initial_partitionFunction`, `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.final_partitionFunction` |
+| The physical free-energy difference is `-log 2` | `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.physicalDeltaFreeEnergy_eq` |
 | The Crooks factor two is `exp (-β ΔF)` for explicit energies | `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.freeEnergyWeight_eq_exp_delta` |
 | The path-work weight is `exp (-β W)` for the final-quench work | `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.fullWorkWeight_eq_exp_thermodynamicWork` |
 | Physical Crooks relation with `exp (-β W)` and `exp (-β ΔF)` | `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.full_crooks_physical` |
+| Physical Jarzynski equality for the real work observable | `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.full_jarzynski_physical` |
 | Physical Jarzynski average evaluates to the explicit factor two | `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.full_jarzynski_physical_eq_two` |
+| Density-free Crooks relation for the work distributions | `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.full_work_distribution_crooks` |
 | Average-work second law for the asymmetric chain | `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.full_second_law` |
 | Integral fluctuation theorem for the entropy production | `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.full_entropyProduction_integral_fluctuation` |
 | Original finite protocol satisfies measure Crooks | `Protocol.measure_crooks` |
@@ -138,18 +144,23 @@ survival factor is `exp (-T)`. Hence each sector has Poisson mass
 disjoint union of finite-jump sectors, this supplies a concrete non-explosion
 result together with normalized Crooks and Jarzynski theorems. The path
 construction is identified with the conservative generator by matching the
-Poisson-flip kernel of its jump count with the matrix exponential `exp (TQ)`,
-and the terminal-state marginal of the normalized path law started from a
-fixed initial state is proved equal to the corresponding row of `exp (TQ)`.
+Poisson-flip kernel of its jump count with the matrix exponential `exp (TQ)`.
+The normalized fixed-initial terminal laws are additionally packaged as a
+Mathlib Markov kernel whose entries are `exp (TQ)` and which satisfies
+Chapman--Kolmogorov.
 
-The asymmetric example drives the chain with escape rates two and one, a Gibbs
-initial density, a uniform final density, and a nonconstant work observable
-whose free-energy factor is two. A telescoping evaluation of the weighted
-simplex integrals proves that the sector masses of every initial state sum to
-one, and the reversal invariance of the raw simplex reference upgrades both the
-forward law and the dynamically constructed reverse law to probability
-measures. The resulting full-path Crooks and Jarzynski equalities are therefore
-normalized and genuinely nonequilibrium.
+The asymmetric example starts from the reversible Gibbs equilibrium selected
+by the conservative rates `q(0,1)=2` and `q(1,0)=1`, and then applies a final
+energy quench. A telescoping evaluation of weighted simplex integrals proves
+that the sector masses of every initial state sum to one, and reversal
+invariance of the raw simplex reference upgrades both the forward law and the
+dynamically constructed reverse law to probability measures. The factorized
+path weight telescopes pointwise to the Boltzmann factor of the real quench
+work. The free-energy factor is derived from partition functions `Z₀=3` and
+`Z₁=6`, so the resulting normalized Crooks theorem has the physical form
+`e^{-βW}` versus `e^{-βΔF}` and implies the real-valued Jarzynski equality,
+the work-distribution Crooks relation, the average-work second law, and the
+entropy-production integral fluctuation theorem.
 
 ## Explicit scope boundaries
 
@@ -160,12 +171,13 @@ normalized and genuinely nonequilibrium.
 - A nonzero reversal-invariant fixed-horizon simplex reference is constructed,
   rather than assumed.
 - A normalized, non-explosive path law is constructed for the symmetric
-  unit-rate two-state CTMC, and the terminal-state marginal of its
-  fixed-initial version is identified with the matrix exponential of its
-  conservative generator.
-- A normalized, non-explosive, genuinely nonequilibrium path law is
-  constructed for the asymmetric two-state chain, with full-path Crooks and
-  real-integral Jarzynski equalities.
+  unit-rate two-state CTMC. Its normalized fixed-initial terminal laws form a
+  Markov kernel with matrix-exponential entries and Chapman--Kolmogorov.
+- A normalized, non-explosive physical quench model is constructed from an
+  asymmetric reversible two-state generator, with explicit Gibbs equilibrium,
+  energies, partition functions, free-energy difference, real work, physical
+  Crooks and Jarzynski relations, work-distribution Crooks, the average-work
+  second law, and the entropy-production integral fluctuation theorem.
 - A generator-to-path-law construction and a non-explosion theorem for an
   arbitrary CTMC are not formalized in this PR.
 - General calendar-time-dependent integrated escape rates and Langevin/SDE path
