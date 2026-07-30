@@ -145,26 +145,6 @@ theorem measurable_rateWorkWeight (n : ℕ) :
     boundaryWork jumpWork
   fun_prop
 
-/-- A concrete one-jump path from `zero` to `one`. -/
-def zeroToOnePath : JumpPath State 1 :=
-  (fun i => if i = 0 then .zero else .one, fun _ => 0)
-
-/-- The concrete path has work weight `3/2`, not one. -/
-theorem rateWorkWeight_zeroToOne :
-    JumpPath.rateWorkWeight boundaryWork jumpWork zeroToOnePath = 3 / 2 := by
-  norm_num [JumpPath.rateWorkWeight, JumpPath.factorizedWorkWeight,
-    zeroToOnePath, boundaryWork, jumpWork]
-  rw [ENNReal.div_eq_inv_mul]
-  ac_rfl
-
-theorem rateWorkWeight_zeroToOne_ne_one :
-    JumpPath.rateWorkWeight boundaryWork jumpWork zeroToOnePath ≠ 1 := by
-  rw [rateWorkWeight_zeroToOne]
-  intro h
-  have h' := congrArg (fun x : ℝ≥0∞ => x * 2) h
-  simp [ENNReal.div_mul_cancel (by norm_num : (2 : ℝ≥0∞) ≠ 0)
-    (by norm_num : (2 : ℝ≥0∞) ≠ ∞)] at h'
-
 theorem freeEnergyWeight_ne_one : freeEnergyWeight ≠ 1 := by
   norm_num [freeEnergyWeight]
 

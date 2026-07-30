@@ -10,7 +10,7 @@ library contains:
   Jarzynski statements for segmentwise jump rates;
 - a fixed-horizon simplex reference with derived volume `1 / n!`, a
   normalized, non-explosive two-state continuous-time Markov chain example
-  whose time-`T` marginal is identified with `exp (TQ)`, a normalized
+  whose Poisson jump-count kernel is identified with `exp (TQ)`, a normalized
   nonequilibrium asymmetric two-state example with a genuinely nonconstant
   work observable; and
 - a path-uniform refinement limit for the two standard discrete work
@@ -52,9 +52,9 @@ The library proves:
   segmentwise constant escape and jump rates;
 - a symmetric unit-rate two-state CTMC whose `n`-jump sector has Poisson mass,
   whose complete finite-jump path law is normalized and non-explosive, which
-  satisfies full-path Crooks and Jarzynski theorems, and whose time-`T` state
-  marginal equals the corresponding entry of the matrix exponential
-  `exp (TQ)` of its conservative generator;
+  satisfies full-path Crooks and Jarzynski theorems, and whose jump-count
+  marginal is Poisson with Poisson-flip kernel equal to the matrix
+  exponential `exp (TQ)` of its conservative generator;
 - an asymmetric two-state chain with escape rates two and one, a Gibbs initial
   state, a nonconstant work observable, and free-energy factor two, whose
   forward and dynamically constructed reverse path laws are both proved to be
@@ -265,10 +265,12 @@ MeasureProtocol.ContinuousTimeJump.TwoState.generator_row_sum
 ```
 
 The construction is identified with the conservative generator: the jump-count
-marginal of the path law is the Poisson distribution, and reading the
-deterministic alternating state off the jump count shows that the time-`T`
-state marginal equals the corresponding entry of the matrix exponential
-`exp (TQ)`, computed by diagonalizing `Q`:
+marginal of the path law is the Poisson distribution, and flipping any fixed
+seed state once per counted jump reproduces the Poisson-flip law whose point
+masses are exactly the entries of the matrix exponential `exp (TQ)`, computed
+by diagonalizing `Q`.  The stronger statement that conditions the path law on
+its own initial state and reads off its terminal-state marginal is not yet
+formalized:
 
 ```lean
 MeasureProtocol.ContinuousTimeJump.TwoState.map_pathLaw_jumpCount
@@ -283,7 +285,10 @@ at `one`, the initial density is the Gibbs density `(2/3, 4/3)` relative to
 the uniform reference, the final density is uniform, and the work observable
 is a genuinely nonconstant product of a boundary factor and per-jump factors.
 The free-energy factor is two, so neither side of Crooks' relation
-degenerates.
+degenerates.  Nondegeneracy holds on the support of the normalized law
+itself: the work values `3` and `3/2` each carry positive probability under
+the forward path law, so the work observable is not almost-everywhere
+constant (`fullWorkWeight_not_ae_const`).
 
 Normalization is proved by a telescoping evaluation of weighted simplex
 integrals: integrating out the last free coordinate shows that consecutive
@@ -303,6 +308,7 @@ MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.tsum_reverseSector
 MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.full_crooks
 MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.full_jarzynski_lintegral
 MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.full_jarzynski_toReal
+MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.fullWorkWeight_not_ae_const
 ```
 
 ## Discrete work conventions and refinement
@@ -342,8 +348,10 @@ path-density Crooks and Jarzynski theorems for segmentwise constant escape and
 jump rates. The library constructs a nonzero reversal-invariant simplex
 reference on the fixed horizon with derived volume `1 / n!`. It constructs and
 normalizes the full path law of the symmetric unit-rate two-state CTMC, proves
-its Poisson jump-count law and non-explosion, and identifies its time-`T`
-state marginal with the matrix exponential of its conservative generator. It
+its Poisson jump-count law and non-explosion, and identifies the Poisson-flip
+kernel of its jump count with the matrix exponential of its conservative
+generator; conditioning the path law on its own initial state is not yet
+formalized. It
 also constructs the nonequilibrium asymmetric two-state example, proves that
 its forward and dynamically constructed reverse path laws are probability
 measures, and derives normalized full-path Crooks, Jarzynski, and

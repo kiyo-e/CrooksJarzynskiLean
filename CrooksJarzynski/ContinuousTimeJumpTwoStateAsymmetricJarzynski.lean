@@ -1222,6 +1222,160 @@ theorem full_jarzynski_toReal (T : NNReal) :
     measurable_fullWorkWeight (by norm_num [freeEnergyWeight])
     (full_crooks T)
 
+
+/-! ### The work observable is nondegenerate under the normalized law -/
+
+/-- The Gibbs initial weight concentrated on a single state. -/
+private noncomputable def initialIndicatorWeight (x : State) :
+    State → ℝ≥0∞ :=
+  fun s => if s = x then gibbsInitialWeight s else 0
+
+/-- Cutting the forward density down to a fixed initial state replaces the
+initial weight by its single-state restriction. -/
+private theorem indicator_rateDensity {n : ℕ} (x : State)
+    (γ : JumpPath State n) :
+    ({γ : JumpPath State n | γ.1 0 = x}).indicator
+        (JumpPath.rateDensity gibbsInitialWeight escapeRate jumpRate) γ =
+      JumpPath.rateDensity (initialIndicatorWeight x) escapeRate jumpRate
+        γ := by
+  unfold JumpPath.rateDensity JumpPath.density initialIndicatorWeight
+  by_cases h : γ.1 0 = x
+  · rw [Set.indicator_of_mem (show γ ∈ _ from h)]
+    simp [h]
+  · rw [Set.indicator_of_notMem (show γ ∉ _ from h)]
+    simp [h]
+
+/-- The mass a forward sector assigns to paths with a fixed initial state. -/
+theorem forwardSectorLaw_initialState (T : NNReal) (n : ℕ) (x : State) :
+    forwardSectorLaw T n {γ : JumpPath State n | γ.1 0 = x} =
+      2⁻¹ * (gibbsInitialWeight x * sectorMass T x n) := by
+  have hmeas : Measurable (fun γ : JumpPath State n => γ.1 0) :=
+    (measurable_pi_apply 0).comp measurable_fst
+  have hset : MeasurableSet {γ : JumpPath State n | γ.1 0 = x} :=
+    hmeas (measurableSet_singleton x)
+  unfold forwardSectorLaw FullPath.forwardRateSectorMeasure pathMeasure
+  rw [withDensity_apply _ hset, ← lintegral_indicator hset,
+    lintegral_congr (indicator_rateDensity x),
+    sectorReference_eq_rawSectorReference,
+    lintegral_rateDensity_rawSectorReference (initialIndicatorWeight x) T n]
+  congr 1
+  rw [show (Finset.univ : Finset State) = {.zero, .one} by decide,
+    Finset.sum_pair (by decide)]
+  cases x <;> simp [initialIndicatorWeight]
+
+/-- With no jump to place, the sector mass is a strictly positive survival
+probability. -/
+theorem sectorMass_zero_pos (T : NNReal) (x : State) :
+    0 < sectorMass T x 0 := by
+  unfold sectorMass sectorIntegral ratePrefixProduct cubeExpWeight
+  have hset : Simplex.freeSimplexSet 0 = Set.univ := by
+    ext u
+    simp [Simplex.freeSimplexSet]
+  have hres : ∀ u : Fin 0 → I, residual u = 1 := by
+    intro u
+    unfold residual
+    simp
+  simp only [Finset.univ_eq_empty, Finset.prod_empty, one_mul, hset,
+    Measure.restrict_univ]
+  simp_rw [hres]
+  rw [lintegral_const]
+  have h1 : (volume : Measure (Fin 0 → I)) Set.univ = 1 := by
+    simp
+  rw [h1, mul_one]
+  exact ENNReal.ofReal_pos.2 (Real.exp_pos _)
+
+/-- The Gibbs initial weight is strictly positive. -/
+theorem gibbsInitialWeight_pos (x : State) :
+    0 < gibbsInitialWeight x := by
+  cases x <;>
+    exact ENNReal.div_pos (by norm_num) (by norm_num)
+
+/-- Both initial states carry positive forward mass in the no-jump sector. -/
+theorem forwardSectorLaw_initialState_pos (T : NNReal) (x : State) :
+    0 < forwardSectorLaw T 0 {γ : JumpPath State 0 | γ.1 0 = x} := by
+  rw [forwardSectorLaw_initialState]
+  exact ENNReal.mul_pos (by norm_num)
+    (ENNReal.mul_pos (gibbsInitialWeight_pos x).ne'
+      (sectorMass_zero_pos T x).ne').ne'
+
+/-- On a path with no jumps, the work weight is the boundary factor of its
+constant state. -/
+theorem rateWorkWeight_zeroJump (γ : JumpPath State 0) :
+    JumpPath.rateWorkWeight boundaryWork jumpWork γ =
+      boundaryWork (γ.1 0) (γ.1 0) := by
+  unfold JumpPath.rateWorkWeight JumpPath.factorizedWorkWeight
+  have hlast : (Fin.last 0) = (0 : Fin 1) := rfl
+  simp [hlast]
+
+private theorem forwardPathLaw_workWeight_value_pos
+    (T : NNReal) (x : State) (v : ℝ≥0∞)
+    (hval : boundaryWork x x = v) :
+    0 < forwardPathLaw T {γ : FullPath State | fullWorkWeight γ = v} := by
+  have hA : MeasurableSet {γ : FullPath State | fullWorkWeight γ = v} :=
+    measurable_fullWorkWeight (measurableSet_singleton v)
+  have hincl : {γ : JumpPath State 0 | γ.1 0 = x} ⊆
+      Sigma.mk 0 ⁻¹' {γ : FullPath State | fullWorkWeight γ = v} := by
+    intro γ hγ
+    have hstate : γ.1 0 = x := hγ
+    show fullWorkWeight ⟨0, γ⟩ = v
+    calc fullWorkWeight ⟨0, γ⟩ =
+        JumpPath.rateWorkWeight boundaryWork jumpWork γ := rfl
+      _ = boundaryWork (γ.1 0) (γ.1 0) := rateWorkWeight_zeroJump γ
+      _ = v := by rw [hstate, hval]
+  calc (0 : ℝ≥0∞) <
+      forwardSectorLaw T 0 {γ : JumpPath State 0 | γ.1 0 = x} :=
+        forwardSectorLaw_initialState_pos T x
+    _ ≤ forwardSectorLaw T 0
+          (Sigma.mk 0 ⁻¹' {γ : FullPath State | fullWorkWeight γ = v}) :=
+        measure_mono hincl
+    _ = FullPath.liftMeasure 0 (forwardSectorLaw T 0)
+          {γ : FullPath State | fullWorkWeight γ = v} :=
+        (Measure.map_apply (FullPath.measurable_mk 0) hA).symm
+    _ ≤ ∑' n, FullPath.liftMeasure n (forwardSectorLaw T n)
+          {γ : FullPath State | fullWorkWeight γ = v} :=
+        ENNReal.le_tsum 0
+    _ = forwardPathLaw T {γ : FullPath State | fullWorkWeight γ = v} := by
+        unfold forwardPathLaw FullPath.measure
+        rw [Measure.sum_apply _ hA]
+
+/-- The work value `3` has positive probability under the forward law. -/
+theorem forwardPathLaw_workWeight_three_pos (T : NNReal) :
+    0 < forwardPathLaw T {γ : FullPath State | fullWorkWeight γ = 3} :=
+  forwardPathLaw_workWeight_value_pos T .zero 3 rfl
+
+/-- The work value `3 / 2` has positive probability under the forward law. -/
+theorem forwardPathLaw_workWeight_three_halves_pos (T : NNReal) :
+    0 < forwardPathLaw T
+      {γ : FullPath State | fullWorkWeight γ = 3 / 2} :=
+  forwardPathLaw_workWeight_value_pos T .one (3 / 2) rfl
+
+/-- The work observable is not almost-everywhere constant under the
+normalized forward path law: the asymmetric example is genuinely
+nondegenerate on the support of its own path measure. -/
+theorem fullWorkWeight_not_ae_const (T : NNReal) :
+    ¬ ∃ c : ℝ≥0∞,
+      fullWorkWeight =ᵐ[forwardPathLaw T] fun _ => c := by
+  rintro ⟨c, hc⟩
+  have h0 : forwardPathLaw T {γ | ¬ fullWorkWeight γ = c} = 0 :=
+    ae_iff.mp hc
+  have hval : ∀ v : ℝ≥0∞,
+      0 < forwardPathLaw T {γ : FullPath State | fullWorkWeight γ = v} →
+        c = v := by
+    intro v hv
+    by_contra hne
+    have hsub : {γ : FullPath State | fullWorkWeight γ = v} ⊆
+        {γ : FullPath State | ¬ fullWorkWeight γ = c} := by
+      intro γ hγ h'
+      exact hne (h'.symm.trans hγ)
+    exact lt_irrefl (0 : ℝ≥0∞)
+      (hv.trans_le ((measure_mono hsub).trans h0.le))
+  have h3 := hval 3 (forwardPathLaw_workWeight_three_pos T)
+  have h32 := hval (3 / 2) (forwardPathLaw_workWeight_three_halves_pos T)
+  have hcontra : (3 : ℝ≥0∞) = 3 / 2 := h3.symm.trans h32
+  have := congrArg ENNReal.toReal hcontra
+  rw [ENNReal.toReal_div] at this
+  norm_num at this
+
 end AsymmetricExample
 end TwoState
 end ContinuousTimeJump

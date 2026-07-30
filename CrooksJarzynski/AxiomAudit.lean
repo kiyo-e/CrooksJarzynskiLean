@@ -94,7 +94,7 @@ the trusted base of the development.
 #print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.TwoState.pathLaw_jarzynski_toReal
 #print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.TwoState.generator_row_sum
 #print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.sector_crooks
-#print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.rateWorkWeight_zeroToOne_ne_one
+#print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.fullWorkWeight_not_ae_const
 #print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.tsum_sectorMass
 #print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.map_rawSectorReference_reverse
 #print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.sectorReference_eq_rawSectorReference
