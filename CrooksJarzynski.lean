@@ -22,6 +22,7 @@ import CrooksJarzynski.ContinuousTimeJumpTwoStateAsymmetric
 import CrooksJarzynski.ContinuousTimeJumpTwoStateAsymmetricNormalization
 import CrooksJarzynski.ContinuousTimeJumpTwoStateAsymmetricJarzynski
 import CrooksJarzynski.ContinuousTimeJumpTwoStateGenerator
+import CrooksJarzynski.ContinuousTimeJumpTwoStateFixedInitial
 import CrooksJarzynski.MathlibBridge
 import CrooksJarzynski.MeasureProtocolFiniteBridge
 import CrooksJarzynski.PhyslibBridge
@@ -92,7 +93,8 @@ canonical-ensemble API. The main results include `Protocol.crooks`,
 `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.sector_crooks`,
 `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.full_crooks`,
 `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.full_jarzynski_lintegral`,
-`MeasureProtocol.ContinuousTimeJump.TwoState.conditionalTerminalLaw_eq_exp_generator`,
+`MeasureProtocol.ContinuousTimeJump.TwoState.pathLawFrom_terminalState_eq_exp_generator`,
+`MeasureProtocol.ContinuousTimeJump.TwoState.transitionProbability_chapman_kolmogorov`,
 `MeasureProtocol.ContinuousTimeJump.TwoState.pathLaw_crooks`,
 `MeasureProtocol.ContinuousTimeJump.TwoState.pathLaw_jarzynski`,
 `MeasureProtocol.ContinuousTimeJump.TwoState.sectorLaw_univ_eq_poisson`,
