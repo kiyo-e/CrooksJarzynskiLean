@@ -59,6 +59,7 @@ theorem transitionKernel_real_singleton
       transitionProbability (T : ℝ) x y := by
   rw [transitionKernel_apply_eq_conditionalTerminalLaw,
     conditionalTerminalLaw_real_singleton_eq]
+  rfl
 
 /-- The real singleton probabilities are the corresponding entries of the
 matrix exponential of the conservative generator. -/

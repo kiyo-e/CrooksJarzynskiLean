@@ -109,6 +109,8 @@ last holding time is the residual `T - ∑ᵢ<n τᵢ`.
 | The terminal-state marginal of the fixed-initial path law | `MeasureProtocol.ContinuousTimeJump.TwoState.map_pathLawFrom_terminalState` |
 | The fixed-initial terminal marginal equals the entries of `exp (TQ)` | `MeasureProtocol.ContinuousTimeJump.TwoState.pathLawFrom_terminalState_eq_exp_generator` |
 | Chapman--Kolmogorov for the explicit transition probabilities | `MeasureProtocol.ContinuousTimeJump.TwoState.transitionProbability_chapman_kolmogorov` |
+| The terminal laws form a Markov transition kernel with `exp (TQ)` entries | `MeasureProtocol.ContinuousTimeJump.TwoState.transitionKernel_real_singleton_eq_exp_generator` |
+| Chapman--Kolmogorov for the packaged transition kernel | `MeasureProtocol.ContinuousTimeJump.TwoState.transitionKernel_chapman_kolmogorov` |
 | Asymmetric-chain sector masses sum to one for every initial state | `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.tsum_sectorMass` |
 | The raw simplex reference is reversal invariant | `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.map_rawSectorReference_reverse` |
 | The normalized asymmetric forward path law is a probability measure | `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.tsum_forwardSectorLaw_univ` |
