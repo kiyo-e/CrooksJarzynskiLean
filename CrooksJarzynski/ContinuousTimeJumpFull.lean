@@ -154,6 +154,25 @@ theorem jarzynski_of_sector_relations
     (crooks_of_sector_relations forward reverse workWeight
       freeEnergyWeight hwork hsector)
 
+/-- Real-valued full-path Jarzynski equality for a finite common
+free-energy weight. -/
+theorem jarzynski_toReal_of_sector_relations
+    (forward reverse : (n : ℕ) → Measure (JumpPath Ω n))
+    (workWeight : (n : ℕ) → JumpPath Ω n → ℝ≥0∞)
+    (freeEnergyWeight : ℝ≥0∞)
+    [IsProbabilityMeasure (measure reverse)]
+    (hwork : ∀ n, Measurable (workWeight n))
+    (hfreeEnergy : freeEnergyWeight ≠ ∞)
+    (hsector : ∀ n,
+      CrooksRelation (forward n) (reverse n)
+        (workWeight n) freeEnergyWeight) :
+    ∫ γ, (weight workWeight γ).toReal ∂(measure forward) =
+      freeEnergyWeight.toReal :=
+  jarzynski_toReal_integral _ _ _ _ (measurable_weight workWeight hwork)
+    hfreeEnergy
+    (crooks_of_sector_relations forward reverse workWeight
+      freeEnergyWeight hwork hsector)
+
 end FullPath
 end ContinuousTimeJump
 end MeasureProtocol

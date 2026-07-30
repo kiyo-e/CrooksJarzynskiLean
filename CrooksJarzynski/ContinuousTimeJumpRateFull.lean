@@ -154,6 +154,54 @@ theorem jarzynski_of_rate_local_balance
       boundaryWork jumpWork freeEnergyWeight hreference hforward
       halignedReverse hwork hboundary hescape hjump)
 
+/-- Real-valued full-path Jarzynski equality for segmentwise rates and a
+finite common free-energy weight. -/
+theorem jarzynski_toReal_of_rate_local_balance
+    (reference : (n : ℕ) → Measure (JumpPath Ω n))
+    (initialWeight finalWeight : Ω → ℝ≥0∞)
+    (forwardEscape reverseEscape :
+      (n : ℕ) → Fin (n + 1) → Ω → NNReal)
+    (forwardJump reverseJump :
+      (n : ℕ) → Fin n → Ω → Ω → NNReal)
+    (boundaryWork : Ω → Ω → ℝ≥0∞)
+    (jumpWork : (n : ℕ) → Fin n → Ω → Ω → ℝ≥0∞)
+    (freeEnergyWeight : ℝ≥0∞)
+    [IsProbabilityMeasure
+      (measure
+        (reversedRateSectorMeasure reference finalWeight
+          reverseEscape reverseJump))]
+    (hreference : ∀ n, (reference n).map JumpPath.reverse = reference n)
+    (hforward : ∀ n,
+      Measurable
+        (JumpPath.rateDensity initialWeight (forwardEscape n) (forwardJump n)))
+    (halignedReverse : ∀ n,
+      Measurable
+        (JumpPath.alignedReverseRateDensity finalWeight
+          (reverseEscape n) (reverseJump n)))
+    (hwork : ∀ n,
+      Measurable (JumpPath.rateWorkWeight boundaryWork (jumpWork n)))
+    (hfreeEnergy : freeEnergyWeight ≠ ∞)
+    (hboundary : ∀ x y,
+      initialWeight x * boundaryWork x y =
+        freeEnergyWeight * finalWeight y)
+    (hescape : ∀ n i x,
+      forwardEscape n i x = reverseEscape n i x)
+    (hjump : ∀ n i x y,
+      JumpPath.jumpWeightOfRate (forwardJump n) i x y *
+          jumpWork n i x y =
+        JumpPath.jumpWeightOfRate (reverseJump n) i y x) :
+    ∫ γ, (weight (rateWorkWeightFamily boundaryWork jumpWork) γ).toReal
+        ∂(measure
+          (forwardRateSectorMeasure reference initialWeight
+            forwardEscape forwardJump)) =
+      freeEnergyWeight.toReal :=
+  jarzynski_toReal_integral _ _ _ _
+    (measurable_weight _ hwork) hfreeEnergy
+    (crooks_of_rate_local_balance reference initialWeight finalWeight
+      forwardEscape reverseEscape forwardJump reverseJump
+      boundaryWork jumpWork freeEnergyWeight hreference hforward
+      halignedReverse hwork hboundary hescape hjump)
+
 /-- The full rate-level Crooks relation after every sector is restricted to the
 same physical time horizon. -/
 theorem crooks_restrict_horizon_of_rate_local_balance
@@ -252,6 +300,55 @@ theorem jarzynski_restrict_horizon_of_rate_local_balance
             forwardEscape forwardJump n)) =
       freeEnergyWeight :=
   jarzynski_lintegral _ _ _ _
+    (crooks_restrict_horizon_of_rate_local_balance T reference
+      initialWeight finalWeight forwardEscape reverseEscape
+      forwardJump reverseJump boundaryWork jumpWork freeEnergyWeight
+      hreference hforward halignedReverse hwork hboundary hescape hjump)
+
+/-- Real-valued fixed-horizon Jarzynski equality for segmentwise rates and a
+finite common free-energy weight. -/
+theorem jarzynski_toReal_restrict_horizon_of_rate_local_balance
+    (T : NNReal)
+    (reference : (n : ℕ) → Measure (JumpPath Ω n))
+    (initialWeight finalWeight : Ω → ℝ≥0∞)
+    (forwardEscape reverseEscape :
+      (n : ℕ) → Fin (n + 1) → Ω → NNReal)
+    (forwardJump reverseJump :
+      (n : ℕ) → Fin n → Ω → Ω → NNReal)
+    (boundaryWork : Ω → Ω → ℝ≥0∞)
+    (jumpWork : (n : ℕ) → Fin n → Ω → Ω → ℝ≥0∞)
+    (freeEnergyWeight : ℝ≥0∞)
+    [IsProbabilityMeasure
+      (measure fun n => JumpPath.horizonMeasure T
+        (reversedRateSectorMeasure reference finalWeight
+          reverseEscape reverseJump n))]
+    (hreference : ∀ n, (reference n).map JumpPath.reverse = reference n)
+    (hforward : ∀ n,
+      Measurable
+        (JumpPath.rateDensity initialWeight (forwardEscape n) (forwardJump n)))
+    (halignedReverse : ∀ n,
+      Measurable
+        (JumpPath.alignedReverseRateDensity finalWeight
+          (reverseEscape n) (reverseJump n)))
+    (hwork : ∀ n,
+      Measurable (JumpPath.rateWorkWeight boundaryWork (jumpWork n)))
+    (hfreeEnergy : freeEnergyWeight ≠ ∞)
+    (hboundary : ∀ x y,
+      initialWeight x * boundaryWork x y =
+        freeEnergyWeight * finalWeight y)
+    (hescape : ∀ n i x,
+      forwardEscape n i x = reverseEscape n i x)
+    (hjump : ∀ n i x y,
+      JumpPath.jumpWeightOfRate (forwardJump n) i x y *
+          jumpWork n i x y =
+        JumpPath.jumpWeightOfRate (reverseJump n) i y x) :
+    ∫ γ, (weight (rateWorkWeightFamily boundaryWork jumpWork) γ).toReal
+        ∂(measure fun n => JumpPath.horizonMeasure T
+          (forwardRateSectorMeasure reference initialWeight
+            forwardEscape forwardJump n)) =
+      freeEnergyWeight.toReal :=
+  jarzynski_toReal_integral _ _ _ _
+    (measurable_weight _ hwork) hfreeEnergy
     (crooks_restrict_horizon_of_rate_local_balance T reference
       initialWeight finalWeight forwardEscape reverseEscape
       forwardJump reverseJump boundaryWork jumpWork freeEnergyWeight
