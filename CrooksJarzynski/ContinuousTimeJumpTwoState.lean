@@ -79,9 +79,10 @@ theorem measurableSet_alternates {n : ℕ} :
 theorem alternates_reverse {n : ℕ} {states : Fin (n + 1) → State}
     (h : Alternates states) : Alternates (fun i => states i.rev) := by
   intro i
+  change states i.succ.rev = flip (states i.castSucc.rev)
   rw [Fin.rev_succ, Fin.rev_castSucc]
   have hi := h i.rev
-  simpa using congrArg flip hi |>.symm
+  simpa using (congrArg flip hi).symm
 
 /-- The uniform initial state distribution. -/
 noncomputable def initialStateLaw : Measure State :=
@@ -133,7 +134,9 @@ theorem sectorReference_ne_zero {T : NNReal} (hT : 0 < T) (n : ℕ) :
     sectorReference T n ≠ 0 := by
   apply Simplex.reference_ne_zero T (alternatingStateLaw n)
   unfold simplexMass
-  positivity
+  have hT0 : (T : ℝ≥0∞) ≠ 0 := by
+    exact_mod_cast hT.ne'
+  exact ne_of_gt (ENNReal.div_pos (pow_ne_zero n hT0) (by simp))
 
 /-- The sector reference is concentrated on paths of duration `T`. -/
 theorem sectorReference_ae_horizon (T : NNReal) (n : ℕ) :
@@ -154,6 +157,18 @@ theorem jumpRate_symm {n : ℕ} (i : Fin n) (x y : State) :
     jumpRate i x y = jumpRate i y x := by
   cases x <;> cases y <;> rfl
 
+/-- Evaluation of a discrete jump-rate factor along a path is measurable. -/
+@[fun_prop]
+theorem measurable_jumpWeight_eval {n : ℕ} (i : Fin n)
+    (a b : Fin (n + 1)) :
+    Measurable (fun γ : JumpPath State n =>
+      JumpPath.jumpWeightOfRate (jumpRate (n := n)) i (γ.1 a) (γ.1 b)) := by
+  unfold JumpPath.jumpWeightOfRate jumpRate
+  apply Measurable.ite
+  · exact measurable_fst MeasurableSet.of_discrete
+  · exact measurable_const
+  · exact measurable_const
+
 /-- There is no thermodynamic work in this equilibrium example. -/
 def boundaryWork : State → State → ℝ≥0∞ :=
   fun _ _ => 1
@@ -173,8 +188,7 @@ theorem measurable_rateDensity (T : NNReal) (n : ℕ) :
       (JumpPath.rateDensity endpointWeight
         (escapeRate (n := n)) (jumpRate (n := n))) := by
   unfold JumpPath.rateDensity JumpPath.density
-    JumpPath.holdingWeightOfEscapeRate JumpPath.jumpWeightOfRate
-    endpointWeight escapeRate jumpRate
+    JumpPath.holdingWeightOfEscapeRate endpointWeight escapeRate
   fun_prop
 
 /-- The aligned reverse rate density is measurable. -/
@@ -183,8 +197,7 @@ theorem measurable_alignedReverseRateDensity (T : NNReal) (n : ℕ) :
       (JumpPath.alignedReverseRateDensity endpointWeight
         (escapeRate (n := n)) (jumpRate (n := n))) := by
   unfold JumpPath.alignedReverseRateDensity JumpPath.alignedReverseDensity
-    JumpPath.holdingWeightOfEscapeRate JumpPath.jumpWeightOfRate
-    endpointWeight escapeRate jumpRate
+    JumpPath.holdingWeightOfEscapeRate endpointWeight escapeRate
   fun_prop
 
 /-- The work weight is the constant one function. -/
