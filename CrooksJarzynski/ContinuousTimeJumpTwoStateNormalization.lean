@@ -331,7 +331,8 @@ def generatorRate (x y : State) : NNReal :=
 /-- The escape rate computed from the generator is one. -/
 theorem generator_escape_eq_one (x : State) :
     (∑ y : State, (if y = x then (0 : NNReal) else generatorRate x y)) = 1 := by
-  cases x <;> decide
+  have huniv : (Finset.univ : Finset State) = {.zero, .one} := by decide
+  cases x <;> simp [huniv, generatorRate, flip]
 
 /-- The segment jump-rate family is the generator's off-diagonal rate. -/
 theorem jumpRate_eq_generatorRate {n : ℕ} (i : Fin n) (x y : State) :
