@@ -59,12 +59,28 @@ integrability and nonzero-measure hypotheses are explicit theorem inputs.
 | Fixed-horizon segmentwise-rate full-path Crooks theorem | `MeasureProtocol.ContinuousTimeJump.FullPath.crooks_restrict_horizon_of_rate_local_balance` |
 | Fixed-horizon segmentwise-rate full-path Jarzynski equality | `MeasureProtocol.ContinuousTimeJump.FullPath.jarzynski_restrict_horizon_of_rate_local_balance` |
 
-The continuous-time layer uses a common reversal-invariant reference measure in
-each fixed-jump-count sector. Exponential survival factors are instantiated for
-segmentwise constant escape rates. Equality of the forward and aligned reverse
-escape rates cancels waiting-time factors, while endpoint reweighting and local
-jump balance give the remaining path-density ratio. Sector normalization and
-the total probability mass across all jump counts are explicit hypotheses.
+The generic continuous-time layer uses a common reversal-invariant reference
+measure in each fixed-jump-count sector. Exponential survival factors are
+instantiated for segmentwise constant escape rates. Equality of the forward and
+aligned reverse escape rates cancels waiting-time factors, while endpoint
+reweighting and local jump balance give the remaining path-density ratio.
+
+## Fixed-horizon simplex construction
+
+| Informal statement | Lean declaration |
+| --- | --- |
+| The free-coordinate simplex has positive product volume | `MeasureProtocol.ContinuousTimeJump.Simplex.volume_freeSimplexSet_pos` |
+| The residual final holding interval makes the total duration exactly `T` | `MeasureProtocol.ContinuousTimeJump.Simplex.sum_holdingTimesOfFree` |
+| The constructed path probability is supported on the horizon | `MeasureProtocol.ContinuousTimeJump.Simplex.rawPathProbability_ae_horizon` |
+| Symmetrization gives reversal invariance | `MeasureProtocol.ContinuousTimeJump.Simplex.map_pathProbability_reverse` |
+| A scaled simplex reference is reversal invariant | `MeasureProtocol.ContinuousTimeJump.Simplex.map_reference_reverse` |
+| Positive scaling gives a nonzero reference | `MeasureProtocol.ContinuousTimeJump.Simplex.reference_ne_zero` |
+| The scaled reference remains supported on the horizon | `MeasureProtocol.ContinuousTimeJump.Simplex.reference_ae_horizon` |
+
+The horizon condition is built into the parametrization rather than imposed by
+restricting an ambient Lebesgue measure to the zero-measure slice
+`∑ᵢ τᵢ = T`. The first `n` holding times are free simplex coordinates and the
+last holding time is the residual `T - ∑ᵢ<n τᵢ`.
 
 ## Concrete specializations
 
@@ -75,23 +91,39 @@ the total probability mass across all jump counts are explicit hypotheses.
 | Metropolis–Hastings detailed balance for a Gibbs measure | `MeasureProtocol.MetropolisHastings.detailedBalance` |
 | Metropolis random-walk Crooks theorem on `ℝ` | `MeasureProtocol.MetropolisExample.multiStep_crooks` |
 | Metropolis random-walk Jarzynski equality on `ℝ` | `MeasureProtocol.MetropolisExample.multiStep_jarzynski` |
+| Two-state CTMC sector mass is the Poisson jump-count mass | `MeasureProtocol.ContinuousTimeJump.TwoState.sectorLaw_univ_eq_poisson` |
+| The two-state sector masses sum to one | `MeasureProtocol.ContinuousTimeJump.TwoState.tsum_sectorLaw_univ` |
+| The complete two-state finite-jump path law is a probability measure | `MeasureProtocol.ContinuousTimeJump.TwoState.instIsProbabilityMeasurePathLaw` |
+| Forward and reverse two-state path laws coincide at equilibrium | `MeasureProtocol.ContinuousTimeJump.TwoState.reversePathLaw_eq_pathLaw` |
+| Crooks relation for the normalized two-state CTMC | `MeasureProtocol.ContinuousTimeJump.TwoState.pathLaw_crooks` |
+| Jarzynski equality for the normalized two-state CTMC | `MeasureProtocol.ContinuousTimeJump.TwoState.pathLaw_jarzynski` |
+| The concrete generator has unit escape rate | `MeasureProtocol.ContinuousTimeJump.TwoState.generator_escape_eq_one` |
+| Every row of the concrete generator sums to zero | `MeasureProtocol.ContinuousTimeJump.TwoState.generator_row_sum` |
 | Original finite protocol satisfies measure Crooks | `Protocol.measure_crooks` |
 | Original finite protocol satisfies real-integral Jarzynski | `Protocol.measure_jarzynski_integral` |
 | General forward path singleton mass equals legacy `forwardWeight` | `Protocol.measure_forwardWeight_singleton` |
 | General reverse path singleton mass equals legacy `reverseWeight` | `Protocol.measure_reverseWeight_singleton` |
 
+For the symmetric unit-rate two-state chain, the `n`-jump simplex volume is
+`T^n / n!` and the survival factor is `exp (-T)`. Hence each sector has Poisson
+mass `exp (-T) T^n / n!`; the sector sum is one. Because the sample space is the
+disjoint union of finite-jump sectors, this supplies a concrete non-explosion
+result together with normalized Crooks and Jarzynski theorems.
+
 ## Explicit scope boundaries
 
 - The discrete-time theorem permits arbitrary measurable state spaces and has a
   finite horizon.
-- The continuous-time theorem covers finite-jump paths and their countable
-  sector sum, with segmentwise constant rates and a measurable fixed-horizon
-  restriction.
-- Continuous-time sector reference measures, normalization across jump counts,
-  and non-explosion are supplied as hypotheses rather than constructed from a
-  generator.
-- General calendar-time-dependent integrated escape rates and Langevin/SDE
-  path laws are not yet formalized.
+- The generic continuous-time theorem covers finite-jump paths, their countable
+  sector sum, segmentwise constant rates, and a measurable fixed horizon.
+- A nonzero reversal-invariant fixed-horizon simplex reference is constructed,
+  rather than assumed.
+- A normalized, non-explosive path law is constructed for the symmetric
+  unit-rate two-state CTMC and is connected to its conservative generator.
+- A generator-to-path-law construction and a non-explosion theorem for an
+  arbitrary CTMC are not formalized in this PR.
+- General calendar-time-dependent integrated escape rates and Langevin/SDE path
+  laws are not formalized.
 - Reverse discrete-time kernels and local balance are supplied; reverse-kernel
   existence by disintegration is not formalized.
 
