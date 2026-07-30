@@ -6,6 +6,7 @@ Authors: kiyo-e
 import CrooksJarzynski.ContinuousTimeJumpHorizon
 import Mathlib.MeasureTheory.Constructions.Pi
 import Mathlib.MeasureTheory.Constructions.UnitInterval
+import Mathlib.MeasureTheory.Measure.Prod
 import Mathlib.Probability.ConditionalProbability
 
 /-!
@@ -139,13 +140,14 @@ theorem sum_holdingTimesOfFree {n : ℕ} (T : NNReal) (u : Fin n → I)
     (hu : u ∈ freeSimplexSet n) :
     ∑ i, holdingTimesOfFree T u i = T := by
   have hsum : (∑ i, unitNNReal (u i)) ≤ (1 : NNReal) := by
+    change (∑ i, (unitNNReal (u i) : ℝ)) ≤ 1 at hu
     exact_mod_cast hu
   have hscaled : (∑ i, T * unitNNReal (u i)) ≤ T := by
     rw [← Finset.mul_sum]
-    exact mul_le_mul_left' hsum T
+    simpa using (mul_le_mul_left' hsum T)
   rw [Fin.sum_univ_castSucc]
   simp only [holdingTimesOfFree, Fin.snoc_castSucc, Fin.snoc_last]
-  exact add_tsub_of_le hscaled
+  exact add_tsub_cancel_of_le hscaled
 
 /-- Assemble a state sequence and free simplex coordinates into a fixed-horizon
 jump path. -/
@@ -188,8 +190,16 @@ theorem map_symmetrizePathMeasure_reverse
     (μ : Measure (JumpPath Ω n)) :
     (symmetrizePathMeasure μ).map JumpPath.reverse =
       symmetrizePathMeasure μ := by
-  simp [symmetrizePathMeasure, Measure.map_add, Measure.map_map,
-    Function.comp_def, add_comm]
+  ext s hs
+  rw [Measure.map_apply JumpPath.measurable_reverse hs]
+  simp only [symmetrizePathMeasure, Measure.smul_apply, Measure.add_apply]
+  rw [Measure.map_apply JumpPath.measurable_reverse
+    (JumpPath.measurable_reverse hs)]
+  have hpre : JumpPath.reverse ⁻¹' (JumpPath.reverse ⁻¹' s) = s := by
+    ext γ
+    simp
+  rw [hpre]
+  ac_rfl
 
 /-- Symmetrizing a probability measure preserves normalization. -/
 theorem isProbabilityMeasure_symmetrizePathMeasure
@@ -200,7 +210,9 @@ theorem isProbabilityMeasure_symmetrizePathMeasure
     Measure.isProbabilityMeasure_map JumpPath.measurable_reverse.aemeasurable
   constructor
   simp [symmetrizePathMeasure]
-  norm_num
+  calc
+    (2 : ℝ≥0∞)⁻¹ + 2⁻¹ = 2⁻¹ * 2 := by ring
+    _ = 1 := ENNReal.inv_mul_cancel (by norm_num) (by norm_num)
 
 /-- The nontrivial, reversal-invariant fixed-horizon path probability used as a
 canonical simplex reference. -/
@@ -304,8 +316,10 @@ theorem reference_ne_zero
     [IsProbabilityMeasure stateLaw] {mass : ℝ≥0∞} (hmass : mass ≠ 0) :
     reference T stateLaw mass ≠ 0 := by
   unfold reference
-  rw [Measure.ennreal_smul_eq_zero]
-  exact not_or_intro hmass (IsProbabilityMeasure.ne_zero _)
+  intro hzero
+  rcases Measure.ennreal_smul_eq_zero.mp hzero with h | h
+  · exact hmass h
+  · exact IsProbabilityMeasure.ne_zero _ h
 
 /-- The scaled reference remains concentrated on the physical horizon. -/
 theorem reference_ae_horizon
