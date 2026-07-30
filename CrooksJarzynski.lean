@@ -16,7 +16,7 @@ import CrooksJarzynski.MeasureProtocolMarginals
 import CrooksJarzynski.MeasureProtocolPhysical
 import CrooksJarzynski.MeasureProtocolGaussianExample
 import CrooksJarzynski.MeasureProtocolMetropolisExample
-import CrooksJarzynski.ContinuousTimeJump
+import CrooksJarzynski.ContinuousTimeJumpRateFull
 import CrooksJarzynski.MathlibBridge
 import CrooksJarzynski.MeasureProtocolFiniteBridge
 import CrooksJarzynski.PhyslibBridge
@@ -39,10 +39,14 @@ finite-horizon path measures, and a bridge proving that the original finite
 protocol satisfies the new measure-level hypotheses and that the new path
 measures recover its legacy singleton weights.
 
-An experimental continuous-time layer represents jump-process path laws by
-densities against a common reference measure. It defines measurable reversal
-of fixed-jump-count state/holding-time paths and reduces continuous-time Crooks
-and Jarzynski statements to the process-specific path-density identity.
+The continuous-time jump layer represents an `n`-jump path by its state and
+holding-time sequences, proves measurable involutive reversal, and constructs
+path laws from densities against reversal-invariant references. It sums all
+finite jump-count sectors into one dependent-sum path law, restricts sectors to
+a measurable fixed-time horizon, instantiates exponential survival and jump
+factors for segmentwise constant rates, derives the path-density identity from
+endpoint reweighting, waiting-time cancellation, and local jump balance, and
+proves fixed-sector, full-path, fixed-horizon Crooks and Jarzynski statements.
 
 The finite-state results include explicit time reversal, both standard
 discrete-time work conventions, a path-uniform `O(1/N)` continuous-time limit
@@ -66,7 +70,10 @@ canonical-ensemble API. The main results include `Protocol.crooks`,
 `MeasureProtocol.Markov.trajectoryMeasure`,
 `MeasureProtocol.Markov.finiteMarginal_eq_chronologicalForwardPathMeasure`,
 `MeasureProtocol.ContinuousTimeJump.crooks_of_reversal_density`,
-`MeasureProtocol.ContinuousTimeJump.JumpPath.crooks_of_density_identity`,
+`MeasureProtocol.ContinuousTimeJump.JumpPath.crooks_of_rate_local_balance`,
+`MeasureProtocol.ContinuousTimeJump.FullPath.crooks_of_sector_relations`,
+`MeasureProtocol.ContinuousTimeJump.FullPath.crooks_of_rate_local_balance`,
+`MeasureProtocol.ContinuousTimeJump.FullPath.crooks_restrict_horizon_of_rate_local_balance`,
 `Protocol.work_distribution_crooks`,
 `WorkConvention.discrepancy_uniform_tendsto_zero`, and `Protocol.second_law`.
 -/
