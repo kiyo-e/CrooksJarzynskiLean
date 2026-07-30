@@ -104,6 +104,10 @@ last holding time is the residual `T - ∑ᵢ<n τᵢ`.
 | Every row of the concrete generator sums to zero | `MeasureProtocol.ContinuousTimeJump.TwoState.generator_row_sum` |
 | The jump-count marginal of the two-state path law is Poisson | `MeasureProtocol.ContinuousTimeJump.TwoState.map_pathLaw_jumpCount` |
 | The Poisson-flip kernel of the jump count equals the entries of `exp (TQ)` | `MeasureProtocol.ContinuousTimeJump.TwoState.conditionalTerminalLaw_eq_exp_generator` |
+| The fixed-initial path law is normalized with Poisson jump counts | `MeasureProtocol.ContinuousTimeJump.TwoState.tsum_sectorLawFrom_univ` |
+| The terminal-state marginal of the fixed-initial path law | `MeasureProtocol.ContinuousTimeJump.TwoState.map_pathLawFrom_terminalState` |
+| The fixed-initial terminal marginal equals the entries of `exp (TQ)` | `MeasureProtocol.ContinuousTimeJump.TwoState.pathLawFrom_terminalState_eq_exp_generator` |
+| Chapman--Kolmogorov for the explicit transition probabilities | `MeasureProtocol.ContinuousTimeJump.TwoState.transitionProbability_chapman_kolmogorov` |
 | Asymmetric-chain sector masses sum to one for every initial state | `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.tsum_sectorMass` |
 | The raw simplex reference is reversal invariant | `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.map_rawSectorReference_reverse` |
 | The normalized asymmetric forward path law is a probability measure | `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.tsum_forwardSectorLaw_univ` |
@@ -124,9 +128,9 @@ survival factor is `exp (-T)`. Hence each sector has Poisson mass
 disjoint union of finite-jump sectors, this supplies a concrete non-explosion
 result together with normalized Crooks and Jarzynski theorems. The path
 construction is identified with the conservative generator by matching the
-Poisson-flip kernel of its jump count with the matrix exponential `exp (TQ)`;
-the conditional terminal-state marginal given the path's own initial state is
-not yet formalized.
+Poisson-flip kernel of its jump count with the matrix exponential `exp (TQ)`,
+and the terminal-state marginal of the normalized path law started from a
+fixed initial state is proved equal to the corresponding row of `exp (TQ)`.
 
 The asymmetric example drives the chain with escape rates two and one, a Gibbs
 initial density, a uniform final density, and a nonconstant work observable
@@ -146,9 +150,9 @@ normalized and genuinely nonequilibrium.
 - A nonzero reversal-invariant fixed-horizon simplex reference is constructed,
   rather than assumed.
 - A normalized, non-explosive path law is constructed for the symmetric
-  unit-rate two-state CTMC, and the Poisson-flip kernel of its jump count is
-  identified with the matrix exponential of its conservative generator;
-  conditioning the path law on its own initial state is not formalized.
+  unit-rate two-state CTMC, and the terminal-state marginal of its
+  fixed-initial version is identified with the matrix exponential of its
+  conservative generator.
 - A normalized, non-explosive, genuinely nonequilibrium path law is
   constructed for the asymmetric two-state chain, with full-path Crooks and
   real-integral Jarzynski equalities.

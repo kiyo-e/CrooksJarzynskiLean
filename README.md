@@ -52,9 +52,11 @@ The library proves:
   segmentwise constant escape and jump rates;
 - a symmetric unit-rate two-state CTMC whose `n`-jump sector has Poisson mass,
   whose complete finite-jump path law is normalized and non-explosive, which
-  satisfies full-path Crooks and Jarzynski theorems, and whose jump-count
-  marginal is Poisson with Poisson-flip kernel equal to the matrix
-  exponential `exp (TQ)` of its conservative generator;
+  satisfies full-path Crooks and Jarzynski theorems, whose jump-count
+  marginal is Poisson, and whose fixed-initial terminal-state marginal is
+  identified with the matrix exponential `exp (TQ)` of its conservative
+  generator, with Chapman--Kolmogorov for the explicit transition
+  probabilities;
 - an asymmetric two-state chain with escape rates two and one, a Gibbs initial
   state, a nonconstant work observable, and free-energy factor two, whose
   forward and dynamically constructed reverse path laws are both proved to be
@@ -268,13 +270,17 @@ The construction is identified with the conservative generator: the jump-count
 marginal of the path law is the Poisson distribution, and flipping any fixed
 seed state once per counted jump reproduces the Poisson-flip law whose point
 masses are exactly the entries of the matrix exponential `exp (TQ)`, computed
-by diagonalizing `Q`.  The stronger statement that conditions the path law on
-its own initial state and reads off its terminal-state marginal is not yet
-formalized:
+by diagonalizing `Q`.  The stronger statement also holds: for the normalized
+path law started from a fixed initial state, the pushforward of the actual
+terminal-state coordinate is exactly the corresponding row of `exp (TQ)`, and
+the explicit transition probabilities satisfy Chapman--Kolmogorov:
 
 ```lean
 MeasureProtocol.ContinuousTimeJump.TwoState.map_pathLaw_jumpCount
 MeasureProtocol.ContinuousTimeJump.TwoState.conditionalTerminalLaw_eq_exp_generator
+MeasureProtocol.ContinuousTimeJump.TwoState.map_pathLawFrom_terminalState
+MeasureProtocol.ContinuousTimeJump.TwoState.pathLawFrom_terminalState_eq_exp_generator
+MeasureProtocol.ContinuousTimeJump.TwoState.transitionProbability_chapman_kolmogorov
 ```
 
 ### Normalized nonequilibrium asymmetric example
@@ -350,8 +356,8 @@ reference on the fixed horizon with derived volume `1 / n!`. It constructs and
 normalizes the full path law of the symmetric unit-rate two-state CTMC, proves
 its Poisson jump-count law and non-explosion, and identifies the Poisson-flip
 kernel of its jump count with the matrix exponential of its conservative
-generator; conditioning the path law on its own initial state is not yet
-formalized. It
+generator, and identifies the terminal-state marginal of the fixed-initial
+normalized path law with the corresponding row of `exp (TQ)`. It
 also constructs the nonequilibrium asymmetric two-state example, proves that
 its forward and dynamically constructed reverse path laws are probability
 measures, and derives normalized full-path Crooks, Jarzynski, and
