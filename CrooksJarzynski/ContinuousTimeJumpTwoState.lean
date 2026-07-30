@@ -16,7 +16,7 @@ flipped, and the escape rate is one.  The initial state is uniform.
 -/
 
 open MeasureTheory ProbabilityTheory
-open scoped ENNReal BigOperators
+open scoped ENNReal BigOperators unitInterval
 
 namespace CrooksJarzynski
 namespace MeasureProtocol
@@ -110,9 +110,24 @@ theorem alternatingStateLaw_ae_alternates (n : ℕ) :
   rw [ae_map_iff Measurable.of_discrete.aemeasurable measurableSet_alternates]
   exact ae_of_all initialStateLaw fun x => alternatingStates_alternates n x
 
-/-- The geometric mass of the horizon-`T`, `n`-jump holding-time simplex. -/
+/-- The geometric mass obtained by scaling the standard free-coordinate
+simplex by the physical horizon in each of its `n` coordinates. -/
 noncomputable def simplexMass (T : NNReal) (n : ℕ) : ℝ≥0∞ :=
-  (T : ℝ≥0∞) ^ n / (n.factorial : ℝ≥0∞)
+  (T : ℝ≥0∞) ^ n *
+    (volume : Measure (Fin n → I)) (Simplex.freeSimplexSet n)
+
+/-- The geometric simplex mass is `T^n / n!`. -/
+theorem simplexMass_eq_ofReal (T : NNReal) (n : ℕ) :
+    simplexMass T n =
+      ENNReal.ofReal ((T : ℝ) ^ n / (n.factorial : ℝ)) := by
+  have hpow :
+      (T : ℝ≥0∞) ^ n = ENNReal.ofReal ((T : ℝ) ^ n) := by
+    simpa only [ENNReal.ofReal_coe_nnreal] using
+      (ENNReal.ofReal_pow (p := (T : ℝ)) T.2 n).symm
+  rw [simplexMass, Simplex.volume_freeSimplexSet, hpow,
+    ← ENNReal.ofReal_mul (by positivity : 0 ≤ (T : ℝ) ^ n)]
+  congr 1
+  ring
 
 /-- A concrete, nonzero, fixed-horizon and reversal-invariant sector reference. -/
 noncomputable def sectorReference (T : NNReal) (n : ℕ) :
@@ -133,10 +148,10 @@ theorem sectorReference_univ (T : NNReal) (n : ℕ) :
 theorem sectorReference_ne_zero {T : NNReal} (hT : 0 < T) (n : ℕ) :
     sectorReference T n ≠ 0 := by
   apply Simplex.reference_ne_zero T (alternatingStateLaw n)
-  unfold simplexMass
-  have hT0 : (T : ℝ≥0∞) ≠ 0 := by
-    exact_mod_cast hT.ne'
-  exact ne_of_gt (ENNReal.div_pos (pow_ne_zero n hT0) (by simp))
+  rw [simplexMass_eq_ofReal]
+  exact ne_of_gt (ENNReal.ofReal_pos.2 (by
+    have hTR : 0 < (T : ℝ) := by exact_mod_cast hT
+    positivity))
 
 /-- The sector reference is concentrated on paths of duration `T`. -/
 theorem sectorReference_ae_horizon (T : NNReal) (n : ℕ) :
@@ -182,7 +197,7 @@ def endpointWeight : State → ℝ≥0∞ :=
   fun _ => 1
 
 /-- The rate density of the two-state model is measurable. -/
-theorem measurable_rateDensity (T : NNReal) (n : ℕ) :
+theorem measurable_rateDensity (n : ℕ) :
     Measurable
       (JumpPath.rateDensity endpointWeight
         (escapeRate (n := n)) (jumpRate (n := n))) := by
@@ -191,7 +206,7 @@ theorem measurable_rateDensity (T : NNReal) (n : ℕ) :
   fun_prop
 
 /-- The aligned reverse rate density is measurable. -/
-theorem measurable_alignedReverseRateDensity (T : NNReal) (n : ℕ) :
+theorem measurable_alignedReverseRateDensity (n : ℕ) :
     Measurable
       (JumpPath.alignedReverseRateDensity endpointWeight
         (escapeRate (n := n)) (jumpRate (n := n))) := by
@@ -225,42 +240,14 @@ theorem sector_crooks (T : NNReal) (n : ℕ) :
     escapeRate escapeRate jumpRate jumpRate
     boundaryWork jumpWork 1
   · exact map_sectorReference_reverse T n
-  · exact measurable_rateDensity T n
-  · exact measurable_alignedReverseRateDensity T n
+  · exact measurable_rateDensity n
+  · exact measurable_alignedReverseRateDensity n
   · exact measurable_rateWorkWeight n
   · intro x y
     simp [endpointWeight, boundaryWork]
   · intro i x
     rfl
   · intro i x y
-    simp [JumpPath.jumpWeightOfRate, jumpWork, jumpRate_symm]
-
-/-- Full finite-jump Crooks relation obtained by summing every two-state sector. -/
-theorem full_crooks (T : NNReal) :
-    CrooksRelation
-      (FullPath.measure
-        (FullPath.forwardRateSectorMeasure (sectorReference T) endpointWeight
-          (fun _ => escapeRate) (fun _ => jumpRate)))
-      (FullPath.measure
-        (FullPath.reversedRateSectorMeasure (sectorReference T) endpointWeight
-          (fun _ => escapeRate) (fun _ => jumpRate)))
-      (FullPath.weight
-        (FullPath.rateWorkWeightFamily boundaryWork (fun _ => jumpWork)))
-      1 := by
-  apply FullPath.crooks_of_rate_local_balance
-    (sectorReference T) endpointWeight endpointWeight
-    (fun _ => escapeRate) (fun _ => escapeRate)
-    (fun _ => jumpRate) (fun _ => jumpRate)
-    boundaryWork (fun _ => jumpWork) 1
-  · exact map_sectorReference_reverse T
-  · exact measurable_rateDensity T
-  · exact measurable_alignedReverseRateDensity T
-  · exact measurable_rateWorkWeight
-  · intro x y
-    simp [endpointWeight, boundaryWork]
-  · intro n i x
-    rfl
-  · intro n i x y
     simp [JumpPath.jumpWeightOfRate, jumpWork, jumpRate_symm]
 
 end TwoState

@@ -46,6 +46,36 @@ theorem reverseRateDensity_reverse
       alignedReverseRateDensity finalWeight escapeRate jumpRate γ := by
   simp [reverseRateDensity]
 
+/-- The pointwise local-balance identity, packaged almost everywhere for reuse
+by both the Crooks and Jarzynski theorems. -/
+theorem rateDensity_mul_rateWorkWeight_ae
+    (reference : Measure (JumpPath Ω n))
+    (initialWeight finalWeight : Ω → ℝ≥0∞)
+    (forwardEscape reverseEscape : Fin (n + 1) → Ω → NNReal)
+    (forwardJump reverseJump : Fin n → Ω → Ω → NNReal)
+    (boundaryWork : Ω → Ω → ℝ≥0∞)
+    (jumpWork : Fin n → Ω → Ω → ℝ≥0∞)
+    (freeEnergyWeight : ℝ≥0∞)
+    (hboundary : ∀ x y,
+      initialWeight x * boundaryWork x y =
+        freeEnergyWeight * finalWeight y)
+    (hescape : ∀ i x, forwardEscape i x = reverseEscape i x)
+    (hjump : ∀ i x y,
+      jumpWeightOfRate forwardJump i x y * jumpWork i x y =
+        jumpWeightOfRate reverseJump i y x) :
+    ∀ᵐ γ ∂reference,
+      rateDensity initialWeight forwardEscape forwardJump γ *
+          rateWorkWeight boundaryWork jumpWork γ =
+        freeEnergyWeight *
+          reverseRateDensity finalWeight reverseEscape reverseJump
+            (reverse γ) := by
+  refine ae_of_all reference fun γ => ?_
+  rw [reverseRateDensity_reverse]
+  exact rateDensity_mul_rateWorkWeight initialWeight finalWeight
+    forwardEscape reverseEscape forwardJump reverseJump
+    boundaryWork jumpWork freeEnergyWeight
+    hboundary hescape hjump γ
+
 /-- Crooks' relation for the segmentwise constant-rate model. Equality of the
 aligned escape rates cancels the waiting-time factors; endpoint reweighting and
 local jump balance supply the remaining density ratio. -/
@@ -77,18 +107,16 @@ theorem crooks_of_rate_local_balance
       (timeReversedMeasure
         (pathMeasure reference
           (reverseRateDensity finalWeight reverseEscape reverseJump)))
-      (rateWorkWeight boundaryWork jumpWork) freeEnergyWeight := by
+    (rateWorkWeight boundaryWork jumpWork) freeEnergyWeight := by
   apply crooks_of_density_identity reference
     (rateDensity initialWeight forwardEscape forwardJump)
     (reverseRateDensity finalWeight reverseEscape reverseJump)
     (rateWorkWeight boundaryWork jumpWork) freeEnergyWeight
     hreference hforward (halignedReverse.comp measurable_reverse) hwork
-  refine ae_of_all reference fun γ => ?_
-  rw [reverseRateDensity_reverse]
-  exact rateDensity_mul_rateWorkWeight initialWeight finalWeight
+  exact rateDensity_mul_rateWorkWeight_ae reference initialWeight finalWeight
     forwardEscape reverseEscape forwardJump reverseJump
     boundaryWork jumpWork freeEnergyWeight
-    hboundary hescape hjump γ
+    hboundary hescape hjump
 
 /-- Jarzynski's equality for the segmentwise constant-rate model. -/
 theorem jarzynski_of_rate_local_balance
@@ -125,12 +153,10 @@ theorem jarzynski_of_rate_local_balance
     (reverseRateDensity finalWeight reverseEscape reverseJump)
     (rateWorkWeight boundaryWork jumpWork) freeEnergyWeight
     hreference hforward (halignedReverse.comp measurable_reverse) hwork
-  refine ae_of_all reference fun γ => ?_
-  rw [reverseRateDensity_reverse]
-  exact rateDensity_mul_rateWorkWeight initialWeight finalWeight
+  exact rateDensity_mul_rateWorkWeight_ae reference initialWeight finalWeight
     forwardEscape reverseEscape forwardJump reverseJump
     boundaryWork jumpWork freeEnergyWeight
-    hboundary hescape hjump γ
+    hboundary hescape hjump
 
 end JumpPath
 end ContinuousTimeJump

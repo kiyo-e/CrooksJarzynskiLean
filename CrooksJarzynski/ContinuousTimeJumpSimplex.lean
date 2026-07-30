@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: kiyo-e
 -/
 import CrooksJarzynski.ContinuousTimeJumpHorizon
+import Mathlib.Analysis.SpecialFunctions.Integrals.Basic
 import Mathlib.MeasureTheory.Constructions.Pi
 import Mathlib.MeasureTheory.Constructions.UnitInterval
 import Mathlib.MeasureTheory.Measure.Prod
@@ -56,66 +57,172 @@ theorem measurableSet_freeSimplexSet (n : ℕ) :
   unfold freeSimplexSet
   exact measurableSet_le (by fun_prop) measurable_const
 
-/-- A positive coordinate bound whose product box lies inside the simplex. -/
-noncomputable def interiorRadius (n : ℕ) : I :=
-  ⟨1 / ((n : ℝ) + 1), by
+private def freeSimplexSetAt (n : ℕ) (t : I) : Set (Fin n → I) :=
+  {u | ∑ i, (unitNNReal (u i) : ℝ) ≤ (t : ℝ)}
+
+private theorem measurableSet_freeSimplexSetAt (n : ℕ) (t : I) :
+    MeasurableSet (freeSimplexSetAt n t) := by
+  unfold freeSimplexSetAt
+  exact measurableSet_le (by fun_prop) measurable_const
+
+private theorem freeSimplexSection {n : ℕ} (t x : I) :
+    (fun v : Fin n → I => (x, v)) ⁻¹'
+        {p : I × (Fin n → I) |
+          (p.1 : ℝ) + ∑ i, (p.2 i : ℝ) ≤ (t : ℝ)} =
+      if hx : x ≤ t then
+        freeSimplexSetAt n
+          ⟨(t : ℝ) - (x : ℝ), sub_nonneg.mpr hx,
+            by linarith [t.2.2, x.2.1]⟩
+      else ∅ := by
+  split_ifs with hx
+  · ext v
+    simp only [Set.mem_preimage, Set.mem_setOf_eq, freeSimplexSetAt,
+      coe_unitNNReal]
+    constructor <;> intro h <;> linarith
+  · ext v
+    simp only [Set.mem_preimage, Set.mem_setOf_eq, Set.mem_empty_iff_false,
+      iff_false]
+    have hsum : 0 ≤ ∑ i, (v i : ℝ) :=
+      Finset.sum_nonneg fun _ _ => (v _).2.1
+    intro h
+    apply hx
+    exact_mod_cast (show (x : ℝ) ≤ (t : ℝ) by linarith)
+
+private theorem lintegral_freeSimplexSection (n : ℕ) (t : I) :
+    ∫⁻ x : I in Set.Iic t,
+        ENNReal.ofReal (((t : ℝ) - (x : ℝ)) ^ n / (n.factorial : ℝ)) =
+      ENNReal.ofReal ((t : ℝ) ^ (n + 1) / ((n + 1).factorial : ℝ)) := by
+  let f : ℝ → ℝ := fun x =>
+    ((t : ℝ) - x) ^ n / (n.factorial : ℝ)
+  have hpre :
+      ((fun x : I => (x : ℝ)) ⁻¹' Set.Icc (0 : ℝ) (t : ℝ)) =
+        Set.Iic t := by
+    ext x
+    simp only [Set.mem_preimage, Set.mem_Icc, Set.mem_Iic]
     constructor
-    · positivity
-    · have hpos : 0 < (n : ℝ) + 1 := by positivity
-      apply (div_le_iff₀ hpos).2
-      norm_num⟩
+    · exact fun h => h.2
+    · intro h
+      exact ⟨x.2.1, h⟩
+  rw [← hpre]
+  change (∫⁻ x : I in
+      (fun x : I => (x : ℝ)) ⁻¹' Set.Icc (0 : ℝ) (t : ℝ),
+      ENNReal.ofReal (f (x : ℝ))) =
+    ENNReal.ofReal ((t : ℝ) ^ (n + 1) / ((n + 1).factorial : ℝ))
+  rw [unitInterval.measurePreserving_coe.setLIntegral_comp_preimage_emb
+    unitInterval.measurableEmbedding_coe
+    (fun x : ℝ => ENNReal.ofReal (f x)) (Set.Icc 0 (t : ℝ))]
+  change (∫⁻ x : ℝ, ENNReal.ofReal (f x)
+      ∂((volume.restrict (Set.Icc (0 : ℝ) 1)).restrict
+        (Set.Icc 0 (t : ℝ)))) =
+    ENNReal.ofReal ((t : ℝ) ^ (n + 1) / ((n + 1).factorial : ℝ))
+  rw [Measure.restrict_restrict measurableSet_Icc]
+  have hsubset : Set.Icc (0 : ℝ) (t : ℝ) ⊆ Set.Icc (0 : ℝ) 1 :=
+    Set.Icc_subset_Icc le_rfl t.2.2
+  rw [Set.inter_eq_left.mpr hsubset]
+  have hfcont : Continuous f := by
+    fun_prop
+  have hfint : Integrable f (volume.restrict (Set.Icc 0 (t : ℝ))) :=
+    hfcont.integrableOn_Icc
+  have hfnn : 0 ≤ᵐ[volume.restrict (Set.Icc (0 : ℝ) (t : ℝ))] f := by
+    filter_upwards [self_mem_ae_restrict measurableSet_Icc] with x hx
+    dsimp [f]
+    exact div_nonneg (pow_nonneg (sub_nonneg.mpr hx.2) n)
+      (Nat.cast_nonneg n.factorial)
+  rw [← ofReal_integral_eq_lintegral_ofReal hfint hfnn]
+  congr 1
+  rw [integral_Icc_eq_integral_Ioc,
+    ← intervalIntegral.integral_of_le t.2.1]
+  simp only [f, div_eq_mul_inv]
+  rw [intervalIntegral.integral_mul_const]
+  have hcomp :
+      (∫ x : ℝ in 0..(t : ℝ), ((t : ℝ) - x) ^ n) =
+        ∫ x : ℝ in 0..(t : ℝ), x ^ n := by
+    simpa using
+      (intervalIntegral.integral_comp_sub_left
+        (fun x : ℝ => x ^ n) (d := (t : ℝ))
+        (a := 0) (b := (t : ℝ)))
+  rw [hcomp, integral_pow, Nat.factorial_succ]
+  push_cast
+  field_simp
+  ring
 
-@[simp]
-theorem coe_interiorRadius (n : ℕ) :
-    ((interiorRadius n : I) : ℝ) = 1 / ((n : ℝ) + 1) :=
-  rfl
-
-/-- The small positive box with side length `1 / (n + 1)` lies inside the
-free-coordinate simplex. -/
-theorem smallBox_subset_freeSimplexSet (n : ℕ) :
-    Set.univ.pi (fun _ : Fin n => Set.Iic (interiorRadius n)) ⊆
-      freeSimplexSet n := by
-  intro u hu
-  rw [Set.mem_univ_pi] at hu
-  change (∑ i, (unitNNReal (u i) : ℝ)) ≤ 1
-  calc
-    (∑ i, (unitNNReal (u i) : ℝ)) ≤
-        ∑ _ : Fin n, ((interiorRadius n : I) : ℝ) := by
-      apply Finset.sum_le_sum
-      intro i _
-      exact_mod_cast hu i
-    _ = (n : ℝ) / ((n : ℝ) + 1) := by
-      simp [div_eq_mul_inv]
-    _ ≤ 1 := by
-      have hpos : 0 < (n : ℝ) + 1 := by positivity
-      apply (div_le_iff₀ hpos).2
-      norm_num
+/-- The standard free-coordinate `n`-simplex has volume `1 / n!`. -/
+theorem volume_freeSimplexSet (n : ℕ) :
+    (volume : Measure (Fin n → I)) (freeSimplexSet n) =
+      ENNReal.ofReal (1 / (n.factorial : ℝ)) := by
+  have volume_freeSimplexSetAt (n : ℕ) (t : I) :
+      (volume : Measure (Fin n → I)) (freeSimplexSetAt n t) =
+        ENNReal.ofReal ((t : ℝ) ^ n / (n.factorial : ℝ)) := by
+    induction n generalizing t with
+    | zero =>
+        have hset : freeSimplexSetAt 0 t = Set.univ := by
+          ext u
+          simp [freeSimplexSetAt, t.2.1]
+        simp [hset]
+    | succ n ih =>
+        let e :=
+          MeasurableEquiv.piFinSuccAbove (fun _ : Fin (n + 1) => I) 0
+        let s : Set (I × (Fin n → I)) :=
+          {p | (p.1 : ℝ) + ∑ i, (p.2 i : ℝ) ≤ (t : ℝ)}
+        have hs : MeasurableSet s := by
+          dsimp [s]
+          exact measurableSet_le (by fun_prop) measurable_const
+        have hpre : e ⁻¹' s = freeSimplexSetAt (n + 1) t := by
+          ext u
+          change
+            (u 0 : ℝ) + ∑ i : Fin n, (u i.succ : ℝ) ≤ (t : ℝ) ↔
+              ∑ i : Fin (n + 1), (u i : ℝ) ≤ (t : ℝ)
+          rw [Fin.sum_univ_succ]
+        rw [← hpre,
+          (volume_preserving_piFinSuccAbove
+            (fun _ : Fin (n + 1) => I) 0).measure_preimage
+              hs.nullMeasurableSet]
+        change ((volume : Measure I).prod
+          (volume : Measure (Fin n → I))) s = _
+        rw [Measure.prod_apply hs]
+        dsimp [s]
+        have hsection : ∀ x : I,
+            (volume : Measure (Fin n → I))
+                {a | (x : ℝ) + ∑ i, (a i : ℝ) ≤ (t : ℝ)} =
+              if hx : x ≤ t then
+                ENNReal.ofReal
+                  (((t : ℝ) - (x : ℝ)) ^ n / (n.factorial : ℝ))
+              else 0 := by
+          intro x
+          rw [show {a : Fin n → I |
+              (x : ℝ) + ∑ i, (a i : ℝ) ≤ (t : ℝ)} =
+                if hx : x ≤ t then
+                  freeSimplexSetAt n
+                    ⟨(t : ℝ) - (x : ℝ), sub_nonneg.mpr hx,
+                      by linarith [t.2.2, x.2.1]⟩
+                else ∅ from freeSimplexSection t x]
+          split_ifs with hx
+          · exact ih _
+          · simp
+        simp_rw [hsection]
+        have hind :
+            (fun x : I =>
+              if hx : x ≤ t then
+                ENNReal.ofReal
+                  (((t : ℝ) - (x : ℝ)) ^ n / (n.factorial : ℝ))
+              else 0) =
+            (Set.Iic t).indicator (fun x : I =>
+              ENNReal.ofReal
+                (((t : ℝ) - (x : ℝ)) ^ n / (n.factorial : ℝ))) := by
+          funext x
+          simp only [Set.indicator_apply, Set.mem_Iic]
+          split_ifs <;> rfl
+        rw [hind, MeasureTheory.lintegral_indicator measurableSet_Iic,
+          lintegral_freeSimplexSection]
+  simpa [freeSimplexSet, freeSimplexSetAt] using
+    volume_freeSimplexSetAt n (1 : I)
 
 /-- The simplex event has strictly positive product volume, so conditioning on
 it is nondegenerate for every jump count, including `n = 0`. -/
 theorem volume_freeSimplexSet_pos (n : ℕ) :
     0 < (volume : Measure (Fin n → I)) (freeSimplexSet n) := by
-  let B : Set (Fin n → I) :=
-    Set.univ.pi (fun _ : Fin n => Set.Iic (interiorRadius n))
-  have hB : B ⊆ freeSimplexSet n :=
-    smallBox_subset_freeSimplexSet n
-  have hBmass :
-      (volume : Measure (Fin n → I)) B =
-        ∏ _ : Fin n, ENNReal.ofReal ((interiorRadius n : I) : ℝ) := by
-    change (Measure.pi fun _ : Fin n => (volume : Measure I)) B = _
-    rw [Measure.pi_pi]
-    simp [unitInterval.volume_Iic]
-  have hBpos : 0 < (volume : Measure (Fin n → I)) B := by
-    rw [hBmass, ← ENNReal.ofReal_prod_of_nonneg]
-    · exact ENNReal.ofReal_pos.2 (by
-        apply Finset.prod_pos
-        intro i hi
-        dsimp [interiorRadius]
-        positivity)
-    · intro i hi
-      dsimp [interiorRadius]
-      positivity
-  exact hBpos.trans_le (measure_mono hB)
+  rw [volume_freeSimplexSet]
+  exact ENNReal.ofReal_pos.2 (by positivity)
 
 /-- The uniform probability law on the free-coordinate simplex.  It is the
 finite product of unit-interval Lebesgue measures conditioned on `sum u ≤ 1`. -/
@@ -151,7 +258,7 @@ theorem sum_holdingTimesOfFree {n : ℕ} (T : NNReal) (u : Fin n → I)
     exact_mod_cast hu
   have hscaled : (∑ i, T * unitNNReal (u i)) ≤ T := by
     rw [← Finset.mul_sum]
-    simpa using (mul_le_mul_left' hsum T)
+    simpa using mul_le_mul_right hsum T
   rw [Fin.sum_univ_castSucc]
   simp only [holdingTimesOfFree, Fin.snoc_castSucc, Fin.snoc_last]
   exact add_tsub_cancel_of_le hscaled
