@@ -18,6 +18,10 @@ import CrooksJarzynski.MeasureProtocolGaussianExample
 import CrooksJarzynski.MeasureProtocolMetropolisExample
 import CrooksJarzynski.ContinuousTimeJumpRateFull
 import CrooksJarzynski.ContinuousTimeJumpTwoStateNormalization
+import CrooksJarzynski.ContinuousTimeJumpTwoStateAsymmetric
+import CrooksJarzynski.ContinuousTimeJumpTwoStateAsymmetricNormalization
+import CrooksJarzynski.ContinuousTimeJumpTwoStateAsymmetricJarzynski
+import CrooksJarzynski.ContinuousTimeJumpTwoStateGenerator
 import CrooksJarzynski.MathlibBridge
 import CrooksJarzynski.MeasureProtocolFiniteBridge
 import CrooksJarzynski.PhyslibBridge
@@ -51,7 +55,12 @@ waiting-time cancellation, and local jump balance, and proves fixed-sector,
 full-path and fixed-horizon Crooks and Jarzynski statements.  A normalized
 unit-rate two-state CTMC example identifies every jump-count sector with its
 Poisson probability and proves non-explosion by constructing a probability law
-on the disjoint union of all finite-jump sectors.
+on the disjoint union of all finite-jump sectors.  Its fixed-initial-state
+time-`T` marginal is identified with the matrix exponential of the conservative
+generator, and a separate asymmetric-rate example has nonconstant work and a
+non-unit free-energy factor.  The asymmetric example is normalized directly
+from its state-dependent holding-time simplex integrals and satisfies full-path
+Crooks and Jarzynski equalities without uniformization.
 
 The finite-state results include explicit time reversal, both standard
 discrete-time work conventions, a path-uniform `O(1/N)` continuous-time limit
@@ -79,6 +88,11 @@ canonical-ensemble API. The main results include `Protocol.crooks`,
 `MeasureProtocol.ContinuousTimeJump.FullPath.crooks_of_sector_relations`,
 `MeasureProtocol.ContinuousTimeJump.FullPath.crooks_of_rate_local_balance`,
 `MeasureProtocol.ContinuousTimeJump.Simplex.map_reference_reverse`,
+`MeasureProtocol.ContinuousTimeJump.Simplex.volume_freeSimplexSet`,
+`MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.sector_crooks`,
+`MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.full_crooks`,
+`MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.full_jarzynski_lintegral`,
+`MeasureProtocol.ContinuousTimeJump.TwoState.conditionalTerminalLaw_eq_exp_generator`,
 `MeasureProtocol.ContinuousTimeJump.TwoState.pathLaw_crooks`,
 `MeasureProtocol.ContinuousTimeJump.TwoState.pathLaw_jarzynski`,
 `MeasureProtocol.ContinuousTimeJump.TwoState.sectorLaw_univ_eq_poisson`,

@@ -58,6 +58,8 @@ integrability and nonzero-measure hypotheses are explicit theorem inputs.
 | Segmentwise-rate full-path Crooks theorem | `MeasureProtocol.ContinuousTimeJump.FullPath.crooks_of_rate_local_balance` |
 | Fixed-horizon segmentwise-rate full-path Crooks theorem | `MeasureProtocol.ContinuousTimeJump.FullPath.crooks_restrict_horizon_of_rate_local_balance` |
 | Fixed-horizon segmentwise-rate full-path Jarzynski equality | `MeasureProtocol.ContinuousTimeJump.FullPath.jarzynski_restrict_horizon_of_rate_local_balance` |
+| Real-integral Jarzynski equality from a Crooks relation | `MeasureProtocol.jarzynski_toReal_integral` |
+| Real-integral full-path Jarzynski for segmentwise rates | `MeasureProtocol.ContinuousTimeJump.FullPath.jarzynski_toReal_of_rate_local_balance` |
 
 The generic continuous-time layer uses a common reversal-invariant reference
 measure in each fixed-jump-count sector. Exponential survival factors are
@@ -69,6 +71,7 @@ reweighting and local jump balance give the remaining path-density ratio.
 
 | Informal statement | Lean declaration |
 | --- | --- |
+| The free-coordinate simplex has product volume exactly `1 / n!` | `MeasureProtocol.ContinuousTimeJump.Simplex.volume_freeSimplexSet` |
 | The free-coordinate simplex has positive product volume | `MeasureProtocol.ContinuousTimeJump.Simplex.volume_freeSimplexSet_pos` |
 | The residual final holding interval makes the total duration exactly `T` | `MeasureProtocol.ContinuousTimeJump.Simplex.sum_holdingTimesOfFree` |
 | The constructed path probability is supported on the horizon | `MeasureProtocol.ContinuousTimeJump.Simplex.rawPathProbability_ae_horizon` |
@@ -99,16 +102,37 @@ last holding time is the residual `T - ∑ᵢ<n τᵢ`.
 | Jarzynski equality for the normalized two-state CTMC | `MeasureProtocol.ContinuousTimeJump.TwoState.pathLaw_jarzynski` |
 | The concrete generator has unit escape rate | `MeasureProtocol.ContinuousTimeJump.TwoState.generator_escape_eq_one` |
 | Every row of the concrete generator sums to zero | `MeasureProtocol.ContinuousTimeJump.TwoState.generator_row_sum` |
+| The jump-count marginal of the two-state path law is Poisson | `MeasureProtocol.ContinuousTimeJump.TwoState.map_pathLaw_jumpCount` |
+| The time-`T` state marginal equals the entries of `exp (TQ)` | `MeasureProtocol.ContinuousTimeJump.TwoState.conditionalTerminalLaw_eq_exp_generator` |
+| Asymmetric-chain sector masses sum to one for every initial state | `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.tsum_sectorMass` |
+| The raw simplex reference is reversal invariant | `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.map_rawSectorReference_reverse` |
+| The normalized asymmetric forward path law is a probability measure | `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.tsum_forwardSectorLaw_univ` |
+| The normalized asymmetric reverse path law is a probability measure | `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.tsum_reverseSectorLaw_univ` |
+| Nonequilibrium full-path Crooks relation with free-energy factor two | `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.full_crooks` |
+| Nonequilibrium full-path Jarzynski equality | `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.full_jarzynski_lintegral` |
+| Nonequilibrium real-integral Jarzynski equality | `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.full_jarzynski_toReal` |
 | Original finite protocol satisfies measure Crooks | `Protocol.measure_crooks` |
 | Original finite protocol satisfies real-integral Jarzynski | `Protocol.measure_jarzynski_integral` |
 | General forward path singleton mass equals legacy `forwardWeight` | `Protocol.measure_forwardWeight_singleton` |
 | General reverse path singleton mass equals legacy `reverseWeight` | `Protocol.measure_reverseWeight_singleton` |
 
-For the symmetric unit-rate two-state chain, the `n`-jump simplex volume is
-`T^n / n!` and the survival factor is `exp (-T)`. Hence each sector has Poisson
-mass `exp (-T) T^n / n!`; the sector sum is one. Because the sample space is the
+For the symmetric unit-rate two-state chain, the `n`-jump simplex volume
+`T^n / n!` is derived from the proved unit-simplex volume `1 / n!`, and the
+survival factor is `exp (-T)`. Hence each sector has Poisson mass
+`exp (-T) T^n / n!`; the sector sum is one. Because the sample space is the
 disjoint union of finite-jump sectors, this supplies a concrete non-explosion
-result together with normalized Crooks and Jarzynski theorems.
+result together with normalized Crooks and Jarzynski theorems. The path
+construction is identified with the conservative generator by matching the
+time-`T` state marginal with the matrix exponential `exp (TQ)`.
+
+The asymmetric example drives the chain with escape rates two and one, a Gibbs
+initial density, a uniform final density, and a nonconstant work observable
+whose free-energy factor is two. A telescoping evaluation of the weighted
+simplex integrals proves that the sector masses of every initial state sum to
+one, and the reversal invariance of the raw simplex reference upgrades both the
+forward law and the dynamically constructed reverse law to probability
+measures. The resulting full-path Crooks and Jarzynski equalities are therefore
+normalized and genuinely nonequilibrium.
 
 ## Explicit scope boundaries
 
@@ -119,7 +143,11 @@ result together with normalized Crooks and Jarzynski theorems.
 - A nonzero reversal-invariant fixed-horizon simplex reference is constructed,
   rather than assumed.
 - A normalized, non-explosive path law is constructed for the symmetric
-  unit-rate two-state CTMC and is connected to its conservative generator.
+  unit-rate two-state CTMC, and its time-`T` marginal is identified with the
+  matrix exponential of its conservative generator.
+- A normalized, non-explosive, genuinely nonequilibrium path law is
+  constructed for the asymmetric two-state chain, with full-path Crooks and
+  real-integral Jarzynski equalities.
 - A generator-to-path-law construction and a non-explosion theorem for an
   arbitrary CTMC are not formalized in this PR.
 - General calendar-time-dependent integrated escape rates and Langevin/SDE path
