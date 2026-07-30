@@ -51,8 +51,9 @@ theorem ctmcReference_ne_zero {T : NNReal} (hT : 0 < T) (n : ℕ) :
     ctmcReference T n ≠ 0 := by
   apply Simplex.reference_ne_zero T (alternatingStateLaw n)
   unfold ctmcSimplexMass
-  rw [ENNReal.ofReal_ne_zero]
-  positivity
+  exact ne_of_gt (ENNReal.ofReal_pos.2 (by
+    have hTR : 0 < (T : ℝ) := by exact_mod_cast hT
+    positivity))
 
 /-- The measurable event that all state changes are the allowed flips. -/
 def pathAlternatesSet (n : ℕ) : Set (JumpPath State n) :=
@@ -78,7 +79,8 @@ theorem rawPathProbability_ae_alternates (T : NNReal) (n : ℕ) :
     (hf (measurableSet_pathAlternatesSet n))).2
   exact (alternatingStateLaw_ae_alternates n).mono fun states hstates =>
     ae_of_all (Simplex.freeSimplexProbability n) fun u => by
-      simpa [f, Simplex.assemblePath] using hstates
+      change Alternates states
+      exact hstates
 
 /-- Symmetrization preserves alternation because path reversal preserves it. -/
 theorem pathProbability_ae_alternates (T : NNReal) (n : ℕ) :
@@ -130,7 +132,12 @@ theorem rateDensity_eq_survivalWeight {T : NNReal} {n : ℕ}
     unfold JumpPath.jumpWeightOfRate jumpRate
     simp [halternates i]
   simp_rw [hjump, mul_one]
-  rw [← Fin.prod_univ_castSucc]
+  let holding : Fin (n + 1) → ℝ≥0∞ := fun i =>
+    JumpPath.holdingWeightOfEscapeRate escapeRate i (γ.1 i) (γ.2 i)
+  change (∏ i : Fin n, holding i.castSucc) * holding (Fin.last n) =
+    survivalWeight T
+  rw [← Fin.prod_univ_castSucc holding]
+  dsimp [holding]
   unfold JumpPath.holdingWeightOfEscapeRate escapeRate
   simp only [NNReal.coe_one, one_mul]
   have hprod :
@@ -195,8 +202,9 @@ theorem sectorLaw_univ_eq_poisson (T : NNReal) (n : ℕ) :
   rw [sectorLaw_eq_smul_reference, Measure.smul_apply, ctmcReference_univ,
     ProbabilityTheory.poissonMeasure_singleton]
   unfold survivalWeight ctmcSimplexMass
+  simp only [smul_eq_mul]
   rw [← ENNReal.ofReal_mul (Real.exp_pos _).le]
-  congr 2
+  congr 1
   ring
 
 /-- The full finite-jump path law of the unit-rate two-state CTMC. -/
@@ -212,11 +220,19 @@ theorem tsum_sectorLaw_univ (T : NNReal) :
       apply tsum_congr
       exact sectorLaw_univ_eq_poisson T
     _ = ProbabilityTheory.poissonMeasure T (⋃ n : ℕ, ({n} : Set ℕ)) := by
-      have hdisj : Pairwise (Disjoint on fun n : ℕ => ({n} : Set ℕ)) := by
+      have hdisj : Pairwise (fun i j : ℕ =>
+          Disjoint ({i} : Set ℕ) ({j} : Set ℕ)) := by
         intro i j hij
-        simp [hij]
-      exact (measure_iUnion hdisj fun n => measurableSet_singleton n).symm
-    _ = 1 := by simp
+        refine Set.disjoint_left.2 ?_
+        intro x hxi hxj
+        simp only [Set.mem_singleton_iff] at hxi hxj
+        exact (hij (hxi.symm.trans hxj)).elim
+      exact (measure_iUnion hdisj (fun n => measurableSet_singleton n)).symm
+    _ = ProbabilityTheory.poissonMeasure T Set.univ := by
+      congr 1
+      ext n
+      simp
+    _ = 1 := measure_univ
 
 /-- The constructed full finite-jump law is a probability measure.  Since its
 sample space is the disjoint union of finite jump-count sectors, this is the
@@ -314,7 +330,7 @@ def generatorRate (x y : State) : NNReal :=
 
 /-- The escape rate computed from the generator is one. -/
 theorem generator_escape_eq_one (x : State) :
-    ∑ y : State, if y = x then (0 : NNReal) else generatorRate x y = 1 := by
+    (∑ y : State, (if y = x then (0 : NNReal) else generatorRate x y)) = 1 := by
   cases x <;> decide
 
 /-- The segment jump-rate family is the generator's off-diagonal rate. -/
@@ -329,7 +345,8 @@ def generator (x y : State) : ℝ :=
 /-- Every row of the generator sums to zero. -/
 theorem generator_row_sum (x : State) :
     ∑ y : State, generator x y = 0 := by
-  cases x <;> norm_num [generator, generatorRate, flip]
+  have huniv : (Finset.univ : Finset State) = {.zero, .one} := by decide
+  cases x <;> simp [huniv, generator, generatorRate, flip]
 
 end TwoState
 end ContinuousTimeJump
