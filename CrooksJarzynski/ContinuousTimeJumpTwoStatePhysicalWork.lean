@@ -67,8 +67,9 @@ theorem terminalWorkWeight_mul_prod_edgeWorkWeight {n : ℕ}
   induction n with
   | zero => simp
   | succ n ih =>
-      rw [Fin.prod_univ_succ, ← mul_assoc,
-        terminalWorkWeight_mul_edgeWorkWeight]
+      rw [Fin.prod_univ_succ, ← mul_assoc]
+      simp only [Fin.castSucc_zero]
+      rw [terminalWorkWeight_mul_edgeWorkWeight]
       simpa using ih (fun i : Fin (n + 1) => states i.succ)
 
 /-- The complete factorized path-work weight is determined by the terminal
@@ -128,7 +129,8 @@ theorem terminalWorkWeight_eq_exp_thermodynamicStateWork (x : State) :
       Real.exp_sub,
       Real.exp_log (by norm_num : (0 : ℝ) < 3),
       Real.exp_log (by norm_num : (0 : ℝ) < 2)]
-    norm_num
+    rw [ENNReal.ofReal_div_of_pos (by norm_num)]
+    norm_num [ENNReal.ofReal_ofNat]
 
 /-- The existing factorized path-work observable is exactly `exp (-β W)` for
 the real-valued final-quench work. -/
@@ -174,7 +176,9 @@ theorem full_jarzynski_physical (T : NNReal) :
 theorem full_jarzynski_physical_eq_two (T : NNReal) :
     ∫ γ, Real.exp (-thermodynamicBeta * thermodynamicWork γ)
         ∂forwardPathLaw T = 2 := by
-  rw [full_jarzynski_physical, thermodynamicBeta, one_mul,
+  rw [full_jarzynski_physical, thermodynamicBeta]
+  rw [show (-(1 : ℝ)) * physicalDeltaFreeEnergy =
+      -physicalDeltaFreeEnergy by ring,
     exp_neg_physicalDeltaFreeEnergy]
 
 /-- Density-free Crooks relation for the pushforward laws of the real work
@@ -199,10 +203,8 @@ theorem integrable_thermodynamicWork (T : NNReal) :
   filter_upwards [] with γ
   unfold thermodynamicWork
   cases h : FullPath.terminalState γ
-  · rw [h]
-    exact le_max_left _ _
-  · rw [h]
-    exact le_max_right _ _
+  · exact le_max_left _ _
+  · exact le_max_right _ _
 
 /-- The average-work second law for the normalized asymmetric chain. -/
 theorem full_second_law (T : NNReal) :
@@ -230,10 +232,11 @@ theorem full_entropyProduction_integral_fluctuation (T : NNReal) :
     congr 1
     unfold entropyProduction
     ring
-  rw [hpoint, integral_const_mul, full_jarzynski_physical]
-  rw [← Real.exp_add]
-  congr 1
-  ring
+  rw [hpoint, integral_const_mul, full_jarzynski_physical,
+    ← Real.exp_add,
+    show thermodynamicBeta * physicalDeltaFreeEnergy +
+        -thermodynamicBeta * physicalDeltaFreeEnergy = 0 by ring]
+  exact Real.exp_zero
 
 end AsymmetricExample
 end TwoState

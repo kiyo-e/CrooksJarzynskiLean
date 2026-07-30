@@ -119,6 +119,11 @@ last holding time is the residual `T - ∑ᵢ<n τᵢ`.
 | The work observable is not a.e. constant under the forward law | `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.fullWorkWeight_not_ae_const` |
 | The asymmetric rates satisfy detailed balance for an explicit Gibbs state | `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.physical_detailedBalance` |
 | The Crooks factor two is `exp (-β ΔF)` for explicit energies | `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.freeEnergyWeight_eq_exp_delta` |
+| The path-work weight is `exp (-β W)` for the final-quench work | `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.fullWorkWeight_eq_exp_thermodynamicWork` |
+| Physical Crooks relation with `exp (-β W)` and `exp (-β ΔF)` | `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.full_crooks_physical` |
+| Physical Jarzynski average evaluates to the explicit factor two | `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.full_jarzynski_physical_eq_two` |
+| Average-work second law for the asymmetric chain | `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.full_second_law` |
+| Integral fluctuation theorem for the entropy production | `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.full_entropyProduction_integral_fluctuation` |
 | Original finite protocol satisfies measure Crooks | `Protocol.measure_crooks` |
 | Original finite protocol satisfies real-integral Jarzynski | `Protocol.measure_jarzynski_integral` |
 | General forward path singleton mass equals legacy `forwardWeight` | `Protocol.measure_forwardWeight_singleton` |
