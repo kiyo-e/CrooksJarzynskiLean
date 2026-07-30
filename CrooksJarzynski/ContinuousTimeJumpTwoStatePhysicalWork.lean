@@ -142,6 +142,16 @@ theorem fullWorkWeight_eq_exp_thermodynamicWork (γ : FullPath State) :
   exact terminalWorkWeight_eq_exp_thermodynamicStateWork
     (FullPath.terminalState γ)
 
+/-- The real-valued quench work is not almost-everywhere constant under the
+normalized forward path law. -/
+theorem thermodynamicWork_not_ae_const (T : NNReal) :
+    ¬ ∃ c : ℝ, thermodynamicWork =ᵐ[forwardPathLaw T] fun _ => c := by
+  rintro ⟨c, hc⟩
+  apply fullWorkWeight_not_ae_const T
+  refine ⟨ENNReal.ofReal (Real.exp (-thermodynamicBeta * c)), ?_⟩
+  filter_upwards [hc] with γ hγ
+  rw [fullWorkWeight_eq_exp_thermodynamicWork, hγ]
+
 /-- Physical Crooks relation for the normalized asymmetric chain, stated with
 real work and free-energy observables. -/
 theorem full_crooks_physical (T : NNReal) :
