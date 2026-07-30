@@ -41,7 +41,8 @@ measure-theoretic layer includes one-step and finite-horizon Crooks relations,
 the corresponding Lebesgue and real-integral Jarzynski equalities, a Gibbs
 specialization constructed from Mathlib's exponentially tilted measures,
 measurable chronological path reversal, physical total-work and endpoint
-free-energy forms, a non-atomic Gaussian example on `ℝ`, an
+free-energy forms, a second law derived directly from an arbitrary physical
+measure-level Crooks relation, a non-atomic Gaussian example on `ℝ`, an
 explicit Lebesgue-based Metropolis--Hastings example on `ℝ`, an
 Ionescu–Tulcea trajectory-measure adapter for time-inhomogeneous Mathlib Markov
 kernels, an identification of all of its finite-dimensional marginals with the
@@ -57,15 +58,26 @@ nonzero fixed-horizon simplex reference instead of restricting an ambient
 Lebesgue law to a null slice, instantiates exponential survival and jump
 factors, derives the path-density identity from endpoint reweighting,
 waiting-time cancellation, and local jump balance, and proves fixed-sector,
-full-path and fixed-horizon Crooks and Jarzynski statements.  A normalized
-unit-rate two-state CTMC example identifies every jump-count sector with its
-Poisson probability and proves non-explosion by constructing a probability law
-on the disjoint union of all finite-jump sectors.  Its fixed-initial-state
-time-`T` marginal is identified with the matrix exponential of the conservative
-generator, and a separate asymmetric-rate example has nonconstant work and a
-non-unit free-energy factor.  The asymmetric example is normalized directly
-from its state-dependent holding-time simplex integrals and satisfies full-path
-Crooks and Jarzynski equalities without uniformization.
+full-path, and fixed-horizon Crooks and Jarzynski statements.
+
+A normalized unit-rate two-state CTMC identifies every jump-count sector with
+its Poisson probability and proves non-explosion by constructing a probability
+law on the disjoint union of all finite-jump sectors. Its normalized
+fixed-initial path laws record their prescribed initial state, and the
+pushforward of their actual terminal coordinate is packaged as a Mathlib Markov
+kernel. The kernel entries are the rows of `exp (TQ)` for the conservative
+generator and satisfy Chapman--Kolmogorov.
+
+A separate asymmetric reversible two-state chain is followed by a final energy
+quench. Its state-dependent holding-time simplex integrals normalize both the
+forward law and the dynamically constructed reverse law without
+uniformization. The conservative generator, reversible Gibbs distribution,
+detailed balance, stationarity, energy landscapes, partition functions,
+free-energy difference, and real-valued quench work are explicit. The
+factorized path weight telescopes pointwise to `exp (-β W)`, yielding normalized
+physical Crooks and Jarzynski relations, a density-free work-distribution
+relation, the average-work second law, and an integral fluctuation theorem for
+entropy production.
 
 The finite-state results include explicit time reversal, both standard
 discrete-time work conventions, a path-uniform `O(1/N)` continuous-time limit
@@ -82,6 +94,7 @@ canonical-ensemble API. The main results include `Protocol.crooks`,
 `MeasureProtocol.Gibbs.multiStep_jarzynski_integral`,
 `MeasureProtocol.Gibbs.multiStep_second_law`,
 `MeasureProtocol.Gibbs.multiStep_work_distribution_crooks`,
+`MeasureProtocol.second_law_of_crooks`,
 `MeasureProtocol.GaussianExample.multiStep_crooks`,
 `MeasureProtocol.GaussianExample.multiStep_jarzynski`,
 `MeasureProtocol.MetropolisExample.multiStep_crooks`,
@@ -94,11 +107,15 @@ canonical-ensemble API. The main results include `Protocol.crooks`,
 `MeasureProtocol.ContinuousTimeJump.FullPath.crooks_of_rate_local_balance`,
 `MeasureProtocol.ContinuousTimeJump.Simplex.map_reference_reverse`,
 `MeasureProtocol.ContinuousTimeJump.Simplex.volume_freeSimplexSet`,
-`MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.sector_crooks`,
-`MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.full_crooks`,
-`MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.full_jarzynski_lintegral`,
 `MeasureProtocol.ContinuousTimeJump.TwoState.pathLawFrom_terminalState_eq_exp_generator`,
-`MeasureProtocol.ContinuousTimeJump.TwoState.transitionProbability_chapman_kolmogorov`,
+`MeasureProtocol.ContinuousTimeJump.TwoState.transitionKernel_real_singleton_eq_exp_generator`,
+`MeasureProtocol.ContinuousTimeJump.TwoState.transitionKernel_chapman_kolmogorov`,
+`MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.physical_detailedBalance`,
+`MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.full_crooks_physical`,
+`MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.full_jarzynski_physical_eq_two`,
+`MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.full_work_distribution_crooks`,
+`MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.full_second_law`,
+`MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.full_entropyProduction_integral_fluctuation`,
 `MeasureProtocol.ContinuousTimeJump.TwoState.pathLaw_crooks`,
 `MeasureProtocol.ContinuousTimeJump.TwoState.pathLaw_jarzynski`,
 `MeasureProtocol.ContinuousTimeJump.TwoState.sectorLaw_univ_eq_poisson`,
