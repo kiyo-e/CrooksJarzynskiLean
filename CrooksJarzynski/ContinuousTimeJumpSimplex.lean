@@ -256,11 +256,14 @@ theorem rawPathProbability_ae_horizon
   rw [ae_map_iff hf.aemeasurable (by
     simpa [JumpPath.horizonSet] using
       (JumpPath.measurableSet_horizonSet (Ω := Ω) (n := n) T))]
+  have hmeas : MeasurableSet
+      {p : (Fin (n + 1) → Ω) × (Fin n → I) |
+        JumpPath.totalHoldingTime
+          (assemblePath (Ω := Ω) (n := n) T p) = T} := by
+    simpa [Function.comp_def] using
+      (((JumpPath.measurable_totalHoldingTime (Ω := Ω) (n := n)).comp hf).eq_const T |>.setOf)
   apply (Measure.ae_prod_iff_ae_ae
-    (μ := stateLaw) (ν := freeSimplexProbability n)
-    (hf (by
-      simpa [JumpPath.horizonSet] using
-        (JumpPath.measurableSet_horizonSet (Ω := Ω) (n := n) T)))).2
+    (μ := stateLaw) (ν := freeSimplexProbability n) hmeas).2
   refine ae_of_all stateLaw fun states => ?_
   have hmem : ∀ᵐ u ∂freeSimplexProbability n, u ∈ freeSimplexSet n := by
     unfold freeSimplexProbability
