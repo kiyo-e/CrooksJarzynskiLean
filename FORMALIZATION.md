@@ -59,6 +59,7 @@ integrability and nonzero-measure hypotheses are explicit theorem inputs.
 | Fixed-horizon segmentwise-rate full-path Crooks theorem | `MeasureProtocol.ContinuousTimeJump.FullPath.crooks_restrict_horizon_of_rate_local_balance` |
 | Fixed-horizon segmentwise-rate full-path Jarzynski equality | `MeasureProtocol.ContinuousTimeJump.FullPath.jarzynski_restrict_horizon_of_rate_local_balance` |
 | Real-integral Jarzynski equality from a Crooks relation | `MeasureProtocol.jarzynski_toReal_integral` |
+| Average-work second law from a measure-level Crooks relation | `MeasureProtocol.second_law_of_crooks` |
 | Real-integral full-path Jarzynski for segmentwise rates | `MeasureProtocol.ContinuousTimeJump.FullPath.jarzynski_toReal_of_rate_local_balance` |
 
 The generic continuous-time layer uses a common reversal-invariant reference
@@ -116,6 +117,8 @@ last holding time is the residual `T - ∑ᵢ<n τᵢ`.
 | Nonequilibrium full-path Jarzynski equality | `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.full_jarzynski_lintegral` |
 | Nonequilibrium real-integral Jarzynski equality | `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.full_jarzynski_toReal` |
 | The work observable is not a.e. constant under the forward law | `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.fullWorkWeight_not_ae_const` |
+| The asymmetric rates satisfy detailed balance for an explicit Gibbs state | `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.physical_detailedBalance` |
+| The Crooks factor two is `exp (-β ΔF)` for explicit energies | `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.freeEnergyWeight_eq_exp_delta` |
 | Original finite protocol satisfies measure Crooks | `Protocol.measure_crooks` |
 | Original finite protocol satisfies real-integral Jarzynski | `Protocol.measure_jarzynski_integral` |
 | General forward path singleton mass equals legacy `forwardWeight` | `Protocol.measure_forwardWeight_singleton` |

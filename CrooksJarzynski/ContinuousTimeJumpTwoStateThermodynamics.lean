@@ -59,11 +59,11 @@ theorem physicalGenerator_row_sum (x : State) :
     ∑ y : State, physicalGenerator x y = 0 := by
   rw [show (Finset.univ : Finset State) = {.zero, .one} by decide,
     Finset.sum_pair (by decide)]
-  cases x <;> norm_num [physicalGenerator, physicalEscapeRate,
-    physicalJumpRate]
+  cases x <;>
+    simp [physicalGenerator, physicalEscapeRate, physicalJumpRate]
 
 /-- The equilibrium probabilities selected by the asymmetric rates. -/
-def equilibriumProbability : State → ℝ
+noncomputable def equilibriumProbability : State → ℝ
   | .zero => 1 / 3
   | .one => 2 / 3
 
@@ -87,8 +87,10 @@ theorem equilibriumProbability_stationary (y : State) :
     ∑ x : State, equilibriumProbability x * physicalGenerator x y = 0 := by
   rw [show (Finset.univ : Finset State) = {.zero, .one} by decide,
     Finset.sum_pair (by decide)]
-  cases y <;> norm_num [equilibriumProbability, physicalGenerator,
-    physicalEscapeRate, physicalJumpRate]
+  cases y <;>
+    simp [equilibriumProbability, physicalGenerator, physicalEscapeRate,
+      physicalJumpRate] <;>
+    norm_num
 
 /-- The inverse temperature used by the explicit thermodynamic model. -/
 def thermodynamicBeta : ℝ := 1
@@ -109,17 +111,19 @@ noncomputable def finitePartitionFunction (energy : State → ℝ) : ℝ :=
 /-- The initial partition function is three. -/
 theorem initial_partitionFunction :
     finitePartitionFunction initialEnergy = 3 := by
+  unfold finitePartitionFunction
   rw [show (Finset.univ : Finset State) = {.zero, .one} by decide,
     Finset.sum_pair (by decide)]
-  norm_num [finitePartitionFunction, initialEnergy,
+  norm_num [initialEnergy,
     Real.exp_log (by norm_num : (0 : ℝ) < 2)]
 
 /-- The final partition function is six. -/
 theorem final_partitionFunction :
     finitePartitionFunction finalEnergy = 6 := by
+  unfold finitePartitionFunction
   rw [show (Finset.univ : Finset State) = {.zero, .one} by decide,
     Finset.sum_pair (by decide)]
-  norm_num [finitePartitionFunction, finalEnergy,
+  norm_num [finalEnergy,
     Real.exp_log (by norm_num : (0 : ℝ) < 3)]
 
 /-- The explicit equilibrium probabilities are the normalized initial
@@ -171,7 +175,10 @@ theorem freeEnergyWeight_eq_exp_delta :
     freeEnergyWeight =
       ENNReal.ofReal
         (Real.exp (-thermodynamicBeta * physicalDeltaFreeEnergy)) := by
-  rw [thermodynamicBeta, one_mul, exp_neg_physicalDeltaFreeEnergy]
+  rw [thermodynamicBeta]
+  rw [show (-(1 : ℝ) * physicalDeltaFreeEnergy) =
+      -physicalDeltaFreeEnergy by ring,
+    exp_neg_physicalDeltaFreeEnergy]
   norm_num [freeEnergyWeight]
 
 /-- The endpoint density used in the path law is twice the Gibbs probability,
@@ -179,7 +186,15 @@ because the state-sequence reference starts from the uniform law. -/
 theorem gibbsInitialWeight_eq_probability_density (x : State) :
     gibbsInitialWeight x =
       ENNReal.ofReal (2 * equilibriumProbability x) := by
-  cases x <;> norm_num [gibbsInitialWeight, equilibriumProbability]
+  cases x
+  · simp only [gibbsInitialWeight, equilibriumProbability]
+    rw [show (2 : ℝ) * (1 / 3) = 2 / 3 by norm_num,
+      ENNReal.ofReal_div_of_pos (by norm_num)]
+    norm_num [ENNReal.ofReal_ofNat]
+  · simp only [gibbsInitialWeight, equilibriumProbability]
+    rw [show (2 : ℝ) * (2 / 3) = 4 / 3 by norm_num,
+      ENNReal.ofReal_div_of_pos (by norm_num)]
+    norm_num [ENNReal.ofReal_ofNat]
 
 /-- The final endpoint density is twice the final uniform Gibbs probability,
 again relative to the uniform state reference. -/

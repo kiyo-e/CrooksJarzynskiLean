@@ -62,7 +62,11 @@ The library proves:
   forward and dynamically constructed reverse path laws are both proved to be
   probability measures by a telescoping simplex-integral evaluation, and which
   satisfies normalized nonequilibrium full-path Crooks, Jarzynski, and
-  real-integral Jarzynski theorems;
+  real-integral Jarzynski theorems, with an explicit thermodynamic model
+  (energies, `β = 1`, partition functions) whose free-energy factor and
+  Gibbs densities reproduce the weights of the path theorem;
+- an average-work second law `ΔF ≤ ⟨W⟩` derived from any measure-level
+  Crooks relation by Jensen's inequality;
 - the original finite-state pathwise Crooks ratio, Jarzynski equality, integral
   fluctuation theorem, explicit reverse protocol, and work-distribution Crooks
   theorem; and
