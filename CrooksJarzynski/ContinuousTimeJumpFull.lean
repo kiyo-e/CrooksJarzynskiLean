@@ -36,7 +36,7 @@ variable {Ω : Type u} [MeasurableSpace Ω]
 theorem measurable_mk (n : ℕ) :
     Measurable (Sigma.mk n : JumpPath Ω n → FullPath Ω) := by
   intro s hs
-  exact measurableSet_iInf.mp hs n
+  exact MeasurableSpace.measurableSet_iInf.mp hs n
 
 /-- Lift a measure on the `n`-jump sector to the full path space. -/
 noncomputable def liftMeasure (n : ℕ) (μ : Measure (JumpPath Ω n)) :
@@ -57,7 +57,7 @@ theorem measurable_weight
     (q : (n : ℕ) → JumpPath Ω n → ℝ≥0∞)
     (hq : ∀ n, Measurable (q n)) : Measurable (weight q) := by
   intro s hs
-  apply measurableSet_iInf.mpr
+  apply MeasurableSpace.measurableSet_iInf.mpr
   intro n
   simpa [weight] using hq n hs
 
@@ -132,7 +132,11 @@ theorem crooks_of_sector_relations
       exact liftMeasure_smul n freeEnergyWeight (reverse n)
     _ = freeEnergyWeight • measure reverse := by
       ext s hs
-      simp [measure, hs, ENNReal.tsum_const_smul]
+      simpa [measure, hs] using
+        (ENNReal.tsum_mul_left
+          (α := ℕ)
+          (a := freeEnergyWeight)
+          (f := fun i => (liftMeasure i (reverse i)) s))
 
 /-- Jarzynski's equality for the complete finite-jump path law. -/
 theorem jarzynski_of_sector_relations
