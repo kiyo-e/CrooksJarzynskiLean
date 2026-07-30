@@ -77,7 +77,8 @@ theorem transitionProbability_nonneg
     (T : NNReal) (x y : State) :
     0 ≤ transitionProbability (T : ℝ) x y := by
   have hnonpos : -2 * (T : ℝ) ≤ 0 := by
-    nlinarith [T.2]
+    have h2T : (0 : ℝ) ≤ 2 * (T : ℝ) := by positivity
+    linarith
   have hle : Real.exp (-2 * (T : ℝ)) ≤ 1 :=
     Real.exp_le_one_iff.2 hnonpos
   unfold transitionProbability
@@ -111,7 +112,8 @@ theorem transitionKernel_zero :
   intro x
   apply Measure.ext_of_singleton
   intro y
-  rw [transitionKernel_singleton, transitionProbability_zero]
+  rw [transitionKernel_singleton, NNReal.coe_zero,
+    transitionProbability_zero]
   by_cases hxy : x = y
   · subst y
     simp [Kernel.id_apply]
