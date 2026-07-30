@@ -37,7 +37,7 @@ universe u
 def unitNNReal (x : I) : NNReal :=
   ⟨x, x.2.1⟩
 
-@[simp, norm_cast]
+@[simp]
 theorem coe_unitNNReal (x : I) : (unitNNReal x : ℝ) = x :=
   rfl
 
@@ -83,7 +83,7 @@ theorem smallBox_subset_freeSimplexSet (n : ℕ) :
         ∑ _ : Fin n, ((interiorRadius n : I) : ℝ) := by
       apply Finset.sum_le_sum
       intro i _
-      simpa using hu i
+      exact_mod_cast hu i
     _ = (n : ℝ) / ((n : ℝ) + 1) := by
       simp [div_eq_mul_inv]
     _ ≤ 1 := by
@@ -104,10 +104,14 @@ theorem volume_freeSimplexSet_pos (n : ℕ) :
         ∏ _ : Fin n, ENNReal.ofReal ((interiorRadius n : I) : ℝ) := by
     change (Measure.pi fun _ : Fin n => (volume : Measure I)) B = _
     rw [Measure.pi_pi]
-    simp [B, unitInterval.volume_Iic]
+    simp [unitInterval.volume_Iic]
   have hBpos : 0 < (volume : Measure (Fin n → I)) B := by
     rw [hBmass]
-    positivity
+    apply Finset.prod_pos
+    intro i hi
+    exact ENNReal.ofReal_pos.2 (by
+      dsimp [interiorRadius]
+      positivity)
   exact hBpos.trans_le (measure_mono hB)
 
 /-- The uniform probability law on the free-coordinate simplex.  It is the
@@ -198,7 +202,7 @@ theorem map_symmetrizePathMeasure_reverse
   have hpre : JumpPath.reverse ⁻¹' (JumpPath.reverse ⁻¹' s) = s := by
     ext γ
     simp
-  rw [hpre]
+  rw [hpre, Measure.map_apply JumpPath.measurable_reverse hs]
   ac_rfl
 
 /-- Symmetrizing a probability measure preserves normalization. -/
@@ -249,7 +253,7 @@ theorem rawPathProbability_ae_horizon
   rw [ae_map_iff hf.aemeasurable (by
     simpa [JumpPath.horizonSet] using
       (JumpPath.measurableSet_horizonSet (Ω := Ω) (n := n) T))]
-  apply (ae_prod_iff_ae_ae (hf (by
+  apply (Measure.ae_prod_iff_ae_ae (hf (by
     simpa [JumpPath.horizonSet] using
       (JumpPath.measurableSet_horizonSet (Ω := Ω) (n := n) T)))).2
   refine ae_of_all stateLaw fun states => ?_
