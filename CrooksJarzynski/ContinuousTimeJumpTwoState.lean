@@ -163,11 +163,10 @@ theorem measurable_jumpWeight_eval {n : ℕ} (i : Fin n)
     (a b : Fin (n + 1)) :
     Measurable (fun γ : JumpPath State n =>
       JumpPath.jumpWeightOfRate (jumpRate (n := n)) i (γ.1 a) (γ.1 b)) := by
-  unfold JumpPath.jumpWeightOfRate jumpRate
-  apply Measurable.ite
-  · exact measurable_fst MeasurableSet.of_discrete
-  · exact measurable_const
-  · exact measurable_const
+  unfold JumpPath.jumpWeightOfRate
+  exact (Measurable.of_discrete :
+    Measurable (fun states : Fin (n + 1) → State =>
+      (jumpRate i (states a) (states b) : ℝ≥0∞))).comp measurable_fst
 
 /-- There is no thermodynamic work in this equilibrium example. -/
 def boundaryWork : State → State → ℝ≥0∞ :=
