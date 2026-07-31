@@ -76,8 +76,9 @@ theorem measurable_transitionCandidate
 private theorem asymmetricTransitionProbability_nonneg_of_nonneg
     {t : ℝ} (ht : 0 ≤ t) (x y : State) :
     0 ≤ asymmetricTransitionProbability t x y := by
-  let T : NNReal := ⟨t, ht⟩
-  simpa [T] using asymmetricTransitionProbability_nonneg T x y
+  change 0 ≤ asymmetricTransitionProbability
+    (((⟨t, ht⟩ : NNReal) : ℝ)) x y
+  exact asymmetricTransitionProbability_nonneg (⟨t, ht⟩ : NNReal) x y
 
 private theorem asymmetricTransitionProbability_le_one_of_nonneg
     {t : ℝ} (ht : 0 ≤ t) (x y : State) :
@@ -139,21 +140,24 @@ private theorem hasDerivAt_asymmetricTransitionProbability
           asymmetricTransitionProbability t (flip x) y) t := by
   have hexp : HasDerivAt (fun s : ℝ => Real.exp (-3 * s))
       (-3 * Real.exp (-3 * t)) t := by
-    convert Real.hasDerivAt_exp.comp t
-      ((hasDerivAt_id t).const_mul (-3)) using 1 <;> ring
+    convert ((hasDerivAt_id t).const_mul (-3)).exp using 1 <;> ring
   cases x <;> cases y
-  · simpa [asymmetricTransitionProbability, stateRate, flip] using
-      (hasDerivAt_const t (1 / 3 : ℝ)).add
-        (hexp.const_mul (2 / 3 : ℝ))
-  · simpa [asymmetricTransitionProbability, stateRate, flip, sub_eq_add_neg] using
-      (hasDerivAt_const t (2 / 3 : ℝ)).add
-        (hexp.const_mul (-2 / 3 : ℝ))
-  · simpa [asymmetricTransitionProbability, stateRate, flip, sub_eq_add_neg] using
-      (hasDerivAt_const t (1 / 3 : ℝ)).add
-        (hexp.const_mul (-1 / 3 : ℝ))
-  · simpa [asymmetricTransitionProbability, stateRate, flip] using
-      (hasDerivAt_const t (2 / 3 : ℝ)).add
-        (hexp.const_mul (1 / 3 : ℝ))
+  · have h := (hasDerivAt_const t (1 / 3 : ℝ)).add
+      (hexp.const_mul (2 / 3 : ℝ))
+    convert h using 1 <;>
+      simp [asymmetricTransitionProbability, stateRate, flip] <;> ring
+  · have h := (hasDerivAt_const t (2 / 3 : ℝ)).add
+      (hexp.const_mul (-2 / 3 : ℝ))
+    convert h using 1 <;>
+      simp [asymmetricTransitionProbability, stateRate, flip, sub_eq_add_neg] <;> ring
+  · have h := (hasDerivAt_const t (1 / 3 : ℝ)).add
+      (hexp.const_mul (-1 / 3 : ℝ))
+    convert h using 1 <;>
+      simp [asymmetricTransitionProbability, stateRate, flip, sub_eq_add_neg] <;> ring
+  · have h := (hasDerivAt_const t (2 / 3 : ℝ)).add
+      (hexp.const_mul (1 / 3 : ℝ))
+    convert h using 1 <;>
+      simp [asymmetricTransitionProbability, stateRate, flip] <;> ring
 
 /-- Real-valued first-jump renewal equation for the explicit transition
 matrix. -/
@@ -164,11 +168,11 @@ private theorem asymmetricTransitionProbability_renewal_real
         Real.exp (-((stateRate x : ℝ) * (T : ℝ) * ρ))
        else 0) +
       (stateRate x : ℝ) * (T : ℝ) *
-        ∫ a : ℝ in 0..ρ,
+        (∫ a : ℝ in 0..ρ,
           Real.exp
               (-((stateRate x : ℝ) * (T : ℝ) * a)) *
             asymmetricTransitionProbability
-              ((T : ℝ) * (ρ - a)) (flip x) y := by
+              ((T : ℝ) * (ρ - a)) (flip x) y) := by
   let λ : ℝ := stateRate x
   let τ : ℝ := T
   let P : ℝ → ℝ := fun t => asymmetricTransitionProbability t x y
@@ -181,8 +185,7 @@ private theorem asymmetricTransitionProbability_renewal_real
     intro u
     have he : HasDerivAt (fun s : ℝ => Real.exp (λ * τ * s))
         (λ * τ * Real.exp (λ * τ * u)) u := by
-      convert Real.hasDerivAt_exp.comp u
-        ((hasDerivAt_id u).const_mul (λ * τ)) using 1 <;> ring
+      convert ((hasDerivAt_id u).const_mul (λ * τ)).exp using 1 <;> ring
     have hp0 := hasDerivAt_asymmetricTransitionProbability (τ * u) x y
     have hp : HasDerivAt (fun s : ℝ => P (τ * s))
         (τ * (-(stateRate x : ℝ) * P (τ * u) +
@@ -204,8 +207,8 @@ private theorem asymmetricTransitionProbability_renewal_real
   have hgrewrite :
       Real.exp (λ * τ * ρ) * P (τ * ρ) =
         P 0 +
-          ∫ u : ℝ in 0..ρ,
-            λ * τ * Real.exp (λ * τ * u) * R (τ * u) := by
+          (∫ u : ℝ in 0..ρ,
+            λ * τ * Real.exp (λ * τ * u) * R (τ * u)) := by
     linarith
   have hrev :
       (∫ u : ℝ in 0..ρ,
@@ -226,8 +229,8 @@ private theorem asymmetricTransitionProbability_renewal_real
           (∫ u : ℝ in 0..ρ,
             λ * τ * Real.exp (λ * τ * u) * R (τ * u)) =
         λ * τ *
-          ∫ a : ℝ in 0..ρ,
-            Real.exp (-(λ * τ * a)) * R (τ * (ρ - a)) := by
+          (∫ a : ℝ in 0..ρ,
+            Real.exp (-(λ * τ * a)) * R (τ * (ρ - a))) := by
     rw [intervalIntegral.integral_const_mul]
     calc
       Real.exp (-(λ * τ * ρ)) *
@@ -266,18 +269,18 @@ private theorem asymmetricTransitionProbability_renewal_real
       rw [hgrewrite]
     _ = Real.exp (-(λ * τ * ρ)) * P 0 +
         λ * τ *
-          ∫ a : ℝ in 0..ρ,
-            Real.exp (-(λ * τ * a)) * R (τ * (ρ - a)) := by
+          (∫ a : ℝ in 0..ρ,
+            Real.exp (-(λ * τ * a)) * R (τ * (ρ - a))) := by
       rw [mul_add, hinter]
     _ = (if x = y then
           Real.exp (-((stateRate x : ℝ) * (T : ℝ) * ρ))
         else 0) +
         (stateRate x : ℝ) * (T : ℝ) *
-          ∫ a : ℝ in 0..ρ,
+          (∫ a : ℝ in 0..ρ,
             Real.exp
                 (-((stateRate x : ℝ) * (T : ℝ) * a)) *
               asymmetricTransitionProbability
-                ((T : ℝ) * (ρ - a)) (flip x) y := by
+                ((T : ℝ) * (ρ - a)) (flip x) y) := by
       rw [show P 0 = if x = y then 1 else 0 by
         exact asymmetricTransitionProbability_zero x y]
       simp only [P, R, λ, τ]
@@ -326,30 +329,81 @@ theorem transitionCandidate_renewal
       (measurableSet_le (by fun_prop) measurable_const)
     intro a ha
     unfold transitionCandidate f
-    rw [← ENNReal.ofReal_mul (Real.exp_pos _).le]
+    change
+      ENNReal.ofReal
+          (Real.exp (-((stateRate x : ℝ) * (T : ℝ) * (a : ℝ)))) *
+        ENNReal.ofReal
+          (asymmetricTransitionProbability
+            ((T : ℝ) * (ρ - (a : ℝ))) (flip x) y) =
+      ENNReal.ofReal
+        (Real.exp (-((stateRate x : ℝ) * (T : ℝ) * (a : ℝ))) *
+          asymmetricTransitionProbability
+            ((T : ℝ) * (ρ - (a : ℝ))) (flip x) y)
+    exact (ENNReal.ofReal_mul (Real.exp_pos _).le).symm
   have hint_nonneg : 0 ≤ ∫ a : ℝ in (0 : ℝ)..ρ, f a := by
     rw [intervalIntegral.integral_of_le hρ0]
-    apply integral_nonneg
+    apply integral_nonneg_of_ae
     filter_upwards [self_mem_ae_restrict measurableSet_Ioc] with a ha
     exact hfnn a ⟨ha.1.le, ha.2⟩
   have hreal := asymmetricTransitionProbability_renewal_real T ρ x y
-  unfold transitionCandidate
-  rw [hreal]
   have hsurv :
       0 ≤ (if x = y then
         Real.exp (-((stateRate x : ℝ) * (T : ℝ) * ρ)) else 0) := by
     split_ifs <;> positivity
   have hrate : 0 ≤ (stateRate x : ℝ) * (T : ℝ) := by positivity
-  rw [ENNReal.ofReal_add hsurv (mul_nonneg hrate hint_nonneg)]
-  rw [ENNReal.ofReal_mul hrate]
-  rw [hlin]
   have hcast :
       ENNReal.ofReal ((stateRate x : ℝ) * (T : ℝ)) =
         (stateRate x : ℝ≥0∞) * (T : ℝ≥0∞) := by
     rw [ENNReal.ofReal_mul (stateRate x).2]
     simp [ENNReal.ofReal_coe_nnreal]
-  rw [hcast]
-  split_ifs <;> simp
+  calc
+    transitionCandidate T x y ρ =
+        ENNReal.ofReal
+          ((if x = y then
+              Real.exp (-((stateRate x : ℝ) * (T : ℝ) * ρ))
+            else 0) +
+            (stateRate x : ℝ) * (T : ℝ) *
+              (∫ a : ℝ in (0 : ℝ)..ρ, f a)) := by
+      unfold transitionCandidate
+      rw [hreal]
+    _ = ENNReal.ofReal
+          (if x = y then
+            Real.exp (-((stateRate x : ℝ) * (T : ℝ) * ρ))
+          else 0) +
+        ENNReal.ofReal
+          ((stateRate x : ℝ) * (T : ℝ) *
+            (∫ a : ℝ in (0 : ℝ)..ρ, f a)) := by
+      rw [ENNReal.ofReal_add hsurv (mul_nonneg hrate hint_nonneg)]
+    _ = ENNReal.ofReal
+          (if x = y then
+            Real.exp (-((stateRate x : ℝ) * (T : ℝ) * ρ))
+          else 0) +
+        ENNReal.ofReal ((stateRate x : ℝ) * (T : ℝ)) *
+          ENNReal.ofReal (∫ a : ℝ in (0 : ℝ)..ρ, f a) := by
+      rw [ENNReal.ofReal_mul hrate]
+    _ = ENNReal.ofReal
+          (if x = y then
+            Real.exp (-((stateRate x : ℝ) * (T : ℝ) * ρ))
+          else 0) +
+        ((stateRate x : ℝ≥0∞) * (T : ℝ≥0∞)) *
+          (∫⁻ a : I in {a : I | (a : ℝ) ≤ ρ},
+            ENNReal.ofReal
+                (Real.exp
+                  (-((stateRate x : ℝ) * (T : ℝ) * (a : ℝ)))) *
+              transitionCandidate T (flip x) y (ρ - (a : ℝ))) := by
+      rw [hcast, hlin]
+    _ = (if x = y then
+          ENNReal.ofReal
+            (Real.exp (-((stateRate x : ℝ) * (T : ℝ) * ρ)))
+        else 0) +
+        ((stateRate x : ℝ≥0∞) * (T : ℝ≥0∞)) *
+          (∫⁻ a : I in {a : I | (a : ℝ) ≤ ρ},
+            ENNReal.ofReal
+                (Real.exp
+                  (-((stateRate x : ℝ) * (T : ℝ) * (a : ℝ)))) *
+              transitionCandidate T (flip x) y (ρ - (a : ℝ))) := by
+      by_cases hxy : x = y <;> simp [hxy]
+
 
 end AsymmetricExample
 end TwoState
