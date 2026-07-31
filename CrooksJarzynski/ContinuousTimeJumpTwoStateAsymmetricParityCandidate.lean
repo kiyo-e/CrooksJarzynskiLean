@@ -193,22 +193,43 @@ private theorem asymmetricTransitionProbability_renewal_real
         (rate * τ * Real.exp (rate * τ * u)) u := by
       exact hlinear.exp.congr_deriv (by ring)
     have hp0 := hasDerivAt_asymmetricTransitionProbability (τ * u) x y
+    have hτ : HasDerivAt (fun s : ℝ => τ * s) τ u := by
+      simpa only [id_eq, mul_one] using
+        (hasDerivAt_id u).const_mul τ
+    have hpRaw : HasDerivAt
+        (fun s : ℝ => asymmetricTransitionProbability (τ * s) x y)
+        ((-(stateRate x : ℝ) *
+            asymmetricTransitionProbability (τ * u) x y +
+          (stateRate x : ℝ) *
+            asymmetricTransitionProbability (τ * u) (flip x) y) * τ) u := by
+      simpa only [Function.comp_apply] using hp0.comp u hτ
     have hp : HasDerivAt (fun s : ℝ => P (τ * s))
         (τ * (-(stateRate x : ℝ) * P (τ * u) +
           (stateRate x : ℝ) * R (τ * u))) u := by
-      convert hp0.comp u ((hasDerivAt_id u).const_mul τ) using 1
-      · funext s
-        simp [P, id_eq]
-      · dsimp [P, R]
-        ring
+      change HasDerivAt
+        (fun s : ℝ => asymmetricTransitionProbability (τ * s) x y)
+        (τ * (-(stateRate x : ℝ) *
+            asymmetricTransitionProbability (τ * u) x y +
+          (stateRate x : ℝ) *
+            asymmetricTransitionProbability (τ * u) (flip x) y)) u
+      exact hpRaw.congr_deriv (mul_comm _ _)
     exact (he.mul hp).congr_deriv (by
       dsimp [rate, P, R]
       ring)
+  have hRcont : Continuous R := by
+    cases x <;> cases y <;>
+      dsimp [R, asymmetricTransitionProbability, flip] <;> fun_prop
+  have hExp : Continuous (fun u : ℝ => Real.exp (rate * τ * u)) := by
+    fun_prop
+  have hRτ : Continuous (fun u : ℝ => R (τ * u)) :=
+    hRcont.comp (by fun_prop)
+  have hIntegrand : Continuous
+      (fun u : ℝ => rate * τ * Real.exp (rate * τ * u) * R (τ * u)) :=
+    ((continuous_const.mul continuous_const).mul hExp).mul hRτ
   have hint : IntervalIntegrable
       (fun u : ℝ => rate * τ * Real.exp (rate * τ * u) * R (τ * u))
-      volume 0 ρ := by
-    apply Continuous.intervalIntegrable
-    fun_prop
+      volume 0 ρ :=
+    hIntegrand.intervalIntegrable
   have hftc :
       (∫ u : ℝ in 0..ρ,
         rate * τ * Real.exp (rate * τ * u) * R (τ * u)) =
@@ -238,8 +259,23 @@ private theorem asymmetricTransitionProbability_renewal_real
   have hexp_cancel :
       Real.exp (-(rate * τ * ρ)) * Real.exp (rate * τ * ρ) = 1 := by
     rw [← Real.exp_add]
-    congr 1
-    ring
+    have hzero : -(rate * τ * ρ) + rate * τ * ρ = 0 := by ring
+    rw [hzero, Real.exp_zero]
+  have hfactor :
+      (∫ u : ℝ in 0..ρ,
+        rate * τ * Real.exp (rate * τ * u) * R (τ * u)) =
+        rate * τ *
+          (∫ u : ℝ in 0..ρ,
+            Real.exp (rate * τ * u) * R (τ * u)) := by
+    calc
+      (∫ u : ℝ in 0..ρ,
+        rate * τ * Real.exp (rate * τ * u) * R (τ * u)) =
+          ∫ u : ℝ in 0..ρ,
+            (rate * τ) * (Real.exp (rate * τ * u) * R (τ * u)) := by
+              apply intervalIntegral.integral_congr
+              intro u hu
+              ring
+      _ = _ := intervalIntegral.integral_const_mul
   have hinter :
       Real.exp (-(rate * τ * ρ)) *
           (∫ u : ℝ in 0..ρ,
@@ -247,31 +283,37 @@ private theorem asymmetricTransitionProbability_renewal_real
         rate * τ *
           (∫ a : ℝ in 0..ρ,
             Real.exp (-(rate * τ * a)) * R (τ * (ρ - a))) := by
-    rw [intervalIntegral.integral_const_mul]
     calc
       Real.exp (-(rate * τ * ρ)) *
-          (rate * τ *
+          (∫ u : ℝ in 0..ρ,
+            rate * τ * Real.exp (rate * τ * u) * R (τ * u)) =
+          Real.exp (-(rate * τ * ρ)) *
+            (rate * τ *
+              ∫ u : ℝ in 0..ρ,
+                Real.exp (rate * τ * u) * R (τ * u)) := by
+                  rw [hfactor]
+      _ = rate * τ *
+            (Real.exp (-(rate * τ * ρ)) *
+              ∫ u : ℝ in 0..ρ,
+                Real.exp (rate * τ * u) * R (τ * u)) := by ring
+      _ = rate * τ *
             ∫ u : ℝ in 0..ρ,
-              Real.exp (rate * τ * u) * R (τ * u)) =
-          rate * τ *
-            ∫ u : ℝ in 0..ρ,
-              (Real.exp (-(rate * τ * ρ)) *
-                Real.exp (rate * τ * u)) * R (τ * u) := by
-            rw [intervalIntegral.integral_const_mul]
-            ring
+              Real.exp (-(rate * τ * ρ)) *
+                (Real.exp (rate * τ * u) * R (τ * u)) := by
+                  rw [intervalIntegral.integral_const_mul]
       _ = rate * τ *
             ∫ u : ℝ in 0..ρ,
               Real.exp (-((rate * τ) * (ρ - u))) * R (τ * u) := by
-            congr 1
-            apply intervalIntegral.integral_congr
-            intro u hu
-            rw [← Real.exp_add]
-            congr 2
-            ring
+                  congr 1
+                  apply intervalIntegral.integral_congr
+                  intro u hu
+                  rw [← Real.exp_add]
+                  congr 2
+                  ring
       _ = rate * τ *
             ∫ a : ℝ in 0..ρ,
               Real.exp (-(rate * τ * a)) * R (τ * (ρ - a)) := by
-            rw [hrev]
+                  rw [hrev]
   calc
     asymmetricTransitionProbability ((T : ℝ) * ρ) x y = P (τ * ρ) := by
       rfl
