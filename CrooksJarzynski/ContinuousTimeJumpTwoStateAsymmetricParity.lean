@@ -34,6 +34,16 @@ theorem measurableSet_freeSimplexSetAt (n : ℕ) (ρ : I) :
   unfold freeSimplexSetAt
   exact measurableSet_le (by fun_prop) measurable_const
 
+/-- The admissible first holding fractions inside a remaining fraction `ρ`. -/
+def firstHoldingSet (ρ : I) : Set I :=
+  {a | (a : ℝ) ≤ (ρ : ℝ)}
+
+/-- The admissible first-holding set is measurable. -/
+theorem measurableSet_firstHoldingSet (ρ : I) :
+    MeasurableSet (firstHoldingSet ρ) := by
+  unfold firstHoldingSet
+  exact measurableSet_le (by fun_prop) measurable_const
+
 /-- The fraction of the horizon remaining after a first holding fraction `a`. -/
 def remainingFraction (ρ a : I) : I :=
   ⟨max ((ρ : ℝ) - (a : ℝ)) 0,
@@ -45,6 +55,152 @@ theorem coe_remainingFraction_of_le (ρ a : I)
     (ha : (a : ℝ) ≤ (ρ : ℝ)) :
     (remainingFraction ρ a : ℝ) = (ρ : ℝ) - (a : ℝ) := by
   simp [remainingFraction, max_eq_left (sub_nonneg.mpr ha)]
+
+/-- Tonelli decomposition of a variable free simplex at its first coordinate. -/
+theorem lintegral_freeSimplexSetAt_succ
+    {n : ℕ} (ρ : I) (g : I → (Fin n → I) → ℝ≥0∞)
+    (hg : Measurable (Function.uncurry g)) :
+    ∫⁻ u in freeSimplexSetAt (n + 1) ρ,
+        g (u 0) (fun i : Fin n => u i.succ) =
+      ∫⁻ a in firstHoldingSet ρ,
+        ∫⁻ v in freeSimplexSetAt n (remainingFraction ρ a), g a v := by
+  classical
+  set s : Set (I × (Fin n → I)) :=
+    {p | (p.1 : ℝ) + ∑ i, (p.2 i : ℝ) ≤ (ρ : ℝ)} with hsdef
+  have hs : MeasurableSet s := by
+    rw [hsdef]
+    exact measurableSet_le (by fun_prop) measurable_const
+  set h : I × (Fin n → I) → ℝ≥0∞ :=
+    s.indicator (fun p => g p.1 p.2) with hhdef
+  have hh : Measurable h := by
+    apply Measurable.indicator
+    · exact hg
+    · exact hs
+  have hmp := MeasureTheory.volume_preserving_piFinSuccAbove
+    (fun _ : Fin (n + 1) => I) 0
+  set e := MeasurableEquiv.piFinSuccAbove
+    (fun _ : Fin (n + 1) => I) 0 with hedef
+  have happly : ∀ u : Fin (n + 1) → I,
+      e u = (u 0, fun j : Fin n => u j.succ) := by
+    intro u
+    simp only [hedef, MeasurableEquiv.piFinSuccAbove, Fin.insertNthEquiv,
+      MeasurableEquiv.coe_mk, Equiv.symm_mk, Equiv.coe_fn_mk]
+    refine congrArg (Prod.mk _) ?_
+    funext j
+    simp [Fin.removeNth_apply, Fin.zero_succAbove]
+  have hhe : ∀ u : Fin (n + 1) → I,
+      h (e u) =
+        (freeSimplexSetAt (n + 1) ρ).indicator
+          (fun u => g (u 0) (fun i : Fin n => u i.succ)) u := by
+    intro u
+    rw [happly u]
+    by_cases hu : u ∈ freeSimplexSetAt (n + 1) ρ
+    · have hsum :
+          (u 0 : ℝ) + ∑ i : Fin n, (u i.succ : ℝ) ≤ (ρ : ℝ) := by
+        change (∑ i : Fin (n + 1), (u i : ℝ)) ≤ (ρ : ℝ) at hu
+        simpa only [Fin.sum_univ_succ] using hu
+      have hmem :
+          ((u 0, fun i : Fin n => u i.succ) : I × (Fin n → I)) ∈ s := by
+        rw [hsdef]
+        exact hsum
+      simp only [hhdef]
+      rw [Set.indicator_of_mem hmem, Set.indicator_of_mem hu]
+    · have hnotmem :
+          ((u 0, fun i : Fin n => u i.succ) : I × (Fin n → I)) ∉ s := by
+        intro hmem
+        apply hu
+        change (∑ i : Fin (n + 1), (u i : ℝ)) ≤ (ρ : ℝ)
+        rw [Fin.sum_univ_succ]
+        simpa only [hsdef, Set.mem_setOf_eq] using hmem
+      simp only [hhdef]
+      rw [Set.indicator_of_notMem hnotmem, Set.indicator_of_notMem hu]
+  have hsection : ∀ a : I,
+      (∫⁻ v : Fin n → I, h (a, v)) =
+        (firstHoldingSet ρ).indicator
+          (fun a =>
+            ∫⁻ v in freeSimplexSetAt n (remainingFraction ρ a), g a v) a := by
+    intro a
+    by_cases ha : (a : ℝ) ≤ (ρ : ℝ)
+    · have hav : ∀ v : Fin n → I,
+          h (a, v) =
+            (freeSimplexSetAt n (remainingFraction ρ a)).indicator
+              (fun v => g a v) v := by
+        intro v
+        simp only [hhdef]
+        by_cases hv : v ∈ freeSimplexSetAt n (remainingFraction ρ a)
+        · have hsum :
+              (∑ i : Fin n, (v i : ℝ)) ≤
+                (ρ : ℝ) - (a : ℝ) := by
+            change (∑ i : Fin n, (v i : ℝ)) ≤
+              (remainingFraction ρ a : ℝ) at hv
+            simpa [coe_remainingFraction_of_le ρ a ha] using hv
+          have hmem : ((a, v) : I × (Fin n → I)) ∈ s := by
+            rw [hsdef]
+            change (a : ℝ) + ∑ i : Fin n, (v i : ℝ) ≤ (ρ : ℝ)
+            linarith
+          rw [Set.indicator_of_mem hmem, Set.indicator_of_mem hv]
+        · have hnotmem : ((a, v) : I × (Fin n → I)) ∉ s := by
+            intro hmem
+            apply hv
+            change (∑ i : Fin n, (v i : ℝ)) ≤
+              (remainingFraction ρ a : ℝ)
+            rw [coe_remainingFraction_of_le ρ a ha]
+            have hsum :
+                (a : ℝ) + ∑ i : Fin n, (v i : ℝ) ≤ (ρ : ℝ) := by
+              simpa only [hsdef, Set.mem_setOf_eq] using hmem
+            linarith
+          rw [Set.indicator_of_notMem hnotmem,
+            Set.indicator_of_notMem hv]
+      calc
+        (∫⁻ v : Fin n → I, h (a, v)) =
+            ∫⁻ v : Fin n → I,
+              (freeSimplexSetAt n (remainingFraction ρ a)).indicator
+                (fun v => g a v) v :=
+          lintegral_congr hav
+        _ = ∫⁻ v in freeSimplexSetAt n (remainingFraction ρ a), g a v := by
+          rw [lintegral_indicator
+            (measurableSet_freeSimplexSetAt n (remainingFraction ρ a))]
+        _ = (firstHoldingSet ρ).indicator
+            (fun a =>
+              ∫⁻ v in freeSimplexSetAt n (remainingFraction ρ a), g a v) a := by
+          rw [Set.indicator_of_mem
+            (show a ∈ firstHoldingSet ρ from ha)]
+    · have hzero : ∀ v : Fin n → I, h (a, v) = 0 := by
+        intro v
+        simp only [hhdef]
+        apply Set.indicator_of_notMem
+        intro hmem
+        apply ha
+        have hsum0 : 0 ≤ ∑ i : Fin n, (v i : ℝ) :=
+          Finset.sum_nonneg fun i _ => (v i).2.1
+        have hsum :
+            (a : ℝ) + ∑ i : Fin n, (v i : ℝ) ≤ (ρ : ℝ) := by
+          simpa only [hsdef, Set.mem_setOf_eq] using hmem
+        linarith
+      rw [Set.indicator_of_notMem
+        (show a ∉ firstHoldingSet ρ from ha)]
+      simp [hzero]
+  calc
+    (∫⁻ u in freeSimplexSetAt (n + 1) ρ,
+        g (u 0) (fun i : Fin n => u i.succ)) =
+        ∫⁻ u,
+          (freeSimplexSetAt (n + 1) ρ).indicator
+            (fun u => g (u 0) (fun i : Fin n => u i.succ)) u := by
+      rw [lintegral_indicator (measurableSet_freeSimplexSetAt (n + 1) ρ)]
+    _ = ∫⁻ u, h (e u) :=
+      lintegral_congr fun u => (hhe u).symm
+    _ = ∫⁻ p, h p := by
+      rw [hmp.lintegral_comp hh]
+    _ = ∫⁻ a : I, ∫⁻ v : Fin n → I, h (a, v) := by
+      rw [Measure.volume_eq_prod, lintegral_prod h hh.aemeasurable]
+    _ = ∫⁻ a : I,
+        (firstHoldingSet ρ).indicator
+          (fun a =>
+            ∫⁻ v in freeSimplexSetAt n (remainingFraction ρ a), g a v) a :=
+      lintegral_congr hsection
+    _ = ∫⁻ a in firstHoldingSet ρ,
+        ∫⁻ v in freeSimplexSetAt n (remainingFraction ρ a), g a v := by
+      rw [lintegral_indicator (measurableSet_firstHoldingSet ρ)]
 
 /-- At the full remaining fraction, the variable simplex is the standard free
 simplex. -/
