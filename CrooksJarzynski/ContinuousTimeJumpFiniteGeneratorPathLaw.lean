@@ -235,6 +235,62 @@ theorem lintegral_rateDensity_assemblePath
   unfold sequenceMass holdingIntegral
   ac_rfl
 
+/-! ### Folding the branching sum over the last state
+
+Summing a sector quantity over the appended state is what turns the jump-rate
+prefactor of the physical density into the escape-rate prefactor of the
+arrival integrals.  It is the general-generator replacement for the two-state
+degeneracy `jumpRate x (flip x) = escapeRate x`, and it only becomes available
+after summing over state sequences. -/
+
+/-- Splitting a state sequence into its initial segment and its final state. -/
+def snocEquiv (Ω : Type u) (n : ℕ) :
+    ((Fin (n + 1) → Ω) × Ω) ≃ (Fin (n + 2) → Ω) where
+  toFun p := Fin.snoc p.1 p.2
+  invFun s := (Fin.init s, s (Fin.last (n + 1)))
+  left_inv := by
+    intro p
+    simp
+  right_inv := by
+    intro s
+    simp
+
+omit [DecidableEq Ω] [MeasurableSpace Ω] [MeasurableSingletonClass Ω] in
+/-- The free holding coordinates never see the appended final state: coordinate
+`i` is spent in state `init i`. -/
+@[simp]
+theorem stateEscapeRates_snoc
+    (G : FiniteJumpGenerator Ω) {n : ℕ} (init : Fin (n + 1) → Ω) (z : Ω) :
+    G.stateEscapeRates (Fin.snoc init z) = fun i => G.escapeRate (init i) := by
+  funext i
+  simp [stateEscapeRates]
+
+omit [DecidableEq Ω] [MeasurableSpace Ω] [MeasurableSingletonClass Ω] in
+/-- Appending a state multiplies the jump product by the rate of the new final
+jump. -/
+theorem jumpProduct_snoc
+    (G : FiniteJumpGenerator Ω) {n : ℕ} (init : Fin (n + 1) → Ω) (z : Ω) :
+    G.jumpProduct (Fin.snoc init z) =
+      G.jumpProduct init *
+        (G.jumpRate (init (Fin.last n)) z : ℝ≥0∞) := by
+  unfold jumpProduct
+  rw [Fin.prod_univ_castSucc]
+  congr 1
+  · refine Finset.prod_congr rfl fun i _ => ?_
+    rw [Fin.succ_castSucc, Fin.snoc_castSucc, Fin.snoc_castSucc]
+  · simp
+
+omit [DecidableEq Ω] [MeasurableSpace Ω] [MeasurableSingletonClass Ω] in
+/-- The branching sum: summing the jump product over the appended state folds
+the last jump rate into the escape rate of the state it leaves. -/
+theorem sum_jumpProduct_snoc
+    (G : FiniteJumpGenerator Ω) {n : ℕ} (init : Fin (n + 1) → Ω) :
+    ∑ z : Ω, G.jumpProduct (Fin.snoc init z) =
+      G.jumpProduct init * (G.escapeRate (init (Fin.last n)) : ℝ≥0∞) := by
+  simp only [jumpProduct_snoc, ← Finset.mul_sum]
+  congr 1
+  simp [escapeRate]
+
 end FiniteJumpGenerator
 end ContinuousTimeJump
 end MeasureProtocol
