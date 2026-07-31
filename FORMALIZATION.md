@@ -162,6 +162,9 @@ change-of-variables lemmas above expose this as a reusable public API in
 | Its terminal marginal is a parity-filtered sector-mass sum | `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.map_asymmetricPathLawFrom_terminalState_apply` |
 | Chapman--Kolmogorov for the explicit asymmetric transition matrix | `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.asymmetricTransitionProbability_chapman_kolmogorov` |
 | The explicit asymmetric matrix is `exp (t Q)` for the physical generator | `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.exp_smul_physicalGenerator_fun_apply` |
+| Renewal evaluation of the parity-filtered sector-mass sums | `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.tsum_sectorMass_parity` |
+| The fixed-initial asymmetric terminal marginal is the explicit matrix row | `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.asymmetricPathLawFrom_terminalState_real_singleton` |
+| The fixed-initial asymmetric terminal marginal equals `exp (TQ)` | `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.asymmetricPathLawFrom_terminalState_eq_exp_generator` |
 | Original finite protocol satisfies measure Crooks | `Protocol.measure_crooks` |
 | Original finite protocol satisfies real-integral Jarzynski | `Protocol.measure_jarzynski_integral` |
 | General forward path singleton mass equals legacy `forwardWeight` | `Protocol.measure_forwardWeight_singleton` |

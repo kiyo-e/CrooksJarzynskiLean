@@ -130,7 +130,8 @@ private theorem renewalRemainder_step
           ratePrefixProduct (chainRates x N) T *
             ((stateRate (iterateFlip N x) : ℝ≥0∞) * (T : ℝ≥0∞)) := by
       unfold ratePrefixProduct
-      rw [Fin.prod_univ_castSucc, chainRates_castSucc, chainRates_last]
+      rw [Fin.prod_univ_castSucc, chainRates_last]
+      simp [chainRates]
     rw [hprefix]
     simp only [mul_assoc]
     congr 1
