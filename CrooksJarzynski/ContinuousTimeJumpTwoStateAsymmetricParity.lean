@@ -157,7 +157,8 @@ private theorem transitionCandidate_renewal
   by_cases hT : T = 0
   · subst T
     cases x <;> cases y <;>
-      simp [transitionCandidate, asymmetricTransitionProbability, stateRate, flip, t]
+      simp [transitionCandidate, asymmetricTransitionProbability, stateRate, flip] <;>
+        norm_num
   have ht : t ≠ 0 := by
     simp [t, hT]
   have htpos : 0 < t := lt_of_le_of_ne ht0 (Ne.symm ht)
@@ -208,13 +209,29 @@ private theorem transitionCandidate_renewal
         lintegral_unitInterval_Iic_of_continuous_nonneg
           f ρ hρ0 hρ1 hf hfnn
       _ = _ := rfl
-  rw [hlintegral x y]
+  let J : ℝ :=
+    ∫ z : ℝ in (0 : ℝ)..ρ,
+      Real.exp (-((stateRate x : ℝ) * t * z)) *
+        asymmetricTransitionProbability (t * (ρ - z)) (flip x) y
+  have hlintegral' :
+      (∫⁻ a : I in {a : I | (a : ℝ) ≤ ρ},
+          ENNReal.ofReal
+              (Real.exp
+                (-((stateRate x : ℝ) * t * (a : ℝ)))) *
+            transitionCandidate T (flip x) y (ρ - (a : ℝ))) =
+        ENNReal.ofReal J := by
+    exact hlintegral x y
+  rw [show (T : ℝ) = t from rfl, hlintegral']
   have hrate :
       ((stateRate x : ℝ≥0∞) * (T : ℝ≥0∞)) =
         ENNReal.ofReal ((stateRate x : ℝ) * t) := by
     rw [← ENNReal.coe_mul, ← ENNReal.ofReal_coe_nnreal]
     rfl
-  rw [hrate, ← ENNReal.ofReal_mul (by positivity)]
+  have hrate_nonneg : 0 ≤ (stateRate x : ℝ) * t :=
+    mul_nonneg (stateRate x).2 ht0
+  rw [hrate,
+    ← ENNReal.ofReal_mul
+      (p := (stateRate x : ℝ) * t) (q := J) hrate_nonneg]
   have hnojump :
       0 ≤ if x = y then
         Real.exp (-((stateRate x : ℝ) * t * ρ)) else 0 := by
@@ -222,23 +239,27 @@ private theorem transitionCandidate_renewal
   have hnojump_eq :
       (if x = y then
           ENNReal.ofReal
-            (Real.exp (-((stateRate x : ℝ) * (T : ℝ) * ρ)))
+            (Real.exp (-((stateRate x : ℝ) * t * ρ)))
         else 0) =
         ENNReal.ofReal
           (if x = y then
             Real.exp (-((stateRate x : ℝ) * t * ρ)) else 0) := by
-    by_cases hxy : x = y <;> simp [hxy, t]
+    by_cases hxy : x = y <;> simp [hxy]
   rw [hnojump_eq, ← ENNReal.ofReal_add hnojump]
+  unfold transitionCandidate
   congr 1
-  cases x <;> cases y <;>
-    simp only [transitionCandidate, asymmetricTransitionProbability,
-      stateRate, flip, if_pos, if_neg, State.zero.injEq, State.one.injEq]
-  all_goals
-    have hneg1 : -t ≠ 0 := neg_ne_zero.mpr ht
+  cases x <;> cases y
+  · change
+      1 / 3 + 2 / 3 * Real.exp (-3 * (t * ρ)) =
+        Real.exp (-(2 * t * ρ)) +
+          2 * t *
+            (∫ z : ℝ in (0 : ℝ)..ρ,
+              Real.exp (-(2 * t * z)) *
+                (1 / 3 -
+                  1 / 3 * Real.exp (-3 * (t * (ρ - z)))))
     have hneg2 : -(2 * t) ≠ 0 := by nlinarith
     have hpos1 : t ≠ 0 := ht
-    have hpos2 : 2 * t ≠ 0 := by nlinarith
-  · have hfun :
+    have hfun :
         (fun z : ℝ =>
           Real.exp (-(2 * t * z)) *
             (1 / 3 - 1 / 3 * Real.exp (-3 * (t * (ρ - z))))) =
@@ -247,8 +268,20 @@ private theorem transitionCandidate_renewal
             (1 / 3) * Real.exp (-3 * t * ρ) * Real.exp (t * z) := by
       funext z
       rw [show -3 * (t * (ρ - z)) = -3 * t * ρ + 3 * t * z by ring,
-        Real.exp_add]
-      ring
+        Real.exp_add,
+        show -(2 * t * z) = (-(2 * t)) * z by ring]
+      have hexp :
+          Real.exp ((-(2 * t)) * z) * Real.exp (3 * t * z) =
+            Real.exp (t * z) := by
+        rw [← Real.exp_add]
+        congr 1
+        ring
+      calc
+        _ = (1 / 3) * Real.exp ((-(2 * t)) * z) -
+            (1 / 3) * Real.exp (-3 * t * ρ) *
+              (Real.exp ((-(2 * t)) * z) * Real.exp (3 * t * z)) := by
+              ring
+        _ = _ := by rw [hexp]
     rw [hfun, intervalIntegral.integral_sub (by fun_prop) (by fun_prop),
       intervalIntegral.integral_const_mul,
       intervalIntegral.integral_const_mul,
@@ -259,7 +292,16 @@ private theorem transitionCandidate_renewal
     ring_nf
     rw [← Real.exp_add]
     ring_nf
-  · have hfun :
+  · change
+      2 / 3 - 2 / 3 * Real.exp (-3 * (t * ρ)) =
+        2 * t *
+          (∫ z : ℝ in (0 : ℝ)..ρ,
+            Real.exp (-(2 * t * z)) *
+              (2 / 3 +
+                1 / 3 * Real.exp (-3 * (t * (ρ - z)))))
+    have hneg2 : -(2 * t) ≠ 0 := by nlinarith
+    have hpos1 : t ≠ 0 := ht
+    have hfun :
         (fun z : ℝ =>
           Real.exp (-(2 * t * z)) *
             (2 / 3 + 1 / 3 * Real.exp (-3 * (t * (ρ - z))))) =
@@ -268,8 +310,20 @@ private theorem transitionCandidate_renewal
             (1 / 3) * Real.exp (-3 * t * ρ) * Real.exp (t * z) := by
       funext z
       rw [show -3 * (t * (ρ - z)) = -3 * t * ρ + 3 * t * z by ring,
-        Real.exp_add]
-      ring
+        Real.exp_add,
+        show -(2 * t * z) = (-(2 * t)) * z by ring]
+      have hexp :
+          Real.exp ((-(2 * t)) * z) * Real.exp (3 * t * z) =
+            Real.exp (t * z) := by
+        rw [← Real.exp_add]
+        congr 1
+        ring
+      calc
+        _ = (2 / 3) * Real.exp ((-(2 * t)) * z) +
+            (1 / 3) * Real.exp (-3 * t * ρ) *
+              (Real.exp ((-(2 * t)) * z) * Real.exp (3 * t * z)) := by
+              ring
+        _ = _ := by rw [hexp]
     rw [hfun, intervalIntegral.integral_add (by fun_prop) (by fun_prop),
       intervalIntegral.integral_const_mul,
       intervalIntegral.integral_const_mul,
@@ -280,17 +334,38 @@ private theorem transitionCandidate_renewal
     ring_nf
     rw [← Real.exp_add]
     ring_nf
-  · have hfun :
+  · change
+      1 / 3 - 1 / 3 * Real.exp (-3 * (t * ρ)) =
+        t *
+          (∫ z : ℝ in (0 : ℝ)..ρ,
+            Real.exp (-(t * z)) *
+              (1 / 3 +
+                2 / 3 * Real.exp (-3 * (t * (ρ - z)))))
+    have hneg1 : -t ≠ 0 := neg_ne_zero.mpr ht
+    have hpos2 : 2 * t ≠ 0 := by nlinarith
+    have hfun :
         (fun z : ℝ =>
-          Real.exp (-(1 * t * z)) *
+          Real.exp (-(t * z)) *
             (1 / 3 + 2 / 3 * Real.exp (-3 * (t * (ρ - z))))) =
         fun z : ℝ =>
           (1 / 3) * Real.exp ((-t) * z) +
             (2 / 3) * Real.exp (-3 * t * ρ) * Real.exp ((2 * t) * z) := by
       funext z
       rw [show -3 * (t * (ρ - z)) = -3 * t * ρ + 3 * t * z by ring,
-        Real.exp_add]
-      ring
+        Real.exp_add,
+        show -(t * z) = (-t) * z by ring]
+      have hexp :
+          Real.exp ((-t) * z) * Real.exp (3 * t * z) =
+            Real.exp ((2 * t) * z) := by
+        rw [← Real.exp_add]
+        congr 1
+        ring
+      calc
+        _ = (1 / 3) * Real.exp ((-t) * z) +
+            (2 / 3) * Real.exp (-3 * t * ρ) *
+              (Real.exp ((-t) * z) * Real.exp (3 * t * z)) := by
+              ring
+        _ = _ := by rw [hexp]
     rw [hfun, intervalIntegral.integral_add (by fun_prop) (by fun_prop),
       intervalIntegral.integral_const_mul,
       intervalIntegral.integral_const_mul,
@@ -301,17 +376,39 @@ private theorem transitionCandidate_renewal
     ring_nf
     rw [← Real.exp_add]
     ring_nf
-  · have hfun :
+  · change
+      2 / 3 + 1 / 3 * Real.exp (-3 * (t * ρ)) =
+        Real.exp (-(t * ρ)) +
+          t *
+            (∫ z : ℝ in (0 : ℝ)..ρ,
+              Real.exp (-(t * z)) *
+                (2 / 3 -
+                  2 / 3 * Real.exp (-3 * (t * (ρ - z)))))
+    have hneg1 : -t ≠ 0 := neg_ne_zero.mpr ht
+    have hpos2 : 2 * t ≠ 0 := by nlinarith
+    have hfun :
         (fun z : ℝ =>
-          Real.exp (-(1 * t * z)) *
+          Real.exp (-(t * z)) *
             (2 / 3 - 2 / 3 * Real.exp (-3 * (t * (ρ - z))))) =
         fun z : ℝ =>
           (2 / 3) * Real.exp ((-t) * z) -
             (2 / 3) * Real.exp (-3 * t * ρ) * Real.exp ((2 * t) * z) := by
       funext z
       rw [show -3 * (t * (ρ - z)) = -3 * t * ρ + 3 * t * z by ring,
-        Real.exp_add]
-      ring
+        Real.exp_add,
+        show -(t * z) = (-t) * z by ring]
+      have hexp :
+          Real.exp ((-t) * z) * Real.exp (3 * t * z) =
+            Real.exp ((2 * t) * z) := by
+        rw [← Real.exp_add]
+        congr 1
+        ring
+      calc
+        _ = (2 / 3) * Real.exp ((-t) * z) -
+            (2 / 3) * Real.exp (-3 * t * ρ) *
+              (Real.exp ((-t) * z) * Real.exp (3 * t * z)) := by
+              ring
+        _ = _ := by rw [hexp]
     rw [hfun, intervalIntegral.integral_sub (by fun_prop) (by fun_prop),
       intervalIntegral.integral_const_mul,
       intervalIntegral.integral_const_mul,
@@ -387,6 +484,23 @@ private theorem lintegral_cubeExpWeight_succ_transition
       unfold cubeExpWeight residualAt
       rw [Fin.prod_univ_castSucc, Fin.sum_univ_castSucc]
       ring_nf
+      have hprod :
+          (∏ j : Fin n,
+              ENNReal.ofReal
+                (Real.exp
+                  (-((r j.castSucc : ℝ) * (T : ℝ) *
+                    (u j.castSucc : ℝ))))) =
+            ∏ j : Fin n,
+              ENNReal.ofReal
+                (Real.exp
+                  (-((T : ℝ) * (r j.castSucc : ℝ) *
+                    (u j.castSucc : ℝ)))) := by
+        apply Finset.prod_congr rfl
+        intro j hj
+        congr 2
+        ring
+      rw [hprod]
+      ac_rfl
     · have hnotmem :
           ((u (Fin.last n), fun j : Fin n => u j.castSucc) :
               I × (Fin n → I)) ∉
@@ -576,6 +690,126 @@ private theorem renewalRemainder_step
     simpa [iterateFlip_succ_eq_flip] using
       transitionCandidate_renewal T (iterateFlip N x) y
         (residualAt ρ u) (hres u hu) (hres1 u hu)
+  have hqmeas : Measurable
+      (fun s : ℝ => transitionCandidate T (iterateFlip (N + 1) x) y s) := by
+    unfold transitionCandidate
+    cases hs : iterateFlip (N + 1) x <;> cases y <;>
+      dsimp [asymmetricTransitionProbability] <;> fun_prop
+  have hprefix :
+      ratePrefixProduct (chainRates x (N + 1)) T =
+        ratePrefixProduct (chainRates x N) T *
+          ((stateRate (iterateFlip N x) : ℝ≥0∞) * (T : ℝ≥0∞)) := by
+    unfold ratePrefixProduct chainRates
+    rw [Fin.prod_univ_castSucc]
+  have hfubini :
+      (∫⁻ u in freeSimplexSetAt (N + 1) ρ,
+          cubeExpWeight (chainRates x (N + 1)) T u *
+            transitionCandidate T (iterateFlip (N + 1) x) y
+              (residualAt ρ u)) =
+        ∫⁻ v in freeSimplexSetAt N ρ,
+          cubeExpWeight (chainRates x N) T v *
+            ∫⁻ a : I in {a : I | (a : ℝ) ≤ residualAt ρ v},
+              ENNReal.ofReal
+                  (Real.exp
+                    (-((stateRate (iterateFlip N x) : ℝ) * (T : ℝ) *
+                      (a : ℝ)))) *
+                transitionCandidate T (iterateFlip (N + 1) x) y
+                  (residualAt ρ v - (a : ℝ)) := by
+    simpa only [chainRates_castSucc, chainRates_last] using
+      (lintegral_cubeExpWeight_succ_transition
+        (chainRates x (N + 1)) T ρ
+        (fun s => transitionCandidate T (iterateFlip (N + 1) x) y s)
+        hqmeas)
+  have hsecond :
+      ratePrefixProduct (chainRates x N) T *
+          ∫⁻ u in freeSimplexSetAt N ρ,
+            cubeExpWeight (chainRates x N) T u *
+              (((stateRate (iterateFlip N x) : ℝ≥0∞) *
+                  (T : ℝ≥0∞)) *
+                ∫⁻ a : I in {a : I | (a : ℝ) ≤ residualAt ρ u},
+                  ENNReal.ofReal
+                      (Real.exp
+                        (-((stateRate (iterateFlip N x) : ℝ) *
+                          (T : ℝ) * (a : ℝ)))) *
+                    transitionCandidate T (iterateFlip (N + 1) x) y
+                      (residualAt ρ u - (a : ℝ))) =
+        ratePrefixProduct (chainRates x (N + 1)) T *
+          ∫⁻ u in freeSimplexSetAt (N + 1) ρ,
+            cubeExpWeight (chainRates x (N + 1)) T u *
+              transitionCandidate T (iterateFlip (N + 1) x) y
+                (residualAt ρ u) := by
+    have hcfinite :
+        ((stateRate (iterateFlip N x) : ℝ≥0∞) *
+          (T : ℝ≥0∞)) ≠ ∞ := by
+      finiteness
+    calc
+      ratePrefixProduct (chainRates x N) T *
+          ∫⁻ u in freeSimplexSetAt N ρ,
+            cubeExpWeight (chainRates x N) T u *
+              (((stateRate (iterateFlip N x) : ℝ≥0∞) *
+                  (T : ℝ≥0∞)) *
+                ∫⁻ a : I in {a : I | (a : ℝ) ≤ residualAt ρ u},
+                  ENNReal.ofReal
+                      (Real.exp
+                        (-((stateRate (iterateFlip N x) : ℝ) *
+                          (T : ℝ) * (a : ℝ)))) *
+                    transitionCandidate T (iterateFlip (N + 1) x) y
+                      (residualAt ρ u - (a : ℝ))) =
+        ratePrefixProduct (chainRates x N) T *
+          ∫⁻ u in freeSimplexSetAt N ρ,
+            (((stateRate (iterateFlip N x) : ℝ≥0∞) *
+                (T : ℝ≥0∞)) *
+              (cubeExpWeight (chainRates x N) T u *
+                ∫⁻ a : I in {a : I | (a : ℝ) ≤ residualAt ρ u},
+                  ENNReal.ofReal
+                      (Real.exp
+                        (-((stateRate (iterateFlip N x) : ℝ) *
+                          (T : ℝ) * (a : ℝ)))) *
+                    transitionCandidate T (iterateFlip (N + 1) x) y
+                      (residualAt ρ u - (a : ℝ)))) := by
+          congr 1
+          apply setLIntegral_congr_fun (measurableSet_freeSimplexSetAt N ρ)
+          intro u hu
+          ac_rfl
+      _ = ratePrefixProduct (chainRates x N) T *
+          (((stateRate (iterateFlip N x) : ℝ≥0∞) *
+              (T : ℝ≥0∞)) *
+            ∫⁻ u in freeSimplexSetAt N ρ,
+              cubeExpWeight (chainRates x N) T u *
+                ∫⁻ a : I in {a : I | (a : ℝ) ≤ residualAt ρ u},
+                  ENNReal.ofReal
+                      (Real.exp
+                        (-((stateRate (iterateFlip N x) : ℝ) *
+                          (T : ℝ) * (a : ℝ)))) *
+                    transitionCandidate T (iterateFlip (N + 1) x) y
+                      (residualAt ρ u - (a : ℝ)) := by
+          rw [lintegral_const_mul' _ _ hcfinite]
+      _ = (ratePrefixProduct (chainRates x N) T *
+          ((stateRate (iterateFlip N x) : ℝ≥0∞) *
+            (T : ℝ≥0∞))) *
+            ∫⁻ u in freeSimplexSetAt N ρ,
+              cubeExpWeight (chainRates x N) T u *
+                ∫⁻ a : I in {a : I | (a : ℝ) ≤ residualAt ρ u},
+                  ENNReal.ofReal
+                      (Real.exp
+                        (-((stateRate (iterateFlip N x) : ℝ) *
+                          (T : ℝ) * (a : ℝ)))) *
+                    transitionCandidate T (iterateFlip (N + 1) x) y
+                      (residualAt ρ u - (a : ℝ)) := by
+          ac_rfl
+      _ = ratePrefixProduct (chainRates x (N + 1)) T *
+            ∫⁻ u in freeSimplexSetAt N ρ,
+              cubeExpWeight (chainRates x N) T u *
+                ∫⁻ a : I in {a : I | (a : ℝ) ≤ residualAt ρ u},
+                  ENNReal.ofReal
+                      (Real.exp
+                        (-((stateRate (iterateFlip N x) : ℝ) *
+                          (T : ℝ) * (a : ℝ)))) *
+                    transitionCandidate T (iterateFlip (N + 1) x) y
+                      (residualAt ρ u - (a : ℝ)) := by
+          rw [hprefix]
+      _ = _ := by
+          rw [← hfubini]
   rw [show
       (∫⁻ u in freeSimplexSetAt N ρ,
         cubeExpWeight (chainRates x N) T u *
@@ -601,28 +835,21 @@ private theorem renewalRemainder_step
         exact congrArg
           (fun z => cubeExpWeight (chainRates x N) T u * z)
           (hrenew u hu)]
-  simp_rw [mul_add]
-  rw [lintegral_add_left (by fun_prop), mul_add]
-  congr 1
-  · by_cases hxy : iterateFlip N x = y
-    · rw [if_pos hxy]
+  by_cases hxy : iterateFlip N x = y
+  · simp_rw [if_pos hxy, mul_add]
+    rw [lintegral_add_left (by fun_prop), mul_add]
+    have hfirst :
+        ratePrefixProduct (chainRates x N) T *
+            ∫⁻ u in freeSimplexSetAt N ρ,
+              cubeExpWeight (chainRates x N) T u *
+                ENNReal.ofReal
+                  (Real.exp
+                    (-((stateRate (iterateFlip N x) : ℝ) * (T : ℝ) *
+                      residualAt ρ u))) =
+          sectorMassAt T x N ρ := by
       rfl
-    · rw [if_neg hxy]
-      simp
-  · have hprefix :
-        ratePrefixProduct (chainRates x (N + 1)) T =
-          ratePrefixProduct (chainRates x N) T *
-            ((stateRate (iterateFlip N x) : ℝ≥0∞) * (T : ℝ≥0∞)) := by
-      unfold ratePrefixProduct
-      rw [Fin.prod_univ_castSucc, chainRates_castSucc, chainRates_last]
-    rw [hprefix]
-    simp only [mul_assoc]
-    congr 1
-    rw [lintegral_cubeExpWeight_succ_transition
-      (chainRates x (N + 1)) T ρ
-      (fun s => transitionCandidate T (iterateFlip (N + 1) x) y s)
-      (by unfold transitionCandidate; fun_prop)]
-    simp only [chainRates_castSucc, chainRates_last]
+    rw [hfirst, hsecond, if_pos hxy]
+  · simpa [hxy] using hsecond
 
 private theorem renewalRemainder_le_arrivalMass
     (T : NNReal) (x y : State) (N : ℕ) (ρ : ℝ)
@@ -637,11 +864,12 @@ private theorem renewalRemainder_le_arrivalMass
       ∫⁻ u in freeSimplexSetAt N ρ,
         cubeExpWeight (chainRates x N) T u := by
       apply setLIntegral_mono'
-      intro u hu
-      apply mul_le_of_le_one_right
-      · exact bot_le
-      · exact transitionCandidate_le_one T _ _
-          (sub_nonneg.mpr hu)
+      · exact measurableSet_freeSimplexSetAt N ρ
+      · intro u hu
+        apply mul_le_of_le_one_right
+        · exact bot_le
+        · exact transitionCandidate_le_one T _ _
+            (sub_nonneg.mpr hu)
     _ ≤ ∫⁻ u in Simplex.freeSimplexSet N,
         cubeExpWeight (chainRates x N) T u := by
       rw [← lintegral_indicator (measurableSet_freeSimplexSetAt N ρ),
