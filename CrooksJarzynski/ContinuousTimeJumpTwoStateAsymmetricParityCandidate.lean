@@ -164,7 +164,6 @@ private theorem hasDerivAt_asymmetricTransitionProbability
 
 /-- Real-valued first-jump renewal equation for the explicit transition
 matrix. -/
-set_option backward.isDefEq.respectTransparency false in
 private theorem asymmetricTransitionProbability_renewal_real
     (T : NNReal) (ρ : ℝ) (x y : State) :
     asymmetricTransitionProbability ((T : ℝ) * ρ) x y =
@@ -195,7 +194,7 @@ private theorem asymmetricTransitionProbability_renewal_real
       exact hlinear.exp.congr_deriv (by ring)
     have hinnerP : HasDerivAt
         (fun s : ℝ => -3 * (τ * s)) (-3 * τ) u := by
-      simpa only [mul_assoc] using
+      simpa only [id_eq, mul_one, mul_assoc] using
         (hasDerivAt_id u).const_mul (-3 * τ)
     have hexpP : HasDerivAt
         (fun s : ℝ => Real.exp (-3 * (τ * s)))
