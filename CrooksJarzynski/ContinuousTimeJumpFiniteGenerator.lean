@@ -190,15 +190,18 @@ theorem model_jumpRate (x y : State) :
 
 @[simp]
 theorem escapeRate_center : model.escapeRate .center = 2 := by
-  norm_num [FiniteJumpGenerator.escapeRate, model, jumpRate, state_univ]
+  simp [FiniteJumpGenerator.escapeRate, model, jumpRate, state_univ] <;>
+    norm_num
 
 @[simp]
 theorem escapeRate_left : model.escapeRate .left = 1 := by
-  norm_num [FiniteJumpGenerator.escapeRate, model, jumpRate, state_univ]
+  simp [FiniteJumpGenerator.escapeRate, model, jumpRate, state_univ] <;>
+    norm_num
 
 @[simp]
 theorem escapeRate_right : model.escapeRate .right = 1 := by
-  norm_num [FiniteJumpGenerator.escapeRate, model, jumpRate, state_univ]
+  simp [FiniteJumpGenerator.escapeRate, model, jumpRate, state_univ] <;>
+    norm_num
 
 /-- The center has two distinct positive-rate successors. -/
 theorem has_two_distinct_successors :
