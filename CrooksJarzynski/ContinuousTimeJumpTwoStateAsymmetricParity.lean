@@ -73,8 +73,9 @@ private noncomputable def transitionCandidate
 private theorem asymmetricTransitionProbability_nonneg_of_nonneg
     {t : ℝ} (ht : 0 ≤ t) (x y : State) :
     0 ≤ asymmetricTransitionProbability t x y := by
-  let T : NNReal := ⟨t, ht⟩
-  simpa [T] using asymmetricTransitionProbability_nonneg T x y
+  change 0 ≤ asymmetricTransitionProbability
+    (((⟨t, ht⟩ : NNReal) : ℝ)) x y
+  exact asymmetricTransitionProbability_nonneg (⟨t, ht⟩ : NNReal) x y
 
 private theorem asymmetricTransitionProbability_le_one_of_nonneg
     {t : ℝ} (ht : 0 ≤ t) (x y : State) :
@@ -135,7 +136,6 @@ private theorem intervalIntegral_exp_mul
     integral_exp]
   simp only [smul_eq_mul, mul_zero, Real.exp_zero]
   field_simp
-  ring
 
 /-- The explicit transition matrix satisfies the one-jump renewal equation. -/
 private theorem transitionCandidate_renewal
@@ -154,10 +154,12 @@ private theorem transitionCandidate_renewal
             transitionCandidate T (flip x) y (ρ - (a : ℝ)) := by
   let t : ℝ := (T : ℝ)
   have ht0 : 0 ≤ t := T.2
-  by_cases ht : t = 0
-  · subst ht
+  by_cases hT : T = 0
+  · subst T
     cases x <;> cases y <;>
-      simp [transitionCandidate, asymmetricTransitionProbability, stateRate, flip]
+      simp [transitionCandidate, asymmetricTransitionProbability, stateRate, flip, t]
+  have ht : t ≠ 0 := by
+    simp [t, hT]
   have htpos : 0 < t := lt_of_le_of_ne ht0 (Ne.symm ht)
   have hmeasSet : MeasurableSet {a : I | (a : ℝ) ≤ ρ} :=
     measurableSet_le (by fun_prop) measurable_const
@@ -175,9 +177,15 @@ private theorem transitionCandidate_renewal
     let f : ℝ → ℝ := fun z =>
       Real.exp (-((stateRate x' : ℝ) * t * z)) *
         asymmetricTransitionProbability (t * (ρ - z)) (flip x') y'
+    have htrans : Continuous fun z : ℝ =>
+        asymmetricTransitionProbability (t * (ρ - z)) (flip x') y' := by
+      cases x' <;> cases y' <;>
+        dsimp [asymmetricTransitionProbability, flip] <;> fun_prop
     have hf : Continuous f := by
       dsimp [f]
-      fun_prop
+      apply Continuous.mul
+      · fun_prop
+      · exact htrans
     have hfnn : ∀ z ∈ Set.Icc (0 : ℝ) ρ, 0 ≤ f z := by
       intro z hz
       dsimp [f]
@@ -211,7 +219,16 @@ private theorem transitionCandidate_renewal
       0 ≤ if x = y then
         Real.exp (-((stateRate x : ℝ) * t * ρ)) else 0 := by
     split_ifs <;> positivity
-  rw [← ENNReal.ofReal_add hnojump]
+  have hnojump_eq :
+      (if x = y then
+          ENNReal.ofReal
+            (Real.exp (-((stateRate x : ℝ) * (T : ℝ) * ρ)))
+        else 0) =
+        ENNReal.ofReal
+          (if x = y then
+            Real.exp (-((stateRate x : ℝ) * t * ρ)) else 0) := by
+    by_cases hxy : x = y <;> simp [hxy, t]
+  rw [hnojump_eq, ← ENNReal.ofReal_add hnojump]
   congr 1
   cases x <;> cases y <;>
     simp only [transitionCandidate, asymmetricTransitionProbability,
@@ -369,7 +386,7 @@ private theorem lintegral_cubeExpWeight_succ_transition
       rw [Set.indicator_of_mem hmem, Set.indicator_of_mem hu]
       unfold cubeExpWeight residualAt
       rw [Fin.prod_univ_castSucc, Fin.sum_univ_castSucc]
-      ring
+      ring_nf
     · have hnotmem :
           ((u (Fin.last n), fun j : Fin n => u j.castSucc) :
               I × (Fin n → I)) ∉
@@ -379,7 +396,7 @@ private theorem lintegral_cubeExpWeight_succ_transition
         apply hu
         change ∑ i, (u i : ℝ) ≤ ρ
         rw [Fin.sum_univ_castSucc]
-        linarith
+        simpa [add_comm] using hmem
       simp only [hFdef]
       rw [Set.indicator_of_notMem hnotmem, Set.indicator_of_notMem hu]
   have hsection : ∀ v : Fin n → I,
@@ -415,9 +432,13 @@ private theorem lintegral_cubeExpWeight_succ_transition
           rw [Set.indicator_of_mem hmem,
             Set.indicator_of_mem
               (show a ∈ {a : I | (a : ℝ) ≤ residualAt ρ v} from ha)]
-          congr 1
-          unfold residualAt
-          ring
+          have hresidual :
+              ρ - ((a : ℝ) + ∑ i, (v i : ℝ)) =
+                residualAt ρ v - (a : ℝ) := by
+            unfold residualAt
+            ring
+          rw [hresidual]
+          ac_rfl
         · have hnotmem : ((a, v) : I × (Fin n → I)) ∉
               {z : I × (Fin n → I) |
                 (z.1 : ℝ) + ∑ i, (z.2 i : ℝ) ≤ ρ} := by
@@ -455,7 +476,9 @@ private theorem lintegral_cubeExpWeight_succ_transition
                     (Real.exp
                       (-((r (Fin.last n) : ℝ) * (T : ℝ) * (a : ℝ)))) *
                   q (residualAt ρ v - (a : ℝ)) := by
-          rw [lintegral_const_mul' _ _ (by finiteness)]
+          rw [lintegral_const_mul' _ _ (by
+            unfold cubeExpWeight
+            exact ENNReal.prod_ne_top fun i hi => ENNReal.ofReal_ne_top)]
     · have hzero : ∀ a : I, F (a, v) = 0 := by
         intro a
         simp only [hFdef]
@@ -575,8 +598,11 @@ private theorem renewalRemainder_step
                   (residualAt ρ u - (a : ℝ))) from by
         apply setLIntegral_congr_fun (measurableSet_freeSimplexSetAt N ρ)
         intro u hu
-        rw [hrenew u hu]]
-  rw [mul_add, ← lintegral_add_left (by fun_prop), mul_add]
+        exact congrArg
+          (fun z => cubeExpWeight (chainRates x N) T u * z)
+          (hrenew u hu)]
+  simp_rw [mul_add]
+  rw [lintegral_add_left (by fun_prop), mul_add]
   congr 1
   · by_cases hxy : iterateFlip N x = y
     · rw [if_pos hxy]
@@ -603,7 +629,7 @@ private theorem renewalRemainder_le_arrivalMass
     (hρ0 : 0 ≤ ρ) (hρ1 : ρ ≤ 1) :
     renewalRemainder T x y N ρ ≤ arrivalMass T x N := by
   unfold renewalRemainder arrivalMass arrivalIntegral
-  apply mul_le_mul_left
+  apply mul_le_mul_left'
   calc
     (∫⁻ u in freeSimplexSetAt N ρ,
         cubeExpWeight (chainRates x N) T u *
