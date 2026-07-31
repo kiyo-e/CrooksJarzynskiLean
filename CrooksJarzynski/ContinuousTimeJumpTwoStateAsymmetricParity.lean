@@ -39,10 +39,6 @@ private theorem renewalRemainder_zero
   simp [renewalRemainder, ratePrefixProduct, cubeExpWeight,
     residualAt, hset]
 
-private theorem chainRates_succ_zero (x : State) (n : ℕ) :
-    chainRates x (n + 1) 0 = stateRate x := by
-  simp [chainRates]
-
 private theorem iterateFlip_succ_eq_flip (n : ℕ) (x : State) :
     iterateFlip (n + 1) x = flip (iterateFlip n x) :=
   rfl
@@ -134,12 +130,7 @@ private theorem renewalRemainder_step
           ratePrefixProduct (chainRates x N) T *
             ((stateRate (iterateFlip N x) : ℝ≥0∞) * (T : ℝ≥0∞)) := by
       unfold ratePrefixProduct
-      rw [Fin.prod_univ_castSucc]
-      congr 1
-      · apply Finset.prod_congr rfl
-        intro i hi
-        simp [chainRates]
-      · simp [chainRates]
+      rw [Fin.prod_univ_castSucc, chainRates_castSucc, chainRates_last]
     rw [hprefix]
     simp only [mul_assoc]
     congr 1
@@ -164,6 +155,7 @@ private theorem renewalRemainder_step
             intro u hu
             ac_rfl
       _ = _ := by
+            rw [lintegral_const_mul' _ _ (by finiteness)]
             rw [lintegral_const_mul' _ _ (by finiteness)]
 
 private theorem renewalRemainder_le_arrivalMass
