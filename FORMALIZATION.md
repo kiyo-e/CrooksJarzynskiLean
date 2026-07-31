@@ -158,6 +158,10 @@ change-of-variables lemmas above expose this as a reusable public API in
 | Reverse work sign convention `W_rev = -W` on reversed paths | `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.reverseThermodynamicWork_eq_neg` |
 | Conventional atomwise Crooks ratio `P_F(W=w) = e^{β(w-ΔF)} P_R(W_rev=-w)` | `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.crooks_work_atom` |
 | Poisson-type tail bound for an arbitrary rate cap `R` | `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.arrivalIntegral_le` |
+| The fixed-initial asymmetric path law is a probability measure | `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.tsum_asymmetricSectorLawFrom_univ` |
+| Its terminal marginal is a parity-filtered sector-mass sum | `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.map_asymmetricPathLawFrom_terminalState_apply` |
+| Chapman--Kolmogorov for the explicit asymmetric transition matrix | `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.asymmetricTransitionProbability_chapman_kolmogorov` |
+| The explicit asymmetric matrix is `exp (t Q)` for the physical generator | `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.exp_smul_physicalGenerator_fun_apply` |
 | Original finite protocol satisfies measure Crooks | `Protocol.measure_crooks` |
 | Original finite protocol satisfies real-integral Jarzynski | `Protocol.measure_jarzynski_integral` |
 | General forward path singleton mass equals legacy `forwardWeight` | `Protocol.measure_forwardWeight_singleton` |

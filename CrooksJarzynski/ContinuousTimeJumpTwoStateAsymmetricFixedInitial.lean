@@ -5,6 +5,7 @@ Authors: kiyo-e
 -/
 import CrooksJarzynski.ContinuousTimeJumpTwoStateAsymmetricJarzynski
 import CrooksJarzynski.ContinuousTimeJumpTwoStateFixedInitial
+import CrooksJarzynski.ContinuousTimeJumpTwoStateThermodynamics
 import Mathlib.Analysis.Normed.Algebra.MatrixExponential
 
 /-!
@@ -249,11 +250,19 @@ theorem asymmetricTransitionProbability_chapman_kolmogorov
     norm_num [asymmetricTransitionProbability] <;> nlinarith [hmul]
 
 /-- The physical conservative generator of the asymmetric chain. -/
-def physicalGenerator : Matrix State State ℝ
+def physicalGeneratorMatrix : Matrix State State ℝ
   | .zero, .zero => -2
   | .zero, .one => 2
   | .one, .zero => 1
   | .one, .one => -1
+
+/-- The explicit matrix agrees entrywise with the thermodynamic conservative
+generator of `ContinuousTimeJumpTwoStateThermodynamics`. -/
+theorem physicalGeneratorMatrix_apply (x y : State) :
+    physicalGeneratorMatrix x y = physicalGenerator x y := by
+  cases x <;> cases y <;>
+    simp [physicalGeneratorMatrix, physicalGenerator,
+      physicalEscapeRate, physicalJumpRate]
 
 def asymmetricEigenbasisMatrix : Matrix State State ℝ
   | .zero, .zero => 1
@@ -299,7 +308,7 @@ def asymmetricGeneratorEigenvalue (t : ℝ) : State → ℝ
   | .one => -3 * t
 
 theorem smul_physicalGenerator_diagonalization (t : ℝ) :
-    t • physicalGenerator =
+    t • physicalGeneratorMatrix =
       asymmetricEigenbasisMatrix *
         Matrix.diagonal (asymmetricGeneratorEigenvalue t) *
           asymmetricEigenbasisInverse := by
@@ -309,13 +318,13 @@ theorem smul_physicalGenerator_diagonalization (t : ℝ) :
       show (Finset.univ : Finset State) = {.zero, .one} by decide,
       asymmetricEigenbasisMatrix,
       asymmetricEigenbasisInverse, asymmetricGeneratorEigenvalue,
-      physicalGenerator] <;>
+      physicalGeneratorMatrix] <;>
     ring
 
 /-- The exponential of the physical generator agrees with the explicit
 transition matrix. -/
 theorem exp_smul_physicalGenerator_apply (t : ℝ) (x y : State) :
-    NormedSpace.exp (t • physicalGenerator) x y =
+    NormedSpace.exp (t • physicalGeneratorMatrix) x y =
       asymmetricTransitionProbability t x y := by
   rw [smul_physicalGenerator_diagonalization]
   change NormedSpace.exp
@@ -336,6 +345,20 @@ theorem exp_smul_physicalGenerator_apply (t : ℝ) (x y : State) :
       asymmetricTransitionProbability] <;>
     rw [Real.exp_eq_exp_ℝ] <;>
     ring
+
+/-- Function form of the exponential identity, stated with the thermodynamic
+conservative generator itself. -/
+theorem exp_smul_physicalGenerator_fun_apply (t : ℝ) (x y : State) :
+    NormedSpace.exp
+        (t • (show Matrix State State ℝ from
+          fun a b => physicalGenerator a b)) x y =
+      asymmetricTransitionProbability t x y := by
+  have h : (show Matrix State State ℝ from
+      fun a b => physicalGenerator a b) = physicalGeneratorMatrix := by
+    ext a b
+    exact (physicalGeneratorMatrix_apply a b).symm
+  rw [h]
+  exact exp_smul_physicalGenerator_apply t x y
 
 /-- Once the parity-filtered sector sum is evaluated, the terminal-law
 identity follows without any further measure-theoretic argument. -/

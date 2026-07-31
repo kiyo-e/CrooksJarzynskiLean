@@ -26,6 +26,7 @@ import CrooksJarzynski.ContinuousTimeJumpTwoStateAsymmetricJarzynski
 import CrooksJarzynski.ContinuousTimeJumpTwoStateGenerator
 import CrooksJarzynski.ContinuousTimeJumpTwoStateFixedInitial
 import CrooksJarzynski.ContinuousTimeJumpTwoStateThermodynamics
+import CrooksJarzynski.ContinuousTimeJumpTwoStateAsymmetricFixedInitial
 import CrooksJarzynski.ContinuousTimeJumpTwoStatePhysicalWork
 import CrooksJarzynski.ContinuousTimeJumpTwoStateSemigroup
 import CrooksJarzynski.MathlibBridge
@@ -83,7 +84,12 @@ terminal-state events determines the exact two-atom work distribution, the
 exact mean work, a strict second law, and the conventional atomwise Crooks
 ratio with the sign-reversed reverse work observable. The simplex-reversal
 change of variables underlying all path-reversal arguments is exposed as a
-reusable API on the free simplex chart.
+reusable API on the free simplex chart. Normalized fixed-initial path laws are
+also constructed for the asymmetric chain, their terminal marginals are
+expressed as parity-filtered sector-mass sums, and the explicit asymmetric
+transition matrix (eigenvalues `0` and `-3`) is proved to satisfy
+Chapman--Kolmogorov and to equal the exponential of the conservative
+generator.
 
 The finite-state results include explicit time reversal, both standard
 discrete-time work conventions, a path-uniform `O(1/N)` continuous-time limit
