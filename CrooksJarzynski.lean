@@ -29,6 +29,7 @@ import CrooksJarzynski.ContinuousTimeJumpTwoStateGenerator
 import CrooksJarzynski.ContinuousTimeJumpTwoStateFixedInitial
 import CrooksJarzynski.ContinuousTimeJumpTwoStateThermodynamics
 import CrooksJarzynski.ContinuousTimeJumpTwoStateAsymmetricFixedInitial
+import CrooksJarzynski.ContinuousTimeJumpTwoStateAsymmetricParity
 import CrooksJarzynski.ContinuousTimeJumpTwoStatePhysicalWork
 import CrooksJarzynski.ContinuousTimeJumpTwoStateSemigroup
 import CrooksJarzynski.MathlibBridge
@@ -91,11 +92,11 @@ exact mean work, a strict second law, and the conventional atomwise Crooks
 ratio with the sign-reversed reverse work observable. The simplex-reversal
 change of variables underlying all path-reversal arguments is exposed as a
 reusable API on the free simplex chart. Normalized fixed-initial path laws are
-also constructed for the asymmetric chain, their terminal marginals are
-expressed as parity-filtered sector-mass sums, and the explicit asymmetric
-transition matrix (eigenvalues `0` and `-3`) is proved to satisfy
-Chapman--Kolmogorov and to equal the exponential of the conservative
-generator.
+also constructed for the asymmetric chain. A renewal expansion evaluates
+their parity-filtered sector-mass sums, proving that their actual terminal
+marginals are the rows of the explicit asymmetric transition matrix and hence
+of `exp (TQ)`. The explicit matrix has eigenvalues `0` and `-3` and satisfies
+Chapman--Kolmogorov.
 
 The finite-state results include explicit time reversal, both standard
 discrete-time work conventions, a path-uniform `O(1/N)` continuous-time limit
@@ -133,6 +134,8 @@ canonical-ensemble API. The main results include `Protocol.crooks`,
 `MeasureProtocol.ContinuousTimeJump.TwoState.pathLawFrom_terminalState_eq_exp_generator`,
 `MeasureProtocol.ContinuousTimeJump.TwoState.transitionKernel_real_singleton_eq_exp_generator`,
 `MeasureProtocol.ContinuousTimeJump.TwoState.transitionKernel_chapman_kolmogorov`,
+`MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.tsum_sectorMass_parity`,
+`MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.asymmetricPathLawFrom_terminalState_eq_exp_generator`,
 `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.physical_detailedBalance`,
 `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.full_crooks_physical`,
 `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.full_jarzynski_physical_eq_two`,
