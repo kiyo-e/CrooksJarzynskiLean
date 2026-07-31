@@ -250,9 +250,9 @@ theorem full_entropyProduction_integral_fluctuation (T : NNReal) :
 
 /-! ### Exact terminal-state and work distributions
 
-The measure-level Crooks relation restricted to a terminal-state event has a
-constant work weight, so the four terminal masses of the forward and reverse
-laws satisfy a solvable linear system.  This determines the full work
+The measure-level Crooks relation restricted to a terminal-state event has
+a work weight taking a single value, so the four terminal masses of the
+forward and reverse laws satisfy a solvable linear system.  This determines the full work
 distribution without computing any transition probability of the chain. -/
 
 /-- The event that a full path terminates in the state `y`. -/
@@ -263,8 +263,8 @@ theorem measurableSet_terminalEvent (y : State) :
     MeasurableSet (terminalEvent y) :=
   FullPath.measurable_terminalState (measurableSet_singleton y)
 
-/-- Crooks' relation evaluated on an event where the work weight is
-constant. -/
+/-- Crooks' relation evaluated on an event carrying a single work-weight
+value. -/
 theorem crooks_event_const (T : NNReal) {E : Set (FullPath State)}
     (hE : MeasurableSet E) {k : ℝ≥0∞}
     (hk : ∀ γ ∈ E, fullWorkWeight γ = k) :
