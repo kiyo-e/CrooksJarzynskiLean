@@ -138,26 +138,29 @@ private theorem hasDerivAt_asymmetricTransitionProbability
       (-(stateRate x : ℝ) * asymmetricTransitionProbability t x y +
         (stateRate x : ℝ) *
           asymmetricTransitionProbability t (flip x) y) t := by
+  have hinner : HasDerivAt (fun s : ℝ => -3 * s) (-3) t := by
+    simpa only [id_eq, mul_one] using
+      (hasDerivAt_id t).const_mul (-3)
   have hexp : HasDerivAt (fun s : ℝ => Real.exp (-3 * s))
       (-3 * Real.exp (-3 * t)) t := by
-    convert ((hasDerivAt_id t).const_mul (-3)).exp using 1 <;> ring
+    exact hinner.exp.congr_deriv (by ring)
   cases x <;> cases y
-  · have h := (hasDerivAt_const t (1 / 3 : ℝ)).add
-      (hexp.const_mul (2 / 3 : ℝ))
-    convert h using 1 <;>
-      simp [asymmetricTransitionProbability, stateRate, flip] <;> ring
-  · have h := (hasDerivAt_const t (2 / 3 : ℝ)).add
-      (hexp.const_mul (-2 / 3 : ℝ))
-    convert h using 1 <;>
-      simp [asymmetricTransitionProbability, stateRate, flip, sub_eq_add_neg] <;> ring
-  · have h := (hasDerivAt_const t (1 / 3 : ℝ)).add
-      (hexp.const_mul (-1 / 3 : ℝ))
-    convert h using 1 <;>
-      simp [asymmetricTransitionProbability, stateRate, flip, sub_eq_add_neg] <;> ring
-  · have h := (hasDerivAt_const t (2 / 3 : ℝ)).add
-      (hexp.const_mul (1 / 3 : ℝ))
-    convert h using 1 <;>
-      simp [asymmetricTransitionProbability, stateRate, flip] <;> ring
+  · refine ((hasDerivAt_const t (1 / 3 : ℝ)).add
+      (hexp.const_mul (2 / 3 : ℝ))).congr_deriv ?_
+    dsimp [asymmetricTransitionProbability, stateRate, flip]
+    ring
+  · refine ((hasDerivAt_const t (2 / 3 : ℝ)).sub
+      (hexp.const_mul (2 / 3 : ℝ))).congr_deriv ?_
+    dsimp [asymmetricTransitionProbability, stateRate, flip]
+    ring
+  · refine ((hasDerivAt_const t (1 / 3 : ℝ)).sub
+      (hexp.const_mul (1 / 3 : ℝ))).congr_deriv ?_
+    dsimp [asymmetricTransitionProbability, stateRate, flip]
+    ring
+  · refine ((hasDerivAt_const t (2 / 3 : ℝ)).add
+      (hexp.const_mul (1 / 3 : ℝ))).congr_deriv ?_
+    dsimp [asymmetricTransitionProbability, stateRate, flip]
+    ring
 
 /-- Real-valued first-jump renewal equation for the explicit transition
 matrix. -/
@@ -183,16 +186,24 @@ private theorem asymmetricTransitionProbability_renewal_real
         (fun s : ℝ => Real.exp (λ * τ * s) * P (τ * s))
         (λ * τ * Real.exp (λ * τ * u) * R (τ * u)) u := by
     intro u
+    have hlinear : HasDerivAt (fun s : ℝ => λ * τ * s) (λ * τ) u := by
+      simpa only [id_eq, mul_one, mul_assoc] using
+        (hasDerivAt_id u).const_mul (λ * τ)
     have he : HasDerivAt (fun s : ℝ => Real.exp (λ * τ * s))
         (λ * τ * Real.exp (λ * τ * u)) u := by
-      convert ((hasDerivAt_id u).const_mul (λ * τ)).exp using 1 <;> ring
+      exact hlinear.exp.congr_deriv (by ring)
     have hp0 := hasDerivAt_asymmetricTransitionProbability (τ * u) x y
     have hp : HasDerivAt (fun s : ℝ => P (τ * s))
         (τ * (-(stateRate x : ℝ) * P (τ * u) +
           (stateRate x : ℝ) * R (τ * u))) u := by
-      simpa [P, R] using hp0.comp u
-        ((hasDerivAt_id u).const_mul τ)
-    convert he.mul hp using 1 <;> simp [λ, P, R] <;> ring
+      convert hp0.comp u ((hasDerivAt_id u).const_mul τ) using 1
+      · funext s
+        simp [P, id_eq]
+      · dsimp [P, R]
+        ring
+    exact (he.mul hp).congr_deriv (by
+      dsimp [λ, P, R]
+      ring)
   have hint : IntervalIntegrable
       (fun u : ℝ => λ * τ * Real.exp (λ * τ * u) * R (τ * u))
       volume 0 ρ := by
@@ -202,8 +213,13 @@ private theorem asymmetricTransitionProbability_renewal_real
       (∫ u : ℝ in 0..ρ,
         λ * τ * Real.exp (λ * τ * u) * R (τ * u)) =
         Real.exp (λ * τ * ρ) * P (τ * ρ) - P 0 := by
-    simpa using intervalIntegral.integral_eq_sub_of_hasDerivAt
-      (fun u hu => hg u) hint
+    simpa using
+      (intervalIntegral.integral_eq_sub_of_hasDerivAt
+        (f := fun s : ℝ => Real.exp (λ * τ * s) * P (τ * s))
+        (f' := fun u : ℝ =>
+          λ * τ * Real.exp (λ * τ * u) * R (τ * u))
+        (a := (0 : ℝ)) (b := ρ)
+        (fun u _ => hg u) hint)
   have hgrewrite :
       Real.exp (λ * τ * ρ) * P (τ * ρ) =
         P 0 +
@@ -282,7 +298,7 @@ private theorem asymmetricTransitionProbability_renewal_real
               asymmetricTransitionProbability
                 ((T : ℝ) * (ρ - a)) (flip x) y) := by
       rw [show P 0 = if x = y then 1 else 0 by
-        exact asymmetricTransitionProbability_zero x y]
+        simpa [P] using asymmetricTransitionProbability_zero x y]
       simp only [P, R, λ, τ]
       split_ifs <;> ring
 
@@ -354,8 +370,9 @@ theorem transitionCandidate_renewal
   have hcast :
       ENNReal.ofReal ((stateRate x : ℝ) * (T : ℝ)) =
         (stateRate x : ℝ≥0∞) * (T : ℝ≥0∞) := by
-    rw [ENNReal.ofReal_mul (stateRate x).2]
-    simp [ENNReal.ofReal_coe_nnreal]
+    symm
+    rw [← ENNReal.coe_mul, ← ENNReal.ofReal_coe_nnreal,
+      NNReal.coe_mul]
   calc
     transitionCandidate T x y ρ =
         ENNReal.ofReal
@@ -403,7 +420,6 @@ theorem transitionCandidate_renewal
                   (-((stateRate x : ℝ) * (T : ℝ) * (a : ℝ)))) *
               transitionCandidate T (flip x) y (ρ - (a : ℝ))) := by
       by_cases hxy : x = y <;> simp [hxy]
-
 
 end AsymmetricExample
 end TwoState
