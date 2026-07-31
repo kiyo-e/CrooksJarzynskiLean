@@ -31,13 +31,69 @@ open scoped ENNReal BigOperators unitInterval
 namespace CrooksJarzynski
 namespace MeasureProtocol
 namespace ContinuousTimeJump
-namespace FiniteJumpGenerator
 
 -- `residual` is deliberately left qualified: `_root_.residual` is Mathlib's
 -- topological residual filter, so opening the name here would be ambiguous.
 open TwoState.AsymmetricExample (cubeExpWeight ratePrefixProduct)
 
 universe u
+
+/-! ### Prefactor-free renewal slice
+
+These are statements about a bare rate vector, with none of the jump-rate or
+escape-rate prefactors the sector integrals carry.  Keeping them prefactor-free
+is what lets the general generator use them: its density carries a product of
+jump rates, not of escape rates, so the two cannot be matched under a common
+prefactor.  They belong with `cubeExpWeight` in a neutral renewal namespace once
+that refactor happens. -/
+
+/-- Survival integral of the free coordinates alone: the mass of paths whose
+first `n` holding intervals fit inside the horizon. -/
+noncomputable def arrivalOn {n : ℕ} (r : Fin n → NNReal) (T : NNReal) : ℝ≥0∞ :=
+  ∫⁻ u in Simplex.freeSimplexSet n, cubeExpWeight r T u
+
+/-- Survival integral including the residual final segment, held at rate `c`. -/
+noncomputable def sectorOn {n : ℕ} (r : Fin n → NNReal) (c T : NNReal) : ℝ≥0∞ :=
+  ∫⁻ u in Simplex.freeSimplexSet n,
+    cubeExpWeight r T u *
+      ENNReal.ofReal
+        (Real.exp
+          (-((c : ℝ) * (T : ℝ) * TwoState.AsymmetricExample.residual u)))
+
+/-- One renewal slice without prefactors: either the path stops in the final
+segment, or it jumps once more. -/
+theorem sectorOn_add_arrivalOn_succ
+    {n : ℕ} (r : Fin (n + 1) → NNReal) (T : NNReal) :
+    sectorOn (fun i : Fin n => r i.castSucc) (r (Fin.last n)) T +
+        ((r (Fin.last n) : ℝ≥0∞) * (T : ℝ≥0∞)) * arrivalOn r T =
+      arrivalOn (fun i : Fin n => r i.castSucc) T := by
+  unfold sectorOn arrivalOn
+  rw [TwoState.AsymmetricExample.lintegral_cubeExpWeight_succ r T,
+    ← lintegral_add_left (by fun_prop)]
+  apply setLIntegral_congr_fun (Simplex.measurableSet_freeSimplexSet n)
+  intro v hv
+  dsimp only
+  have hsum : (∑ i, ((v i : ℝ))) ≤ 1 := hv
+  have hres0 : 0 ≤ TwoState.AsymmetricExample.residual v := by
+    unfold TwoState.AsymmetricExample.residual
+    linarith
+  have hx : 0 ≤ (r (Fin.last n) : ℝ) * (T : ℝ) *
+      TwoState.AsymmetricExample.residual v := by positivity
+  have hexp1 :
+      Real.exp
+          (-((r (Fin.last n) : ℝ) * (T : ℝ) *
+            TwoState.AsymmetricExample.residual v)) ≤ 1 :=
+    Real.exp_le_one_iff.2 (neg_nonpos.mpr hx)
+  rw [← mul_add, ← ENNReal.ofReal_add (Real.exp_nonneg _) (by linarith)]
+  rw [show Real.exp
+        (-((r (Fin.last n) : ℝ) * (T : ℝ) *
+          TwoState.AsymmetricExample.residual v)) +
+      (1 - Real.exp
+        (-((r (Fin.last n) : ℝ) * (T : ℝ) *
+          TwoState.AsymmetricExample.residual v))) = 1 from by ring]
+  simp
+
+namespace FiniteJumpGenerator
 
 variable {Ω : Type u} [Fintype Ω] [DecidableEq Ω]
 variable [MeasurableSpace Ω] [MeasurableSingletonClass Ω]
@@ -290,6 +346,109 @@ theorem sum_jumpProduct_snoc
   simp only [jumpProduct_snoc, ← Finset.mul_sum]
   congr 1
   simp [escapeRate]
+
+/-! ### Telescoping the sector masses -/
+
+/-- The mass of paths from `states 0` whose first `n` jumps realize `states` and
+all fit inside the horizon.  Unlike `sequenceMass` there is no survival factor
+on the final segment: the path is free to jump again. -/
+noncomputable def sequenceArrivalMass
+    (G : FiniteJumpGenerator Ω) (T : NNReal) {n : ℕ}
+    (states : Fin (n + 1) → Ω) : ℝ≥0∞ :=
+  (T : ℝ≥0∞) ^ n * G.jumpProduct states *
+    arrivalOn (G.stateEscapeRates states) T
+
+omit [DecidableEq Ω] [MeasurableSpace Ω] [MeasurableSingletonClass Ω] in
+theorem sequenceMass_eq_sectorOn
+    (G : FiniteJumpGenerator Ω) (T : NNReal) {n : ℕ}
+    (states : Fin (n + 1) → Ω) :
+    G.sequenceMass T states =
+      (T : ℝ≥0∞) ^ n * G.jumpProduct states *
+        sectorOn (G.stateEscapeRates states)
+          (G.escapeRate (states (Fin.last n))) T :=
+  rfl
+
+omit [DecidableEq Ω] [MeasurableSpace Ω] [MeasurableSingletonClass Ω] in
+/-- One renewal step for a fixed initial segment: the sector that stops after
+`n` jumps plus the paths that jump once more, summed over where they jump to,
+exhaust the paths whose first `n` jumps fit. -/
+theorem sequenceMass_add_sum_sequenceArrivalMass_snoc
+    (G : FiniteJumpGenerator Ω) (T : NNReal) {n : ℕ}
+    (init : Fin (n + 1) → Ω) :
+    G.sequenceMass T init +
+        ∑ z : Ω, G.sequenceArrivalMass T (Fin.snoc init z) =
+      G.sequenceArrivalMass T init := by
+  set r : Fin (n + 1) → NNReal := fun i => G.escapeRate (init i) with hr
+  have hcast : G.stateEscapeRates init = fun i : Fin n => r i.castSucc := rfl
+  have hlast : G.escapeRate (init (Fin.last n)) = r (Fin.last n) := rfl
+  have hsnoc : ∀ z : Ω,
+      G.sequenceArrivalMass T (Fin.snoc init z) =
+        (T : ℝ≥0∞) ^ (n + 1) * G.jumpProduct (Fin.snoc init z) *
+          arrivalOn r T := by
+    intro z
+    unfold sequenceArrivalMass
+    rw [G.stateEscapeRates_snoc init z]
+  simp only [hsnoc, ← Finset.sum_mul, ← Finset.mul_sum]
+  rw [G.sum_jumpProduct_snoc init]
+  rw [G.sequenceMass_eq_sectorOn T init, hcast, hlast]
+  unfold sequenceArrivalMass
+  rw [hcast]
+  rw [show ((T : ℝ≥0∞) ^ (n + 1) *
+        (G.jumpProduct init * (G.escapeRate (init (Fin.last n)) : ℝ≥0∞))) *
+        arrivalOn r T =
+      ((T : ℝ≥0∞) ^ n * G.jumpProduct init) *
+        (((r (Fin.last n) : ℝ≥0∞) * (T : ℝ≥0∞)) * arrivalOn r T) from by
+    rw [pow_succ]
+    ring]
+  rw [← mul_add, sectorOn_add_arrivalOn_succ r T]
+
+omit [Fintype Ω] [DecidableEq Ω] [MeasurableSpace Ω]
+  [MeasurableSingletonClass Ω] in
+@[simp]
+theorem snoc_zero {n : ℕ} (init : Fin (n + 1) → Ω) (z : Ω) :
+    (Fin.snoc init z : Fin (n + 2) → Ω) 0 = init 0 := by
+  rw [← Fin.castSucc_zero, Fin.snoc_castSucc]
+
+/-- The mass the `n`-jump sector receives from a prescribed initial state. -/
+noncomputable def sectorMassFrom
+    (G : FiniteJumpGenerator Ω) (T : NNReal) (x : Ω) (n : ℕ) : ℝ≥0∞ :=
+  ∑ states : Fin (n + 1) → Ω,
+    fixedInitialWeight x (states 0) * G.sequenceMass T states
+
+/-- The mass of paths from `x` whose first `n` jumps fit inside the horizon. -/
+noncomputable def arrivalMassFrom
+    (G : FiniteJumpGenerator Ω) (T : NNReal) (x : Ω) (n : ℕ) : ℝ≥0∞ :=
+  ∑ states : Fin (n + 1) → Ω,
+    fixedInitialWeight x (states 0) * G.sequenceArrivalMass T states
+
+omit [MeasurableSpace Ω] [MeasurableSingletonClass Ω] in
+/-- Consecutive arrival masses differ by exactly one sector mass.  Summing over
+state sequences is what makes the branching identity
+`∑ z, jumpRate x z = escapeRate x` available, so this is the general-generator
+replacement for the two-state telescoping step. -/
+theorem sectorMassFrom_add_arrivalMassFrom_succ
+    (G : FiniteJumpGenerator Ω) (T : NNReal) (x : Ω) (n : ℕ) :
+    G.sectorMassFrom T x n + G.arrivalMassFrom T x (n + 1) =
+      G.arrivalMassFrom T x n := by
+  have hreindex :
+      G.arrivalMassFrom T x (n + 1) =
+        ∑ init : Fin (n + 1) → Ω,
+          fixedInitialWeight x (init 0) *
+            ∑ z : Ω, G.sequenceArrivalMass T (Fin.snoc init z) := by
+    unfold arrivalMassFrom
+    rw [← Fintype.sum_equiv (snocEquiv Ω n)
+      (fun p : (Fin (n + 1) → Ω) × Ω =>
+        fixedInitialWeight x ((Fin.snoc p.1 p.2 : Fin (n + 2) → Ω) 0) *
+          G.sequenceArrivalMass T (Fin.snoc p.1 p.2))
+      _ (fun p => rfl)]
+    rw [Fintype.sum_prod_type]
+    exact Finset.sum_congr rfl fun init _ => by
+      simp [Finset.mul_sum]
+  rw [hreindex]
+  unfold sectorMassFrom
+  rw [← Finset.sum_add_distrib]
+  refine Finset.sum_congr rfl fun init _ => ?_
+  rw [← mul_add, G.sequenceMass_add_sum_sequenceArrivalMass_snoc T init]
 
 end FiniteJumpGenerator
 end ContinuousTimeJump
