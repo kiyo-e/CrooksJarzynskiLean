@@ -248,6 +248,282 @@ theorem full_entropyProduction_integral_fluctuation (T : NNReal) :
         -thermodynamicBeta * physicalDeltaFreeEnergy = 0 by ring]
   exact Real.exp_zero
 
+/-! ### Exact terminal-state and work distributions
+
+The measure-level Crooks relation restricted to a terminal-state event has a
+constant work weight, so the four terminal masses of the forward and reverse
+laws satisfy a solvable linear system.  This determines the full work
+distribution without computing any transition probability of the chain. -/
+
+/-- The event that a full path terminates in the state `y`. -/
+def terminalEvent (y : State) : Set (FullPath State) :=
+  {γ | FullPath.terminalState γ = y}
+
+theorem measurableSet_terminalEvent (y : State) :
+    MeasurableSet (terminalEvent y) :=
+  FullPath.measurable_terminalState (measurableSet_singleton y)
+
+/-- Crooks' relation evaluated on an event where the work weight is
+constant. -/
+theorem crooks_event_const (T : NNReal) {E : Set (FullPath State)}
+    (hE : MeasurableSet E) {k : ℝ≥0∞}
+    (hk : ∀ γ ∈ E, fullWorkWeight γ = k) :
+    k * forwardPathLaw T E = 2 * reversePathLaw T E := by
+  have h : (forwardPathLaw T).withDensity fullWorkWeight E =
+      (freeEnergyWeight • reversePathLaw T) E := by
+    rw [show (forwardPathLaw T).withDensity fullWorkWeight =
+        freeEnergyWeight • reversePathLaw T from full_crooks T]
+  rw [withDensity_apply _ hE, setLIntegral_congr_fun hE hk,
+    setLIntegral_const, Measure.smul_apply, smul_eq_mul] at h
+  exact h
+
+/-- Crooks' relation on the terminal-state events of the asymmetric chain. -/
+theorem crooks_terminalEvent (T : NNReal) (y : State) :
+    terminalWorkWeight y * forwardPathLaw T (terminalEvent y) =
+      2 * reversePathLaw T (terminalEvent y) :=
+  crooks_event_const T (measurableSet_terminalEvent y)
+    (fun γ hγ => by
+      rw [fullWorkWeight_eq_terminalWorkWeight,
+        show FullPath.terminalState γ = y from hγ])
+
+/-- The two terminal-state events partition the path space. -/
+theorem compl_terminalEvent_zero :
+    (terminalEvent State.zero)ᶜ = terminalEvent State.one := by
+  ext γ
+  cases h : FullPath.terminalState γ <;>
+    simp [terminalEvent, h]
+
+private theorem real_crooks_zero (T : NNReal) :
+    3 * (forwardPathLaw T).real (terminalEvent State.zero) =
+      2 * (reversePathLaw T).real (terminalEvent State.zero) := by
+  have h := crooks_terminalEvent T State.zero
+  rw [show terminalWorkWeight State.zero = 3 from rfl] at h
+  have h' := congrArg ENNReal.toReal h
+  rwa [ENNReal.toReal_mul, ENNReal.toReal_mul, ENNReal.toReal_ofNat,
+    ENNReal.toReal_ofNat, ← measureReal_def, ← measureReal_def] at h'
+
+private theorem real_crooks_one (T : NNReal) :
+    3 / 2 * (forwardPathLaw T).real (terminalEvent State.one) =
+      2 * (reversePathLaw T).real (terminalEvent State.one) := by
+  have h := crooks_terminalEvent T State.one
+  rw [show terminalWorkWeight State.one = 3 / 2 from rfl] at h
+  have h' := congrArg ENNReal.toReal h
+  rwa [ENNReal.toReal_mul, ENNReal.toReal_mul, ENNReal.toReal_div,
+    ENNReal.toReal_ofNat, ENNReal.toReal_ofNat,
+    ← measureReal_def, ← measureReal_def] at h'
+
+private theorem real_split (μ : Measure (FullPath State))
+    [IsProbabilityMeasure μ] :
+    μ.real (terminalEvent State.zero) + μ.real (terminalEvent State.one) =
+      1 := by
+  have h : μ (terminalEvent State.zero) +
+      μ (terminalEvent State.one) = 1 := by
+    rw [← compl_terminalEvent_zero,
+      measure_add_measure_compl (measurableSet_terminalEvent State.zero)]
+    exact measure_univ
+  have h' := congrArg ENNReal.toReal h
+  rwa [ENNReal.toReal_add (measure_ne_top _ _) (measure_ne_top _ _),
+    ENNReal.toReal_one, ← measureReal_def, ← measureReal_def] at h'
+
+/-- The forward law terminates in the ground state with probability `1/3`. -/
+theorem forwardPathLaw_terminalEvent_zero (T : NNReal) :
+    (forwardPathLaw T).real (terminalEvent State.zero) = 1 / 3 := by
+  have h0 := real_crooks_zero T
+  have h1 := real_crooks_one T
+  have h2 := real_split (forwardPathLaw T)
+  have h3 := real_split (reversePathLaw T)
+  linarith
+
+/-- The forward law terminates in the excited state with probability `2/3`. -/
+theorem forwardPathLaw_terminalEvent_one (T : NNReal) :
+    (forwardPathLaw T).real (terminalEvent State.one) = 2 / 3 := by
+  have h0 := forwardPathLaw_terminalEvent_zero T
+  have h2 := real_split (forwardPathLaw T)
+  linarith
+
+/-- The reverse law has the uniform terminal distribution. -/
+theorem reversePathLaw_terminalEvent (T : NNReal) (y : State) :
+    (reversePathLaw T).real (terminalEvent y) = 1 / 2 := by
+  have h0 := real_crooks_zero T
+  have h1 := real_crooks_one T
+  have h2 := real_split (forwardPathLaw T)
+  have h3 := real_split (reversePathLaw T)
+  cases y <;> linarith
+
+/-- The quench work takes the value `-log 3` exactly on the ground-state
+terminal event. -/
+theorem thermodynamicWork_preimage_low :
+    thermodynamicWork ⁻¹' {-Real.log 3} = terminalEvent State.zero := by
+  have hlog : (0 : ℝ) < Real.log 2 := Real.log_pos (by norm_num)
+  ext γ
+  simp only [Set.mem_preimage, Set.mem_singleton_iff, terminalEvent,
+    Set.mem_setOf_eq]
+  unfold thermodynamicWork thermodynamicStateWork
+  cases h : FullPath.terminalState γ
+  · simp [finalEnergy, initialEnergy]
+  · simp only [finalEnergy, initialEnergy]
+    constructor
+    · intro heq
+      exfalso
+      have : Real.log 2 = 0 := by linarith
+      linarith
+    · intro heq
+      cases heq
+
+/-- The quench work takes the value `log 2 - log 3 = log (2/3)` exactly on the
+excited-state terminal event. -/
+theorem thermodynamicWork_preimage_high :
+    thermodynamicWork ⁻¹' {Real.log 2 - Real.log 3} =
+      terminalEvent State.one := by
+  have hlog : (0 : ℝ) < Real.log 2 := Real.log_pos (by norm_num)
+  ext γ
+  simp only [Set.mem_preimage, Set.mem_singleton_iff, terminalEvent,
+    Set.mem_setOf_eq]
+  unfold thermodynamicWork thermodynamicStateWork
+  cases h : FullPath.terminalState γ
+  · simp only [finalEnergy, initialEnergy]
+    constructor
+    · intro heq
+      exfalso
+      have : Real.log 2 = 0 := by linarith
+      linarith
+    · intro heq
+      cases heq
+  · constructor
+    · intro _
+      rfl
+    · intro _
+      simp [finalEnergy, initialEnergy]
+      ring
+
+/-- The exact forward work distribution at its low atom:
+`P(W = -log 3) = 1/3`. -/
+theorem forward_work_atom_low (T : NNReal) :
+    ((forwardPathLaw T).map thermodynamicWork).real {-Real.log 3} =
+      1 / 3 := by
+  rw [measureReal_def,
+    Measure.map_apply measurable_thermodynamicWork
+      (measurableSet_singleton _),
+    thermodynamicWork_preimage_low, ← measureReal_def]
+  exact forwardPathLaw_terminalEvent_zero T
+
+/-- The exact forward work distribution at its high atom:
+`P(W = log (2/3)) = 2/3`. -/
+theorem forward_work_atom_high (T : NNReal) :
+    ((forwardPathLaw T).map thermodynamicWork).real
+        {Real.log 2 - Real.log 3} = 2 / 3 := by
+  rw [measureReal_def,
+    Measure.map_apply measurable_thermodynamicWork
+      (measurableSet_singleton _),
+    thermodynamicWork_preimage_high, ← measureReal_def]
+  exact forwardPathLaw_terminalEvent_one T
+
+/-- The exact mean quench work under the forward law. -/
+theorem full_average_work (T : NNReal) :
+    ∫ γ, thermodynamicWork γ ∂forwardPathLaw T =
+      2 / 3 * Real.log 2 - Real.log 3 := by
+  rw [← integral_add_compl (measurableSet_terminalEvent State.zero)
+    (integrable_thermodynamicWork T), compl_terminalEvent_zero]
+  have hzero :
+      ∫ γ in terminalEvent State.zero, thermodynamicWork γ
+          ∂forwardPathLaw T =
+        (forwardPathLaw T).real (terminalEvent State.zero) •
+          thermodynamicStateWork State.zero := by
+    rw [← setIntegral_const]
+    exact setIntegral_congr_fun (measurableSet_terminalEvent State.zero)
+      (fun γ hγ => by
+        unfold thermodynamicWork
+        rw [show FullPath.terminalState γ = State.zero from hγ])
+  have hone :
+      ∫ γ in terminalEvent State.one, thermodynamicWork γ
+          ∂forwardPathLaw T =
+        (forwardPathLaw T).real (terminalEvent State.one) •
+          thermodynamicStateWork State.one := by
+    rw [← setIntegral_const]
+    exact setIntegral_congr_fun (measurableSet_terminalEvent State.one)
+      (fun γ hγ => by
+        unfold thermodynamicWork
+        rw [show FullPath.terminalState γ = State.one from hγ])
+  rw [hzero, hone, forwardPathLaw_terminalEvent_zero T,
+    forwardPathLaw_terminalEvent_one T]
+  unfold thermodynamicStateWork
+  simp only [finalEnergy, initialEnergy, smul_eq_mul]
+  ring
+
+/-- The strict second law for the asymmetric quench: the mean dissipated work
+is strictly positive because `27 < 32`. -/
+theorem full_second_law_strict (T : NNReal) :
+    physicalDeltaFreeEnergy <
+      ∫ γ, thermodynamicWork γ ∂forwardPathLaw T := by
+  rw [full_average_work, physicalDeltaFreeEnergy_eq]
+  have hlt : Real.log 27 < Real.log 32 :=
+    Real.log_lt_log (by norm_num) (by norm_num)
+  have h27 : Real.log 27 = 3 * Real.log 3 := by
+    rw [show (27 : ℝ) = 3 ^ 3 by norm_num, Real.log_pow]
+    push_cast
+    ring
+  have h32 : Real.log 32 = 5 * Real.log 2 := by
+    rw [show (32 : ℝ) = 2 ^ 5 by norm_num, Real.log_pow]
+    push_cast
+    ring
+  linarith
+
+/-! ### The reverse work observable and the conventional Crooks ratio -/
+
+/-- The reverse experiment's own quench work, expressed in the chronological
+representation used by `reversePathLaw`: the reverse protocol un-quenches
+`finalEnergy` back to `initialEnergy`, and in the reversed time coordinates
+this happens at the state recorded as the terminal coordinate. -/
+noncomputable def reverseThermodynamicWork (γ : FullPath State) : ℝ :=
+  initialEnergy (FullPath.terminalState γ) -
+    finalEnergy (FullPath.terminalState γ)
+
+/-- Sign convention: the reverse work observable is the negated forward work
+observable, pointwise on the reversed path space. -/
+theorem reverseThermodynamicWork_eq_neg (γ : FullPath State) :
+    reverseThermodynamicWork γ = -thermodynamicWork γ := by
+  unfold reverseThermodynamicWork thermodynamicWork thermodynamicStateWork
+  ring
+
+/-- The conventional atomwise Crooks ratio
+`P_F(W = w) = exp (β (w - ΔF)) * P_R(W_rev = -w)`, stated with the reverse
+experiment's own work observable and valid for every real work value. -/
+theorem crooks_work_atom (T : NNReal) (w : ℝ) :
+    (forwardPathLaw T).real {γ | thermodynamicWork γ = w} =
+      Real.exp (thermodynamicBeta * (w - physicalDeltaFreeEnergy)) *
+        (reversePathLaw T).real
+          {γ | reverseThermodynamicWork γ = -w} := by
+  have hset : {γ : FullPath State | reverseThermodynamicWork γ = -w} =
+      {γ : FullPath State | thermodynamicWork γ = w} := by
+    ext γ
+    simp only [Set.mem_setOf_eq, reverseThermodynamicWork_eq_neg,
+      neg_inj]
+  have hB : MeasurableSet {γ : FullPath State | thermodynamicWork γ = w} :=
+    measurable_thermodynamicWork (measurableSet_singleton w)
+  have hkey := crooks_event_const T hB
+    (k := ENNReal.ofReal (Real.exp (-thermodynamicBeta * w)))
+    (fun γ hγ => by
+      rw [fullWorkWeight_eq_exp_thermodynamicWork,
+        show thermodynamicWork γ = w from hγ])
+  have hreal := congrArg ENNReal.toReal hkey
+  rw [ENNReal.toReal_mul, ENNReal.toReal_mul,
+    ENNReal.toReal_ofReal (Real.exp_nonneg _), ENNReal.toReal_ofNat,
+    ← measureReal_def, ← measureReal_def] at hreal
+  rw [hset, physicalDeltaFreeEnergy_eq]
+  simp only [thermodynamicBeta] at hreal ⊢
+  rw [show (1 : ℝ) * (w - -Real.log 2) = w + Real.log 2 by ring,
+    Real.exp_add, Real.exp_log (by norm_num : (0 : ℝ) < 2)]
+  have hcancel : Real.exp w * Real.exp (-(1 : ℝ) * w) = 1 := by
+    rw [← Real.exp_add]
+    norm_num
+  set a := (forwardPathLaw T).real {γ | thermodynamicWork γ = w}
+  set r := (reversePathLaw T).real {γ | thermodynamicWork γ = w}
+  calc
+    a = Real.exp w * (Real.exp (-(1 : ℝ) * w) * a) := by
+      rw [← mul_assoc, hcancel, one_mul]
+    _ = Real.exp w * (2 * r) := by rw [hreal]
+    _ = Real.exp w * 2 * r := by ring
+
 end AsymmetricExample
 end TwoState
 end ContinuousTimeJump

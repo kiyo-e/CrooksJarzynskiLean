@@ -396,12 +396,13 @@ theorem sectorIntegral_add_arrivalIntegral_succ
 
 /-! ### Vanishing tail -/
 
-/-- The arrival integral of a rate sequence bounded by two is dominated by the
-Poisson-type tail `(2 T)^n / n!`. -/
-theorem arrivalIntegral_le {n : ℕ} (r : Fin n → NNReal) (T : NNReal)
-    (hr : ∀ i, r i ≤ 2) :
+/-- The arrival integral of a rate sequence bounded by an arbitrary cap `R` is
+dominated by the Poisson-type tail `(R T)^n / n!`. -/
+theorem arrivalIntegral_le {n : ℕ} (r : Fin n → NNReal) (T R : NNReal)
+    (hr : ∀ i, r i ≤ R) :
     arrivalIntegral r T ≤
-      (2 * (T : ℝ≥0∞)) ^ n * ENNReal.ofReal (1 / (n.factorial : ℝ)) := by
+      ((R : ℝ≥0∞) * (T : ℝ≥0∞)) ^ n *
+        ENNReal.ofReal (1 / (n.factorial : ℝ)) := by
   unfold arrivalIntegral
   have hweight : ∀ u : Fin n → I, cubeExpWeight r T u ≤ 1 := by
     intro u
@@ -420,33 +421,37 @@ theorem arrivalIntegral_le {n : ℕ} (r : Fin n → NNReal) (T : NNReal)
     _ = ratePrefixProduct r T *
           (volume : Measure (Fin n → I)) (Simplex.freeSimplexSet n) := by
         rw [setLIntegral_one]
-    _ ≤ (2 * (T : ℝ≥0∞)) ^ n * ENNReal.ofReal (1 / (n.factorial : ℝ)) := by
+    _ ≤ ((R : ℝ≥0∞) * (T : ℝ≥0∞)) ^ n *
+          ENNReal.ofReal (1 / (n.factorial : ℝ)) := by
         rw [Simplex.volume_freeSimplexSet]
         apply mul_le_mul_left
         unfold ratePrefixProduct
         calc (∏ i, ((r i : ℝ≥0∞) * (T : ℝ≥0∞)))
-            ≤ ∏ _i : Fin n, (2 * (T : ℝ≥0∞)) := by
+            ≤ ∏ _i : Fin n, ((R : ℝ≥0∞) * (T : ℝ≥0∞)) := by
               apply Finset.prod_le_prod'
               intro i _
               apply mul_le_mul_left
               exact_mod_cast hr i
-          _ = (2 * (T : ℝ≥0∞)) ^ n := by
+          _ = ((R : ℝ≥0∞) * (T : ℝ≥0∞)) ^ n := by
               rw [Finset.prod_const, Finset.card_univ, Fintype.card_fin]
 
-/-- The dominating Poisson-type tail vanishes. -/
-theorem tendsto_pow_mul_factorial_inv (T : NNReal) :
+/-- The dominating Poisson-type tail vanishes for every rate cap `R`. -/
+theorem tendsto_pow_mul_factorial_inv (T R : NNReal) :
     Filter.Tendsto
       (fun n : ℕ =>
-        (2 * (T : ℝ≥0∞)) ^ n * ENNReal.ofReal (1 / (n.factorial : ℝ)))
+        ((R : ℝ≥0∞) * (T : ℝ≥0∞)) ^ n *
+          ENNReal.ofReal (1 / (n.factorial : ℝ)))
       Filter.atTop (nhds 0) := by
   have hconv : ∀ n : ℕ,
-      (2 * (T : ℝ≥0∞)) ^ n * ENNReal.ofReal (1 / (n.factorial : ℝ)) =
-        ENNReal.ofReal ((2 * (T : ℝ)) ^ n / (n.factorial : ℝ)) := by
+      ((R : ℝ≥0∞) * (T : ℝ≥0∞)) ^ n *
+          ENNReal.ofReal (1 / (n.factorial : ℝ)) =
+        ENNReal.ofReal (((R : ℝ) * (T : ℝ)) ^ n / (n.factorial : ℝ)) := by
     intro n
-    have h2T : (2 * (T : ℝ≥0∞)) = ENNReal.ofReal (2 * (T : ℝ)) := by
-      rw [ENNReal.ofReal_mul (by norm_num)]
+    have hRT : ((R : ℝ≥0∞) * (T : ℝ≥0∞)) =
+        ENNReal.ofReal ((R : ℝ) * (T : ℝ)) := by
+      rw [ENNReal.ofReal_mul R.coe_nonneg]
       simp [ENNReal.ofReal_coe_nnreal]
-    rw [h2T, ← ENNReal.ofReal_pow (by positivity),
+    rw [hRT, ← ENNReal.ofReal_pow (by positivity),
       ← ENNReal.ofReal_mul (by positivity)]
     congr 1
     ring
@@ -454,7 +459,7 @@ theorem tendsto_pow_mul_factorial_inv (T : NNReal) :
   have h0 : (0 : ℝ≥0∞) = ENNReal.ofReal 0 := by simp
   rw [h0]
   apply ENNReal.tendsto_ofReal
-  exact FloorSemiring.tendsto_pow_div_factorial_atTop (2 * (T : ℝ))
+  exact FloorSemiring.tendsto_pow_div_factorial_atTop ((R : ℝ) * (T : ℝ))
 
 /-! ### The alternating two-state chain -/
 
@@ -512,11 +517,14 @@ theorem tendsto_arrivalMass (T : NNReal) (x : State) :
   apply tendsto_of_tendsto_of_tendsto_of_le_of_le
     (g := fun _ : ℕ => (0 : ℝ≥0∞))
     (h := fun n : ℕ =>
-      (2 * (T : ℝ≥0∞)) ^ n * ENNReal.ofReal (1 / (n.factorial : ℝ)))
-    tendsto_const_nhds (tendsto_pow_mul_factorial_inv T)
+      ((2 : ℝ≥0∞) * (T : ℝ≥0∞)) ^ n *
+        ENNReal.ofReal (1 / (n.factorial : ℝ)))
+    tendsto_const_nhds (by
+      simpa using tendsto_pow_mul_factorial_inv T 2)
     (fun n => bot_le)
-    (fun n => arrivalIntegral_le (chainRates x n) T
-      (fun i => stateRate_le_two _))
+    (fun n => by
+      simpa [arrivalMass] using arrivalIntegral_le (chainRates x n) T 2
+        (fun i => stateRate_le_two _))
 
 /-- The sector masses of the asymmetric chain sum to one for every initial
 state. -/

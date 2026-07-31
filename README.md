@@ -8,12 +8,15 @@ library contains:
   spaces;
 - a finite-jump continuous-time path-space theory with fixed-horizon Crooks and
   Jarzynski statements for segmentwise jump rates;
-- a fixed-horizon simplex reference with derived volume `1 / n!`;
+- a fixed-horizon simplex reference with derived free-coordinate Lebesgue
+  volume `1 / n!`;
 - a normalized, non-explosive two-state continuous-time Markov chain whose
   fixed-initial terminal laws form a Markov kernel with entries `exp (TQ)`;
 - a normalized asymmetric reversible two-state chain followed by an explicit
   energy quench, with real work, free-energy difference, physical Crooks and
-  Jarzynski relations, work-distribution Crooks, the second law, and an entropy
+  Jarzynski relations, work-distribution Crooks, the exact two-atom work
+  distribution and mean work, a strict second law, the conventional atomwise
+  Crooks ratio with the sign-reversed reverse work observable, and an entropy
   production fluctuation theorem; and
 - a path-uniform refinement limit for the two standard discrete work
   conventions.
@@ -46,9 +49,9 @@ The library proves:
 - a dependent-sum path space containing every finite jump count, together with
   the countable sum of the sector measures;
 - a measurable fixed-time horizon condition that is invariant under reversal;
-- a simplex parametrization with derived volume `1 / n!` that builds the
-  horizon condition into the holding-time law and yields a nonzero
-  reversal-invariant reference;
+- a simplex parametrization with derived free-coordinate Lebesgue volume
+  `1 / n!` that builds the horizon condition into the holding-time law and
+  yields a nonzero reversal-invariant reference;
 - factorized continuous-time path densities built from endpoint weights,
   survival factors, and jump-rate factors;
 - a path-density Crooks identity derived from endpoint reweighting, cancellation
@@ -213,6 +216,14 @@ MeasureProtocol.ContinuousTimeJump.Simplex.map_reference_reverse
 MeasureProtocol.ContinuousTimeJump.Simplex.reference_ne_zero
 MeasureProtocol.ContinuousTimeJump.Simplex.reference_ae_horizon
 ```
+
+> **Volume convention.** All simplex volumes are stated for the
+> `n`-dimensional Lebesgue product measure on the free coordinates, under
+> which the simplex has volume exactly `1 / n!`. The intrinsic
+> `n`-dimensional Hausdorff measure of the embedded slice `∑ᵢ τᵢ = T` in
+> `ℝ^{n+1}` differs by the constant factor `√(n+1)`, which is common to the
+> forward and reverse references and cancels from every normalized law and
+> every Crooks ratio.
 
 ### Rate-level density identity
 

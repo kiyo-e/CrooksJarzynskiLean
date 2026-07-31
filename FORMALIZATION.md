@@ -80,11 +80,29 @@ reweighting and local jump balance give the remaining path-density ratio.
 | A scaled simplex reference is reversal invariant | `MeasureProtocol.ContinuousTimeJump.Simplex.map_reference_reverse` |
 | Positive scaling gives a nonzero reference | `MeasureProtocol.ContinuousTimeJump.Simplex.reference_ne_zero` |
 | The scaled reference remains supported on the horizon | `MeasureProtocol.ContinuousTimeJump.Simplex.reference_ae_horizon` |
+| Simplex reversal preserves every free-simplex Lebesgue integral | `MeasureProtocol.ContinuousTimeJump.Simplex.lintegral_freeSimplex_reverseFree` |
+| Reversing the free coordinates reverses the completed holding times | `MeasureProtocol.ContinuousTimeJump.Simplex.holdingTimesOfFree_reverseFree` |
 
 The horizon condition is built into the parametrization rather than imposed by
 restricting an ambient Lebesgue measure to the zero-measure slice
 `∑ᵢ τᵢ = T`. The first `n` holding times are free simplex coordinates and the
 last holding time is the residual `T - ∑ᵢ<n τᵢ`.
+
+All volume statements refer to this free-coordinate convention: the `n`
+free holding-time coordinates carry the `n`-dimensional Lebesgue product
+measure, under which the free simplex has volume exactly `1 / n!`. This is a
+chart convention, not the intrinsic geometry of the embedded slice
+`∑ᵢ τᵢ = T` in `ℝ^{n+1}`, whose `n`-dimensional Hausdorff measure carries an
+additional constant factor `√(n+1)`. The factor is common to the forward and
+reverse references, so it cancels from every normalized path law and every
+Crooks ratio; no statement in this development depends on the intrinsic
+normalization.
+
+Time reversal of a fixed-horizon holding-time vector acts on the free
+coordinates as an affine involution: a shear exchanging the first coordinate
+with the residual coordinate, followed by a coordinate permutation. The
+change-of-variables lemmas above expose this as a reusable public API in
+`ContinuousTimeJumpSimplexReversal.lean`.
 
 ## Concrete specializations
 
@@ -132,6 +150,14 @@ last holding time is the residual `T - ∑ᵢ<n τᵢ`.
 | Density-free Crooks relation for the work distributions | `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.full_work_distribution_crooks` |
 | Average-work second law for the asymmetric chain | `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.full_second_law` |
 | Integral fluctuation theorem for the entropy production | `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.full_entropyProduction_integral_fluctuation` |
+| The forward terminal distribution is `(1/3, 2/3)` at every horizon | `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.forwardPathLaw_terminalEvent_zero`, `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.forwardPathLaw_terminalEvent_one` |
+| The reverse terminal distribution is uniform at every horizon | `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.reversePathLaw_terminalEvent` |
+| Exact work atoms `P(W = -log 3) = 1/3`, `P(W = log (2/3)) = 2/3` | `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.forward_work_atom_low`, `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.forward_work_atom_high` |
+| Exact mean work `(2/3) log 2 - log 3` | `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.full_average_work` |
+| Strict second law `ΔF < ⟨W⟩`, reducing to `27 < 32` | `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.full_second_law_strict` |
+| Reverse work sign convention `W_rev = -W` on reversed paths | `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.reverseThermodynamicWork_eq_neg` |
+| Conventional atomwise Crooks ratio `P_F(W=w) = e^{β(w-ΔF)} P_R(W_rev=-w)` | `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.crooks_work_atom` |
+| Poisson-type tail bound for an arbitrary rate cap `R` | `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.arrivalIntegral_le` |
 | Original finite protocol satisfies measure Crooks | `Protocol.measure_crooks` |
 | Original finite protocol satisfies real-integral Jarzynski | `Protocol.measure_jarzynski_integral` |
 | General forward path singleton mass equals legacy `forwardWeight` | `Protocol.measure_forwardWeight_singleton` |
@@ -161,6 +187,18 @@ work. The free-energy factor is derived from partition functions `Z₀=3` and
 `e^{-βW}` versus `e^{-βΔF}` and implies the real-valued Jarzynski equality,
 the work-distribution Crooks relation, the average-work second law, and the
 entropy-production integral fluctuation theorem.
+
+Restricting the measure-level Crooks relation to the two terminal-state
+events makes the work weight constant on each event, so the four terminal
+masses of the forward and reverse laws satisfy an explicitly solvable linear
+system. This determines, at every horizon and without computing any
+transition probability, the exact terminal distributions `(1/3, 2/3)` and
+`(1/2, 1/2)`, the exact two-atom work distribution, the exact mean work
+`(2/3) log 2 - log 3`, and hence a strict second law whose final inequality
+is `log 27 < log 32`. The conventional Crooks ratio
+`P_F(W = w) = e^{β(w-ΔF)} P_R(W_rev = -w)` is stated with the reverse
+experiment's own work observable, whose sign reversal on chronologically
+reversed paths is itself a theorem.
 
 ## Explicit scope boundaries
 

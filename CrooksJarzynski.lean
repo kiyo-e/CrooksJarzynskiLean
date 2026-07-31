@@ -18,6 +18,7 @@ import CrooksJarzynski.MeasureProtocolSecondLaw
 import CrooksJarzynski.MeasureProtocolGaussianExample
 import CrooksJarzynski.MeasureProtocolMetropolisExample
 import CrooksJarzynski.ContinuousTimeJumpRateFull
+import CrooksJarzynski.ContinuousTimeJumpSimplexReversal
 import CrooksJarzynski.ContinuousTimeJumpTwoStateNormalization
 import CrooksJarzynski.ContinuousTimeJumpTwoStateAsymmetric
 import CrooksJarzynski.ContinuousTimeJumpTwoStateAsymmetricNormalization
@@ -77,7 +78,12 @@ free-energy difference, and real-valued quench work are explicit. The
 factorized path weight telescopes pointwise to `exp (-β W)`, yielding normalized
 physical Crooks and Jarzynski relations, a density-free work-distribution
 relation, the average-work second law, and an integral fluctuation theorem for
-entropy production.
+entropy production. Restricting the measure-level Crooks relation to
+terminal-state events determines the exact two-atom work distribution, the
+exact mean work, a strict second law, and the conventional atomwise Crooks
+ratio with the sign-reversed reverse work observable. The simplex-reversal
+change of variables underlying all path-reversal arguments is exposed as a
+reusable API on the free simplex chart.
 
 The finite-state results include explicit time reversal, both standard
 discrete-time work conventions, a path-uniform `O(1/N)` continuous-time limit
@@ -107,6 +113,7 @@ canonical-ensemble API. The main results include `Protocol.crooks`,
 `MeasureProtocol.ContinuousTimeJump.FullPath.crooks_of_rate_local_balance`,
 `MeasureProtocol.ContinuousTimeJump.Simplex.map_reference_reverse`,
 `MeasureProtocol.ContinuousTimeJump.Simplex.volume_freeSimplexSet`,
+`MeasureProtocol.ContinuousTimeJump.Simplex.lintegral_freeSimplex_reverseFree`,
 `MeasureProtocol.ContinuousTimeJump.TwoState.pathLawFrom_terminalState_eq_exp_generator`,
 `MeasureProtocol.ContinuousTimeJump.TwoState.transitionKernel_real_singleton_eq_exp_generator`,
 `MeasureProtocol.ContinuousTimeJump.TwoState.transitionKernel_chapman_kolmogorov`,
@@ -115,6 +122,10 @@ canonical-ensemble API. The main results include `Protocol.crooks`,
 `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.full_jarzynski_physical_eq_two`,
 `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.full_work_distribution_crooks`,
 `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.full_second_law`,
+`MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.forward_work_atom_low`,
+`MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.full_average_work`,
+`MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.full_second_law_strict`,
+`MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.crooks_work_atom`,
 `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.full_entropyProduction_integral_fluctuation`,
 `MeasureProtocol.ContinuousTimeJump.TwoState.pathLaw_crooks`,
 `MeasureProtocol.ContinuousTimeJump.TwoState.pathLaw_jarzynski`,
