@@ -165,6 +165,7 @@ change-of-variables lemmas above expose this as a reusable public API in
 | Renewal evaluation of the parity-filtered sector-mass sums | `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.tsum_sectorMass_parity` |
 | The fixed-initial asymmetric terminal marginal is the explicit matrix row | `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.asymmetricPathLawFrom_terminalState_real_singleton` |
 | The fixed-initial asymmetric terminal marginal equals `exp (TQ)` | `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.asymmetricPathLawFrom_terminalState_eq_exp_generator` |
+| The finite-generator counting reference carries the physical mass `T^n / n!` | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.simplexSectorMass_eq` |
 | Original finite protocol satisfies measure Crooks | `Protocol.measure_crooks` |
 | Original finite protocol satisfies real-integral Jarzynski | `Protocol.measure_jarzynski_integral` |
 | General forward path singleton mass equals legacy `forwardWeight` | `Protocol.measure_forwardWeight_singleton` |

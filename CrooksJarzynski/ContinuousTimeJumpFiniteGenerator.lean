@@ -18,7 +18,7 @@ branching. A symmetric three-state Y chain is included as an example.
 -/
 
 open MeasureTheory
-open scoped ENNReal BigOperators Matrix
+open scoped ENNReal BigOperators Matrix unitInterval
 
 namespace CrooksJarzynski
 namespace MeasureProtocol
@@ -121,27 +121,42 @@ noncomputable def stateSequenceCountingReference
     Measure (Fin (n + 1) → Ω) :=
   Measure.count
 
-/-- Counting state sequences combined with the fixed-horizon simplex law. -/
+/-- The physical `n`-jump holding-time volume `T^n / n!`, expressed through
+the free-coordinate simplex volume. -/
+noncomputable def simplexSectorMass (T : NNReal) (n : ℕ) : ℝ≥0∞ :=
+  (T : ℝ≥0∞) ^ n *
+    (volume : Measure (Fin n → I)) (Simplex.freeSimplexSet n)
+
+/-- The physical sector mass evaluates to `T^n / n!`. -/
+theorem simplexSectorMass_eq (T : NNReal) (n : ℕ) :
+    simplexSectorMass T n =
+      (T : ℝ≥0∞) ^ n * ENNReal.ofReal (1 / (n.factorial : ℝ)) := by
+  unfold simplexSectorMass
+  rw [Simplex.volume_freeSimplexSet]
+
+/-- Counting state sequences combined with the fixed-horizon simplex law,
+scaled by the physical holding-time volume `T^n / n!` of the sector. -/
 noncomputable def countingReference
     (G : FiniteJumpGenerator Ω) (T : NNReal) (n : ℕ) :
     Measure (JumpPath Ω n) :=
-  Simplex.pathProbability T (G.stateSequenceCountingReference n)
+  Simplex.reference T (G.stateSequenceCountingReference n)
+    (simplexSectorMass T n)
 
 /-- The counting reference is invariant under path reversal. -/
 theorem map_countingReference_reverse
     (G : FiniteJumpGenerator Ω) (T : NNReal) (n : ℕ) :
     (G.countingReference T n).map JumpPath.reverse =
       G.countingReference T n := by
-  exact Simplex.map_pathProbability_reverse T
-    (G.stateSequenceCountingReference n)
+  exact Simplex.map_reference_reverse T
+    (G.stateSequenceCountingReference n) (simplexSectorMass T n)
 
 /-- The counting reference is supported on paths of duration `T`. -/
 theorem countingReference_ae_horizon
     (G : FiniteJumpGenerator Ω) (T : NNReal) (n : ℕ) :
     ∀ᵐ γ ∂G.countingReference T n,
       γ ∈ JumpPath.horizonSet (Ω := Ω) (n := n) T := by
-  exact Simplex.pathProbability_ae_horizon T
-    (G.stateSequenceCountingReference n)
+  exact Simplex.reference_ae_horizon T
+    (G.stateSequenceCountingReference n) (simplexSectorMass T n)
 
 variable [MeasurableSingletonClass Ω]
 
