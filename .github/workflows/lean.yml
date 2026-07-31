@@ -17,14 +17,26 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
+      - name: Restore Elan toolchain cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.elan
+          key: elan-${{ runner.os }}-${{ hashFiles('lean-toolchain') }}
       - name: Install Elan
         shell: bash
         run: |
           set -euo pipefail
-          curl --proto '=https' --tlsv1.2 -sSf \
-            https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh \
-            | sh -s -- -y --default-toolchain none
+          if [ ! -x "$HOME/.elan/bin/elan" ]; then
+            curl --proto '=https' --tlsv1.2 -sSf \
+              https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh \
+              | sh -s -- -y --default-toolchain none
+          fi
           echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+      - name: Restore Lake package cache
+        uses: actions/cache@v4
+        with:
+          path: .lake/packages
+          key: lake-packages-${{ runner.os }}-${{ hashFiles('lake-manifest.json') }}
       - name: Resolve dependencies, audit proofs, and build
         shell: bash
         run: |
@@ -55,19 +67,38 @@ jobs:
               axiom_reports="$(grep -Ec \
                 'depends on axioms:|does not depend on any axioms' \
                 axiom-audit.log)"
-              if [ "$axiom_reports" -ne 18 ]; then
+              expected_axiom_reports="$(grep -Ec \
+                '^[[:space:]]*#print axioms ' \
+                CrooksJarzynski/AxiomAudit.lean)"
+              if [ "$axiom_reports" -ne "$expected_axiom_reports" ]; then
                 echo "Kernel axiom audit did not report every headline theorem."
                 status=1
-              elif sed -n 's/.*depends on axioms: \[\(.*\)\]$/\1/p' \
-                  axiom-audit.log \
-                  | tr ',' '\n' \
-                  | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' \
-                  | grep -Evx \
-                    'propext|Classical\.choice|Quot\.sound'; then
-                echo "Kernel axiom audit found an unapproved axiom."
-                status=1
               else
-                echo "Kernel axiom audit passed."
+                unexpected_axioms="$(
+                  awk '
+                    /depends on axioms: \[/ {
+                      line = $0
+                      sub(/^.*depends on axioms: \[/, "", line)
+                      while (line !~ /\]$/ && getline continuation > 0) {
+                        line = line " " continuation
+                      }
+                      sub(/\].*$/, "", line)
+                      print line
+                    }
+                  ' axiom-audit.log \
+                    | tr ',' '\n' \
+                    | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' \
+                    | grep -Evx \
+                      'propext|Classical\.choice|Quot\.sound' \
+                    || true
+                )"
+                if [ -n "$unexpected_axioms" ]; then
+                  printf '%s\n' "$unexpected_axioms"
+                  echo "Kernel axiom audit found an unapproved axiom."
+                  status=1
+                else
+                  echo "Kernel axiom audit passed."
+                fi
               fi
             fi
           } > build.log 2>&1

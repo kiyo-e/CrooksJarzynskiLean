@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: kiyo-e
 -/
 import CrooksJarzynski.Protocol
+import CrooksJarzynski.MeasureProtocol
 import Mathlib.Probability.Kernel.Basic
 
 /-!
@@ -11,7 +12,10 @@ import Mathlib.Probability.Kernel.Basic
 
 This module embeds the elementary finite distributions and transition kernels
 used by the Crooks–Jarzynski development into Mathlib's measure-theoretic
-`ProbabilityTheory.Kernel` API.
+`ProbabilityTheory.Kernel` API.  It also realizes the general-state
+Ionescu–Tulcea trajectory construction on finite distributions and kernels,
+showing that the original finite layer is a concrete specialization of the
+measure-theoretic core.
 -/
 
 open MeasureTheory
@@ -98,6 +102,20 @@ theorem toKernel_singleton (K : CrooksJarzynski.Kernel Ω) (x y : Ω) :
   rw [toKernel_apply]
   exact FiniteDistribution.toMeasure_singleton (K x) y
 
+/-- The general Ionescu–Tulcea trajectory measure specialized to the elementary
+finite distributions and transition kernels used by this project. -/
+noncomputable def trajectoryMeasure
+    (μ₀ : FiniteDistribution Ω) (K : ℕ → CrooksJarzynski.Kernel Ω) :
+    Measure (ℕ → Ω) :=
+  MeasureProtocol.Markov.trajectoryMeasure μ₀.toMeasure
+    (fun t => toKernel (K t))
+
+noncomputable instance instIsProbabilityMeasureTrajectoryMeasure
+    (μ₀ : FiniteDistribution Ω) (K : ℕ → CrooksJarzynski.Kernel Ω) :
+    IsProbabilityMeasure (trajectoryMeasure μ₀ K) := by
+  unfold trajectoryMeasure
+  infer_instance
+
 end MathlibBridge
 
 namespace Protocol
@@ -116,6 +134,18 @@ noncomputable def reverseMathlibKernel
     {n : ℕ} (P : Protocol Ω n) (t : Fin n) :
     ProbabilityTheory.Kernel Ω Ω :=
   MathlibBridge.toKernel (P.reverseKernel t)
+
+noncomputable instance instIsMarkovKernelForwardMathlibKernel
+    {n : ℕ} (P : Protocol Ω n) (t : Fin n) :
+    ProbabilityTheory.IsMarkovKernel (P.forwardMathlibKernel t) := by
+  unfold forwardMathlibKernel
+  infer_instance
+
+noncomputable instance instIsMarkovKernelReverseMathlibKernel
+    {n : ℕ} (P : Protocol Ω n) (t : Fin n) :
+    ProbabilityTheory.IsMarkovKernel (P.reverseMathlibKernel t) := by
+  unfold reverseMathlibKernel
+  infer_instance
 
 @[simp]
 theorem forwardMathlibKernel_singleton
