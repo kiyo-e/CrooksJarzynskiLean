@@ -85,6 +85,23 @@ theorem jarzynski_lintegral
   have h_univ := congrArg (fun μ : Measure Γ => μ Set.univ) h
   simpa [CrooksRelation, withDensity_apply] using h_univ
 
+/-- The real-valued integral form of `jarzynski_lintegral`.  Note that the
+integrand is the exponential work weight `exp (-β W)` and the right-hand side
+is the exponential free-energy weight `exp (-β ΔF)`, not the work `W` or the
+free-energy difference `ΔF` themselves; the forward measure is not assumed to
+be normalized. -/
+theorem jarzynski_toReal_integral
+    (forward reverse : Measure Γ) (workWeight : Γ → ℝ≥0∞)
+    (freeEnergyWeight : ℝ≥0∞) [IsProbabilityMeasure reverse]
+    (hwork : Measurable workWeight) (hfreeEnergy : freeEnergyWeight ≠ ∞)
+    (h : CrooksRelation forward reverse workWeight freeEnergyWeight) :
+    ∫ γ, (workWeight γ).toReal ∂forward = freeEnergyWeight.toReal := by
+  have hjarzynski :=
+    jarzynski_lintegral forward reverse workWeight freeEnergyWeight h
+  rw [integral_toReal hwork.aemeasurable
+    (ae_lt_top hwork (hjarzynski.trans_ne hfreeEnergy))]
+  exact congrArg ENNReal.toReal hjarzynski
+
 /-- The physical exponential form of `jarzynski_lintegral`. -/
 theorem jarzynski_exponential
     (forward reverse : Measure Γ) (β ΔF : ℝ) (work : Γ → ℝ)
