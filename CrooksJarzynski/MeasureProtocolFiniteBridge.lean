@@ -244,6 +244,7 @@ variable {Ω : Type u} [Fintype Ω] [Nonempty Ω]
 variable [MeasurableSpace Ω] [MeasurableSingletonClass Ω]
 variable {n : ℕ}
 
+omit [Nonempty Ω] [MeasurableSpace Ω] [MeasurableSingletonClass Ω] in
 /-- The original pointwise local-balance equation also holds after normalizing
 both Boltzmann weights to Gibbs probabilities. -/
 theorem gibbsProbability_localBalance

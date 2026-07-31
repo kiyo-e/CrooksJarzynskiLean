@@ -46,7 +46,7 @@ private theorem iterateFlip_succ_eq_flip (n : ℕ) (x : State) :
 /-- One renewal step exposes exactly one more parity-filtered sector. -/
 private theorem renewalRemainder_step
     (T : NNReal) (x y : State) (N : ℕ) (ρ : ℝ)
-    (hρ0 : 0 ≤ ρ) (hρ1 : ρ ≤ 1) :
+    (_hρ0 : 0 ≤ ρ) (hρ1 : ρ ≤ 1) :
     renewalRemainder T x y N ρ =
       (if iterateFlip N x = y then sectorMassAt T x N ρ else 0) +
         renewalRemainder T x y (N + 1) ρ := by

@@ -104,7 +104,8 @@ theorem exp_neg_beta_mul_freeEnergy_sub {Ω : Type u} [Fintype Ω] [Nonempty Ω]
     (β : ℝ) (hβ : β ≠ 0) (E₀ E₁ : Energy Ω) :
     Real.exp (-β * (freeEnergy β E₁ - freeEnergy β E₀)) =
       partitionFunction β E₁ / partitionFunction β E₀ := by
-  convert exp_beta_mul_freeEnergy_sub β hβ E₁ E₀ using 1 <;> ring
+  convert exp_beta_mul_freeEnergy_sub β hβ E₁ E₀ using 1
+  ring_nf
 
 /-- A change of energy can be moved from the Boltzmann weight into an
 exponential work factor. -/

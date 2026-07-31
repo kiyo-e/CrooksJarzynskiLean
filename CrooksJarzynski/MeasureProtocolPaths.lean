@@ -173,7 +173,11 @@ theorem measurable_chronologicalWorkWeight
     Trajectory.measurable_reverse
 
 /-- The finite-horizon Crooks relation in the conventional chronological path
-coordinates. -/
+coordinates.
+
+As in `multiStep_crooks`, the reverse kernel is an input: `reverse` is supplied
+by the caller and constrained only by `hbalance`, and a forward kernel that is
+reversible for `equilibrium i.succ` can be reused as its own reverse kernel. -/
 theorem multiStep_crooks_chronological
     {n : ℕ}
     (equilibrium : Fin (n + 1) → Measure Ω)

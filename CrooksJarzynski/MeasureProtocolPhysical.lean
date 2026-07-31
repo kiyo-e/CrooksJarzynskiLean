@@ -40,8 +40,7 @@ theorem Markov.measurable_reversedAccumulatedWork
     Measurable (Markov.reversedAccumulatedWork work) := by
   induction n with
   | zero =>
-      simpa [Markov.reversedAccumulatedWork] using
-        (measurable_const : Measurable (fun _ : Trajectory Ω 0 => (0 : ℝ)))
+      simp [Markov.reversedAccumulatedWork]
   | succ n ih =>
       change Measurable (fun γ : Ω × Trajectory Ω n =>
         Markov.reversedAccumulatedWork (fun i => work i.castSucc) γ.2 +
@@ -55,6 +54,7 @@ theorem Markov.measurable_reversedAccumulatedWork
               (measurable_snd :
                 Measurable (fun γ : Ω × Trajectory Ω n => γ.2))))
 
+omit [MeasurableSpace Ω] in
 /-- A product of exponential step weights is the exponential of the accumulated
 step observable. -/
 theorem Markov.reversedWorkWeight_eq_exp_accumulated
@@ -184,6 +184,7 @@ theorem measurable_reversePathWork
   exact ((measurable_pathWork energy henergy).comp
     Trajectory.measurable_reverse).neg
 
+omit [MeasurableSpace Ω] in
 /-- The chronological work factor is exactly `exp (-β W)`. -/
 theorem chronologicalWorkWeight_eq_exp_pathWork
     {n : ℕ} (β : ℝ) (energy : Fin (n + 1) → Ω → ℝ)
@@ -221,7 +222,12 @@ theorem accumulatedFreeEnergyWeight_eq_exp_delta
   rw [htel]
 
 /-- The standard physical finite-horizon Crooks relation on chronological paths
-in an arbitrary measurable state space. -/
+in an arbitrary measurable state space.
+
+As in `Markov.multiStep_crooks`, the reverse kernel is an input: `reverse` is
+supplied by the caller and constrained only by the local-balance hypothesis,
+and a forward kernel that is reversible for the relevant Gibbs measure can be
+reused as its own reverse kernel. -/
 theorem multiStep_crooks_physical
     {n : ℕ} (base : Measure Ω) [NeZero base]
     (β : ℝ) (hβ : β ≠ 0)

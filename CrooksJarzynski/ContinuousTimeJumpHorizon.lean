@@ -42,6 +42,7 @@ theorem measurable_totalHoldingTime :
   unfold totalHoldingTime
   fun_prop
 
+omit [MeasurableSpace Ω] in
 /-- Reversing a jump path preserves its total elapsed time. -/
 @[simp]
 theorem totalHoldingTime_reverse (γ : JumpPath Ω n) :
@@ -65,6 +66,7 @@ theorem measurableSet_horizonSet (T : NNReal) :
   simpa [horizonSet] using
     (measurable_totalHoldingTime (Ω := Ω) (n := n)).eq_const T |>.setOf
 
+omit [MeasurableSpace Ω] in
 /-- The horizon sector is invariant under path reversal. -/
 @[simp]
 theorem preimage_horizonSet_reverse (T : NNReal) :
@@ -115,8 +117,7 @@ theorem map_horizonMeasure_reverse
   have hmap : μ.map e = μ := by
     simpa [e, reverseEquiv] using hμ
   have hpre : e ⁻¹' S = S := by
-    simpa [e, S, reverseEquiv] using
-      (preimage_horizonSet_reverse (Ω := Ω) (n := n) T)
+    simp [e, S, reverseEquiv]
   rw [hmap, hpre] at h
   simpa [horizonMeasure, e, S, reverseEquiv] using h.symm
 

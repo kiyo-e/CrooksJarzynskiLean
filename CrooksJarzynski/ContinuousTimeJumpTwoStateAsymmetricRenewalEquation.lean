@@ -7,7 +7,7 @@ import CrooksJarzynski.ContinuousTimeJumpTwoStateAsymmetricFixedInitial
 import Mathlib.Analysis.SpecialFunctions.Integrals.Basic
 
 /-!
-# Renewal candidate for the asymmetric two-state parity sums
+# Renewal equation for the asymmetric two-state parity sums
 
 This module develops the variable-horizon sector masses and proves the
 one-jump renewal equation for the explicit asymmetric transition matrix.
@@ -371,7 +371,7 @@ private theorem asymmetricTransitionProbability_renewal_real
                 ((T : ℝ) * (ρ - a)) (flip x) y) := by
       rw [show P 0 = if x = y then 1 else 0 by
         simpa [P] using asymmetricTransitionProbability_zero x y]
-      simp only [P, R, rate, τ]
+      simp only [R, rate, τ]
       split_ifs <;> ring
 
 /-- The explicit transition matrix satisfies the one-jump renewal equation. -/

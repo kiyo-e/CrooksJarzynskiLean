@@ -236,6 +236,14 @@ initialWeight(x₀)
   · exp (-λₙ(xₙ) τₙ).
 ```
 
+The index `i` here is the jump sector, not calendar time: these are
+segment-indexed factorized finite-jump laws, whose rate factors are
+piecewise constant on jump sectors. A rate may differ from one sector to the
+next, but within a segment it is a constant `λᵢ(x)` multiplying the holding
+time `τᵢ`, never an integrated hazard `∫ λ_s ds` over the absolute times that
+segment sweeps. Nothing in this layer is a general calendar-time-dependent
+CTMC.
+
 The local-balance theorem assumes:
 
 ```text

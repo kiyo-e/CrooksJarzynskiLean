@@ -81,9 +81,7 @@ theorem crooks_of_reference_density
         (fun _ : Γ => freeEnergyWeight) :=
       MeasureTheory.withDensity_mul reference hreverse measurable_const
     _ = freeEnergyWeight • reference.withDensity reverseDensity := by
-      simpa using
-        (MeasureTheory.withDensity_const
-          (μ := reference.withDensity reverseDensity) freeEnergyWeight)
+      simp
 
 /-- Mapping a density-defined path law by a measurable involution amounts to
 composing its density with that involution, provided the reference measure is
@@ -175,16 +173,18 @@ theorem measurable_reverse :
     intro i
     exact (measurable_pi_apply i.rev).comp measurable_snd
 
+omit [MeasurableSpace Ω] in
 @[simp]
 theorem reverse_reverse (γ : JumpPath Ω n) :
     reverse (reverse γ) = γ := by
   rcases γ with ⟨states, holdingTimes⟩
   apply Prod.ext
   · funext i
-    simpa [reverse] using congrArg states (Fin.rev_involutive i)
+    simp [reverse]
   · funext i
-    simpa [reverse] using congrArg holdingTimes (Fin.rev_involutive i)
+    simp [reverse]
 
+omit [MeasurableSpace Ω] in
 /-- Path reversal is an involution. -/
 theorem reverse_involutive :
     Function.Involutive (reverse (Ω := Ω) (n := n)) :=
@@ -192,10 +192,15 @@ theorem reverse_involutive :
 
 /-- A generic factorized density for a jump path with exactly `n` jumps.
 
-`holdingWeight` can encode the exponential of the integrated escape rate on a
-holding interval, and `jumpWeight` can encode the instantaneous jump rate. This
-definition deliberately separates the path-space measure theory from a later
-choice of time-homogeneous or time-inhomogeneous rate model. -/
+`holdingWeight` is indexed by the jump sector `Fin (n + 1)` and sees only the
+state and the holding duration of its own segment, so it encodes a survival
+factor `exp (-λᵢ(x) τᵢ)` whose rate is constant along that segment;
+`jumpWeight` likewise encodes a segment-indexed jump rate. Calendar-time
+dependence, where the hazard on a segment is an integral `∫ λ_s ds` over the
+absolute times swept by that segment, is outside this parametrization: no
+argument carries the absolute start time. This definition deliberately
+separates the path-space measure theory from the later choice of
+piecewise-constant rate factors. -/
 noncomputable def density
     (initialWeight : Ω → ℝ≥0∞)
     (holdingWeight : Fin (n + 1) → Ω → NNReal → ℝ≥0∞)
