@@ -65,11 +65,42 @@ noncomputable def arrivalMassAt
     (T : NNReal) (ρ : I) (x : State) (n : ℕ) : ℝ≥0∞ :=
   arrivalIntegralAt (chainRates x n) T ρ
 
+/-- Residual horizon fraction after all free holding fractions have been used. -/
+def residualAt {n : ℕ} (ρ : I) (u : Fin n → I) : ℝ :=
+  (ρ : ℝ) - ∑ i, (u i : ℝ)
+
+@[fun_prop]
+theorem measurable_residualAt {n : ℕ} (ρ : I) :
+    Measurable (residualAt (n := n) ρ) := by
+  unfold residualAt
+  fun_prop
+
+/-- Exactly-`n`-jump mass on a remaining horizon fraction `ρ`. -/
+noncomputable def sectorIntegralAt {n : ℕ} (r : Fin n → NNReal)
+    (c : NNReal) (T : NNReal) (ρ : I) : ℝ≥0∞ :=
+  ratePrefixProduct r T *
+    ∫⁻ u in freeSimplexSetAt n ρ,
+      cubeExpWeight r T u *
+        ENNReal.ofReal
+          (Real.exp (-((c : ℝ) * (T : ℝ) * residualAt ρ u)))
+
+/-- Variable-horizon sector mass along the alternating asymmetric chain. -/
+noncomputable def sectorMassAt
+    (T : NNReal) (ρ : I) (x : State) (n : ℕ) : ℝ≥0∞ :=
+  sectorIntegralAt (chainRates x n) (stateRate (iterateFlip n x)) T ρ
+
 /-- The variable-horizon construction at `ρ = 1` is the existing arrival mass. -/
 theorem arrivalMassAt_one (T : NNReal) (x : State) (n : ℕ) :
     arrivalMassAt T (1 : I) x n = arrivalMass T x n := by
   simp [arrivalMassAt, arrivalIntegralAt, arrivalMass, arrivalIntegral,
     freeSimplexSetAt_one]
+
+/-- The variable-horizon sector construction at `ρ = 1` is the existing sector
+mass. -/
+theorem sectorMassAt_one (T : NNReal) (x : State) (n : ℕ) :
+    sectorMassAt T (1 : I) x n = sectorMass T x n := by
+  unfold sectorMassAt sectorIntegralAt sectorMass sectorIntegral residualAt
+  rw [freeSimplexSetAt_one]
 
 /-- Before any jump is requested, every remaining horizon has arrival mass one. -/
 theorem arrivalMassAt_zero (T : NNReal) (ρ : I) (x : State) :
@@ -79,6 +110,18 @@ theorem arrivalMassAt_zero (T : NNReal) (ρ : I) (x : State) :
     simp [freeSimplexSetAt, ρ.2.1]
   simp [arrivalMassAt, arrivalIntegralAt, ratePrefixProduct,
     cubeExpWeight, hset]
+
+/-- The zero-jump sector is the survival probability over the remaining
+fraction of the horizon. -/
+theorem sectorMassAt_zero (T : NNReal) (ρ : I) (x : State) :
+    sectorMassAt T ρ x 0 =
+      ENNReal.ofReal
+        (Real.exp (-((stateRate x : ℝ) * (T : ℝ) * (ρ : ℝ)))) := by
+  have hset : freeSimplexSetAt 0 ρ = Set.univ := by
+    ext u
+    simp [freeSimplexSetAt, ρ.2.1]
+  simp [sectorMassAt, sectorIntegralAt, ratePrefixProduct,
+    cubeExpWeight, residualAt, chainRates, hset]
 
 /-- Iterated flipping commutes with changing the prescribed initial state by one
 flip. -/
