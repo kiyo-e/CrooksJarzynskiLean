@@ -101,7 +101,9 @@ theorem generator_row_sum (G : FiniteJumpGenerator Ω) (x : Ω) :
     apply Finset.sum_congr rfl
     intro y hy
     exact G.generator_apply_of_ne (Finset.ne_of_mem_erase hy)
-  rw [hoff, Finset.sum_erase Finset.univ (G.jumpRate_self x)]
+  have hself : (G.jumpRate x x : ℝ) = 0 := by
+    simp
+  rw [hoff, Finset.sum_erase Finset.univ hself]
   simp [escapeRate]
 
 /-- The matrix derived from nonnegative jump rates is conservative. -/
@@ -135,16 +137,6 @@ noncomputable def stateSequenceCountingReference
     Measure (Fin (n + 1) → Ω) :=
   Measure.count
 
-variable [MeasurableSingletonClass Ω]
-
-/-- Every individual finite state sequence has unit counting mass. -/
-@[simp]
-theorem stateSequenceCountingReference_singleton
-    (G : FiniteJumpGenerator Ω) (n : ℕ)
-    (states : Fin (n + 1) → Ω) :
-    G.stateSequenceCountingReference n {states} = 1 := by
-  exact Measure.count_singleton states
-
 /-- The canonical fixed-horizon counting reference for finite-state jump paths.
 
 The holding times use the simplex probability, while the state sequence uses
@@ -171,6 +163,16 @@ theorem countingReference_ae_horizon
       γ ∈ JumpPath.horizonSet (Ω := Ω) (n := n) T := by
   exact Simplex.pathProbability_ae_horizon T
     (G.stateSequenceCountingReference n)
+
+variable [MeasurableSingletonClass Ω]
+
+/-- Every individual finite state sequence has unit counting mass. -/
+@[simp]
+theorem stateSequenceCountingReference_singleton
+    (G : FiniteJumpGenerator Ω) (n : ℕ)
+    (states : Fin (n + 1) → Ω) :
+    G.stateSequenceCountingReference n {states} = 1 := by
+  exact Measure.count_singleton states
 
 namespace ThreeStateBranching
 
