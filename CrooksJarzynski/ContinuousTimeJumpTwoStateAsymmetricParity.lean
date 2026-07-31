@@ -127,23 +127,8 @@ private theorem renewalRemainder_step
   rw [lintegral_add_left hmeasNoJump, mul_add]
   congr 1
   · by_cases hxy : iterateFlip N x = y
-    · rw [if_pos hxy]
-      unfold sectorMassAt
-      rfl
-    · rw [if_neg hxy]
-      have hzero :
-          (fun u : Fin N → I =>
-            cubeExpWeight (chainRates x N) T u *
-              (if iterateFlip N x = y then
-                ENNReal.ofReal
-                  (Real.exp
-                    (-((stateRate (iterateFlip N x) : ℝ) * (T : ℝ) *
-                      residualAt ρ u)))
-              else 0)) = fun _ => 0 := by
-        funext u
-        simp [hxy]
-      rw [hzero]
-      simp
+    · simp [hxy, sectorMassAt]
+    · simp [hxy]
   · have hprefix :
         ratePrefixProduct (chainRates x (N + 1)) T =
           ratePrefixProduct (chainRates x N) T *
@@ -163,15 +148,27 @@ private theorem renewalRemainder_step
       (fun s => transitionCandidate T (iterateFlip (N + 1) x) y s)
       (measurable_transitionCandidate T _ _)]
     simp only [chainRates_castSucc, chainRates_last]
-    conv_rhs =>
-      rw [← lintegral_const_mul' _ _ (by finiteness)]
-    apply setLIntegral_congr_fun (measurableSet_freeSimplexSetAt N ρ)
-    intro u hu
-    ring
+    calc
+      _ = ∫⁻ u in freeSimplexSetAt N ρ,
+          (stateRate (iterateFlip N x) : ℝ≥0∞) *
+            ((T : ℝ≥0∞) *
+              (cubeExpWeight (chainRates x N) T u *
+                ∫⁻ a : I in {a : I | (a : ℝ) ≤ residualAt ρ u},
+                  ENNReal.ofReal
+                      (Real.exp
+                        (-((stateRate (iterateFlip N x) : ℝ) *
+                          (T : ℝ) * (a : ℝ)))) *
+                    transitionCandidate T (iterateFlip (N + 1) x) y
+                      (residualAt ρ u - (a : ℝ)))) := by
+            apply setLIntegral_congr_fun (measurableSet_freeSimplexSetAt N ρ)
+            intro u hu
+            ac_rfl
+      _ = _ := by
+            rw [lintegral_const_mul' _ _ (by finiteness)]
 
 private theorem renewalRemainder_le_arrivalMass
     (T : NNReal) (x y : State) (N : ℕ) (ρ : ℝ)
-    (hρ0 : 0 ≤ ρ) (hρ1 : ρ ≤ 1) :
+    (_hρ0 : 0 ≤ ρ) (hρ1 : ρ ≤ 1) :
     renewalRemainder T x y N ρ ≤ arrivalMass T x N := by
   unfold renewalRemainder arrivalMass arrivalIntegral
   apply mul_le_mul_right
