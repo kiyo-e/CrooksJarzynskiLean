@@ -19,7 +19,9 @@ import CrooksJarzynski.MeasureProtocolGaussianExample
 import CrooksJarzynski.MeasureProtocolMetropolisExample
 import CrooksJarzynski.ContinuousTimeJumpRateFull
 import CrooksJarzynski.ContinuousTimeJumpSimplexReversal
+import CrooksJarzynski.ContinuousTimeJumpFiniteGenerator
 import CrooksJarzynski.ContinuousTimeJumpTwoStateNormalization
+import CrooksJarzynski.ContinuousTimeJumpTwoStateFiniteGenerator
 import CrooksJarzynski.ContinuousTimeJumpTwoStateAsymmetric
 import CrooksJarzynski.ContinuousTimeJumpTwoStateAsymmetricNormalization
 import CrooksJarzynski.ContinuousTimeJumpTwoStateAsymmetricJarzynski
@@ -60,7 +62,10 @@ nonzero fixed-horizon simplex reference instead of restricting an ambient
 Lebesgue law to a null slice, instantiates exponential survival and jump
 factors, derives the path-density identity from endpoint reweighting,
 waiting-time cancellation, and local jump balance, and proves fixed-sector,
-full-path, and fixed-horizon Crooks and Jarzynski statements.
+full-path, and fixed-horizon Crooks and Jarzynski statements. A general
+`FiniteJumpGenerator` packages nonnegative finite-state jump rates, derives a
+conservative real generator, and supplies a fixed-horizon counting reference;
+a three-state Y-shaped chain demonstrates genuine branching.
 
 A normalized unit-rate two-state CTMC identifies every jump-count sector with
 its Poisson probability and proves non-explosion by constructing a probability
@@ -68,7 +73,8 @@ law on the disjoint union of all finite-jump sectors. Its normalized
 fixed-initial path laws record their prescribed initial state, and the
 pushforward of their actual terminal coordinate is packaged as a Mathlib Markov
 kernel. The kernel entries are the rows of `exp (TQ)` for the conservative
-generator and satisfy Chapman--Kolmogorov.
+generator and satisfy Chapman--Kolmogorov. Its concrete matrix is also proved
+to be the generator derived from the general `FiniteJumpGenerator` structure.
 
 A separate asymmetric reversible two-state chain is followed by a final energy
 quench. Its state-dependent holding-time simplex integrals normalize both the
@@ -120,6 +126,10 @@ canonical-ensemble API. The main results include `Protocol.crooks`,
 `MeasureProtocol.ContinuousTimeJump.Simplex.map_reference_reverse`,
 `MeasureProtocol.ContinuousTimeJump.Simplex.volume_freeSimplexSet`,
 `MeasureProtocol.ContinuousTimeJump.Simplex.lintegral_freeSimplex_reverseFree`,
+`MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.generator_row_sum`,
+`MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.map_countingReference_reverse`,
+`MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.ThreeStateBranching.has_two_distinct_successors`,
+`MeasureProtocol.ContinuousTimeJump.TwoState.finiteGenerator_generator_eq`,
 `MeasureProtocol.ContinuousTimeJump.TwoState.pathLawFrom_terminalState_eq_exp_generator`,
 `MeasureProtocol.ContinuousTimeJump.TwoState.transitionKernel_real_singleton_eq_exp_generator`,
 `MeasureProtocol.ContinuousTimeJump.TwoState.transitionKernel_chapman_kolmogorov`,
