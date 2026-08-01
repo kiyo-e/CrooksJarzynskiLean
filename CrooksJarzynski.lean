@@ -89,7 +89,11 @@ the renewal equation itself rather than being assumed. Since scaling every jump
 rate scales the generator, the fraction form is the real-time form of a
 rescaled chain, which feeds the uniqueness hook directly and identifies the
 terminal marginal of the general fixed-initial path law with the rows of
-`exp (TQ)`.
+`exp (TQ)`. The terminal marginals are packaged as a Mathlib Markov kernel and
+shown to satisfy Chapman--Kolmogorov and the semigroup law under kernel
+composition, and the identification is specialized to the branching three-state
+Y chain, which no parity argument reaches, and to the normalized two-state
+chain.
 
 A normalized unit-rate two-state CTMC identifies every jump-count sector with
 its Poisson probability and proves non-explosion by constructing a probability
@@ -155,6 +159,10 @@ canonical-ensemble API. The main results include `Protocol.crooks`,
 `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.transitionMassAt_renewal`,
 `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.eq_exp_smul_apply_of_renewal_fraction`,
 `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.pathLawFrom_terminalState_eq_exp_generator`,
+`MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.transitionKernel_chapman_kolmogorov`,
+`MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.transitionKernel_add`,
+`MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.ThreeStateBranching.pathLawFrom_terminalState_eq_exp_generator`,
+`MeasureProtocol.ContinuousTimeJump.TwoState.finiteGenerator_pathLawFrom_terminalState_eq_exp_generator`,
 `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.ThreeStateBranching.has_two_distinct_successors`,
 `MeasureProtocol.ContinuousTimeJump.TwoState.finiteGenerator_generator_eq`,
 `MeasureProtocol.ContinuousTimeJump.TwoState.pathLawFrom_terminalState_eq_exp_generator`,
