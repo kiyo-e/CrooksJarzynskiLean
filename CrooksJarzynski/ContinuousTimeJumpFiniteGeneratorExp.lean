@@ -184,6 +184,80 @@ theorem hasDerivAt_expScaled
   rw [hval]
   exact hmul
 
+/-- At time zero the exponential curve is the identity matrix. -/
+theorem exp_zero_smul_apply (Q : Matrix Ω Ω ℝ) (x y : Ω) :
+    NormedSpace.exp ((0 : ℝ) • Q) x y = if x = y then 1 else 0 := by
+  rw [zero_smul, NormedSpace.exp_zero]
+  simp [Matrix.one_apply]
+
+theorem continuousOn_expScaled_jumpFlow
+    (G : FiniteJumpGenerator Ω) (x y : Ω) (T : ℝ) :
+    ContinuousOn
+      (fun s : ℝ => Real.exp ((G.escapeRate x : ℝ) * s) * G.jumpFlow x y s)
+      (Set.uIcc (0 : ℝ) T) := by
+  have hlin : Continuous fun s : ℝ => (G.escapeRate x : ℝ) * s :=
+    continuous_const.mul continuous_id
+  exact ((Real.continuous_exp.comp hlin).mul
+    (G.continuous_jumpFlow x y)).continuousOn
+
+/-- Integrating the exact derivative supplied by the integrating factor. -/
+theorem integral_expScaled_jumpFlow
+    (G : FiniteJumpGenerator Ω) (x y : Ω) (T : ℝ) :
+    (∫ s in (0 : ℝ)..T,
+        Real.exp ((G.escapeRate x : ℝ) * s) * G.jumpFlow x y s) =
+      Real.exp ((G.escapeRate x : ℝ) * T) *
+          NormedSpace.exp (T • G.generator) x y -
+        (if x = y then (1 : ℝ) else 0) := by
+  rw [intervalIntegral.integral_eq_sub_of_hasDerivAt
+    (fun s _ => G.hasDerivAt_expScaled x y s)
+    (G.continuousOn_expScaled_jumpFlow x y T).intervalIntegrable]
+  rw [mul_zero, Real.exp_zero, one_mul, exp_zero_smul_apply]
+
+/-- **Entrywise renewal equation for the matrix exponential.**  Conditioning on
+the first jump: either no jump occurs during `[0, T]`, which happens with the
+survival weight `e^{-λ(x) T}` and keeps the state at `x`, or the first jump
+leaves `x` at time `s` and the remaining time `T - s` is again covered by the
+exponential.
+
+The right-hand side is exactly the first-jump decomposition of the jump
+process, so this is the real-valued form that the `ℝ≥0∞` path-law side has to
+be matched against. -/
+theorem exp_smul_apply_renewal
+    (G : FiniteJumpGenerator Ω) (x y : Ω) (T : ℝ) :
+    NormedSpace.exp (T • G.generator) x y =
+      (if x = y then Real.exp (-(G.escapeRate x : ℝ) * T) else 0) +
+        ∫ s in (0 : ℝ)..T,
+          Real.exp (-(G.escapeRate x : ℝ) * s) * G.jumpFlow x y (T - s) := by
+  have hchange :
+      (∫ s in (0 : ℝ)..T,
+          Real.exp (-(G.escapeRate x : ℝ) * s) * G.jumpFlow x y (T - s)) =
+        ∫ s in (0 : ℝ)..T,
+          Real.exp (-(G.escapeRate x : ℝ) * (T - s)) * G.jumpFlow x y s := by
+    have h := intervalIntegral.integral_comp_sub_left (a := (0 : ℝ)) (b := T)
+      (fun u : ℝ =>
+        Real.exp (-(G.escapeRate x : ℝ) * (T - u)) * G.jumpFlow x y u) T
+    simpa using h
+  have hsplit :
+      (∫ s in (0 : ℝ)..T,
+          Real.exp (-(G.escapeRate x : ℝ) * (T - s)) * G.jumpFlow x y s) =
+        Real.exp (-(G.escapeRate x : ℝ) * T) *
+          ∫ s in (0 : ℝ)..T,
+            Real.exp ((G.escapeRate x : ℝ) * s) * G.jumpFlow x y s := by
+    rw [← intervalIntegral.integral_const_mul]
+    refine intervalIntegral.integral_congr fun s _ => ?_
+    have hexp : -(G.escapeRate x : ℝ) * (T - s) =
+        -(G.escapeRate x : ℝ) * T + (G.escapeRate x : ℝ) * s := by ring
+    rw [hexp, Real.exp_add, mul_assoc]
+  have hinv : Real.exp (-(G.escapeRate x : ℝ) * T) *
+      Real.exp ((G.escapeRate x : ℝ) * T) = 1 := by
+    rw [← Real.exp_add]
+    simp
+  rw [hchange, hsplit, integral_expScaled_jumpFlow, mul_sub, ← mul_assoc, hinv,
+    one_mul]
+  by_cases hxy : x = y
+  · simp [hxy]
+  · simp [hxy]
+
 end MatrixNorm
 
 end FiniteJumpGenerator
