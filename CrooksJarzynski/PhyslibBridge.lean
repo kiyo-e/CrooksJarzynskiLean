@@ -105,6 +105,7 @@ def physlibEnsembleAt (P : Protocol Ω n) (t : ℕ) : CanonicalEnsemble Ω :=
 def physlibTemperature (P : Protocol Ω n) : Temperature :=
   PhyslibBridge.temperatureOfBeta P.β P.β_pos.le
 
+omit [Nonempty Ω] [MeasurableSpace Ω] [MeasurableSingletonClass Ω] in
 @[simp]
 theorem physlibTemperature_beta (P : Protocol Ω n) :
     ((P.physlibTemperature).β : ℝ) = P.β := by

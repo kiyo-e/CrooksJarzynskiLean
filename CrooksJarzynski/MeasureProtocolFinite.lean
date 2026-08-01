@@ -189,8 +189,7 @@ theorem measurable_reversedWorkWeight
     Measurable (reversedWorkWeight q) := by
   induction n with
   | zero =>
-      simpa [reversedWorkWeight] using
-        (measurable_const : Measurable (fun _ : Trajectory Ω 0 => (1 : ℝ≥0∞)))
+      simp [reversedWorkWeight]
   | succ n ih =>
       change Measurable (fun γ : Ω × Trajectory Ω n =>
         reversedWorkWeight (fun i => q i.castSucc) γ.2 *

@@ -34,6 +34,7 @@ noncomputable def reverseRateDensity
     (jumpRate : Fin n → Ω → Ω → NNReal) : JumpPath Ω n → ℝ≥0∞ :=
   alignedReverseRateDensity finalWeight escapeRate jumpRate ∘ reverse
 
+omit [MeasurableSpace Ω] in
 /-- Pulling the reverse-rate likelihood back by reversal recovers its aligned
 forward-coordinate form. -/
 @[simp]

@@ -34,6 +34,7 @@ variable [MeasurableSpace Ω] [MeasurableSingletonClass Ω]
 noncomputable def toMeasure (μ : FiniteDistribution Ω) : Measure Ω :=
   ∑ x : Ω, ENNReal.ofReal (μ x) • Measure.dirac x
 
+omit [MeasurableSingletonClass Ω] in
 /-- Evaluation of the associated measure on a measurable set. -/
 theorem toMeasure_apply (μ : FiniteDistribution Ω) {s : Set Ω}
     (hs : MeasurableSet s) :
@@ -41,6 +42,7 @@ theorem toMeasure_apply (μ : FiniteDistribution Ω) {s : Set Ω}
       ∑ x : Ω, ENNReal.ofReal (μ x) * s.indicator 1 x := by
   simp [toMeasure, hs, Measure.dirac_apply']
 
+omit [MeasurableSingletonClass Ω] in
 @[simp]
 theorem toMeasure_univ (μ : FiniteDistribution Ω) :
     μ.toMeasure Set.univ = 1 := by

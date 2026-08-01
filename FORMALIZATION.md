@@ -212,8 +212,12 @@ reversed paths is itself a theorem.
 
 - The discrete-time theorem permits arbitrary measurable state spaces and has a
   finite horizon.
-- The generic continuous-time theorem covers finite-jump paths, their countable
-  sector sum, segmentwise constant rates, and a measurable fixed horizon.
+- The generic continuous-time theorem covers segment-indexed factorized
+  finite-jump laws: finite-jump paths, their countable sector sum,
+  piecewise-constant rate factors on jump sectors, and a measurable fixed
+  horizon. The escape and jump rates carry a `Fin` sector index and the
+  survival factor of a segment is `exp (-λᵢ(x) τᵢ)` in that segment's own
+  holding time; no construction here depends on absolute calendar time.
 - A nonzero reversal-invariant fixed-horizon simplex reference is constructed,
   rather than assumed.
 - A normalized, non-explosive path law is constructed for the symmetric
@@ -229,7 +233,12 @@ reversed paths is itself a theorem.
 - General calendar-time-dependent integrated escape rates and Langevin/SDE path
   laws are not formalized.
 - Reverse discrete-time kernels and local balance are supplied; reverse-kernel
-  existence by disintegration is not formalized.
+  existence by disintegration is not formalized. In `multiStep_crooks`,
+  `multiStep_crooks_chronological` and `multiStep_crooks_physical` the reverse
+  kernel is an input of the theorem, constrained only by the local-balance
+  hypothesis. A forward kernel that is reversible for the corresponding
+  equilibrium measure satisfies that hypothesis with itself as the reverse
+  kernel.
 
 `CrooksJarzynski/AxiomAudit.lean` lists the declarations whose kernel axioms are
 checked in CI.

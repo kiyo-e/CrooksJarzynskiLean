@@ -38,6 +38,7 @@ theorem measurable_acceptance (β : ℝ) {E : X → ℝ} (hE : Measurable E) :
   unfold acceptance
   fun_prop
 
+omit [MeasurableSpace X] in
 /-- The Metropolis acceptance probability is at most one. -/
 theorem acceptance_le_one (β : ℝ) (E : X → ℝ) (x y : X) :
     acceptance β E x y ≤ 1 := by
@@ -117,6 +118,7 @@ theorem measurable_gibbsDensity
   unfold gibbsDensity
   fun_prop
 
+omit [MeasurableSpace X] in
 /-- Multiplying a Boltzmann weight by the Metropolis acceptance probability
 gives the smaller of the two endpoint Boltzmann weights. -/
 theorem boltzmann_mul_acceptance
@@ -161,7 +163,7 @@ theorem measurable_acceptedWeight
 theorem acceptedWeight_swap
     (base : Measure X) [NeZero base] (β : ℝ)
     {E : X → ℝ}
-    (hEInt : Integrable (fun x => Real.exp (-β * E x)) base) :
+    (_hEInt : Integrable (fun x => Real.exp (-β * E x)) base) :
     acceptedWeight base β E ∘ Prod.swap =
       acceptedWeight base β E := by
   have hZinv : (0 : ℝ) ≤ (∫ z, Real.exp (-β * E z) ∂base)⁻¹ :=
@@ -234,8 +236,8 @@ endpoints. -/
 theorem rejection_detailedBalance
     (base : Measure X) [SFinite base] [NeZero base]
     (Q : ProbabilityTheory.Kernel X X) [IsMarkovKernel Q]
-    (β : ℝ) (E : X → ℝ) (hE : Measurable E)
-    (hEInt : Integrable (fun x => Real.exp (-β * E x)) base) :
+    (β : ℝ) (E : X → ℝ) (_hE : Measurable E)
+    (_hEInt : Integrable (fun x => Real.exp (-β * E x)) base) :
     Gibbs.measure base β E ⊗ₘ rejectionKernel Q β E =
       (Gibbs.measure base β E ⊗ₘ rejectionKernel Q β E).map Prod.swap := by
   letI : IsFiniteKernel (acceptedKernel Q β E) :=

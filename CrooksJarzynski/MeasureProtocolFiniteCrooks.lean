@@ -105,7 +105,15 @@ theorem extendReversedPrefix_crooks
 /-- Finite-horizon Crooks relation on an arbitrary measurable state space.
 The forward and reverse path measures are represented in reverse chronological
 order. Each step follows from equilibrium reweighting and a measure-level local
-detailed-balance identity. -/
+detailed-balance identity.
+
+The reverse kernel is an input of this theorem, not an output. `reverse` is
+supplied by the caller and is tied to `forward` only through `hbalance`;
+constructing a reverse kernel by disintegrating the forward joint law is
+outside the scope of this development. When `forward i` is reversible for
+`equilibrium i.succ`, the hypothesis `hbalance` holds with
+`reverse i := forward i`, so a reversible forward kernel serves as its own
+reverse kernel. -/
 theorem multiStep_crooks
     {n : ℕ}
     (equilibrium : Fin (n + 1) → Measure Ω)

@@ -166,7 +166,7 @@ theorem sum_reverseTransitionWeight {Ω : Type u} [Fintype Ω]
   induction n with
   | zero =>
       change (∑ x : Ω, ∑ _ : PUnit, ν x * (1 : ℝ)) = 1
-      simpa using ν.sum_prob
+      simp [ν.sum_prob]
   | succ n ih =>
       change
         (∑ x : Ω, ∑ c : Ω × Continuation Ω n,

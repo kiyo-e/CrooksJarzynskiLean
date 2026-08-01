@@ -65,6 +65,7 @@ noncomputable def reverseExperimentDensity
     JumpPath Ω n → ℝ≥0∞ :=
   alignedReverseDensity finalWeight reverseHolding reverseJump ∘ reverse
 
+omit [MeasurableSpace Ω] in
 /-- Pulling the reverse-experiment density back by reversal recovers the
 forward-oriented reverse density. -/
 @[simp]
@@ -77,6 +78,7 @@ theorem reverseExperimentDensity_reverse
       alignedReverseDensity finalWeight reverseHolding reverseJump γ := by
   simp [reverseExperimentDensity]
 
+omit [MeasurableSpace Ω] in
 /-- Local endpoint, holding, and jump identities multiply into the complete
 path-density identity.  This is the division-free local-detailed-balance step. -/
 theorem density_mul_factorizedWorkWeight
@@ -240,6 +242,7 @@ noncomputable def rateWorkWeight
     (jumpWork : Fin n → Ω → Ω → ℝ≥0∞) : JumpPath Ω n → ℝ≥0∞ :=
   factorizedWorkWeight boundaryWork (fun _ _ _ => 1) jumpWork
 
+omit [MeasurableSpace Ω] in
 /-- Equal forward and time-reversal-aligned escape rates cancel all survival
 factors.  Boundary reweighting and local jump balance then imply the complete
 rate-density identity. -/
