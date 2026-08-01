@@ -450,6 +450,228 @@ theorem sectorMassFrom_add_arrivalMassFrom_succ
   refine Finset.sum_congr rfl fun init _ => ?_
   rw [← mul_add, G.sequenceMass_add_sum_sequenceArrivalMass_snoc T init]
 
+/-! ### The vanishing tail
+
+The number of state sequences grows like `|Ω| ^ n`, so a per-sequence bound is
+useless.  The branching sum has to be folded at every step first, which is
+exactly what turns the jump-rate products into powers of a single rate bound. -/
+
+/-- A uniform bound on the escape rates.  The total rate out of all states is
+crude but costs nothing on a finite state space. -/
+noncomputable def rateBound (G : FiniteJumpGenerator Ω) : NNReal :=
+  ∑ x, G.escapeRate x
+
+omit [DecidableEq Ω] [MeasurableSpace Ω] [MeasurableSingletonClass Ω] in
+theorem escapeRate_le_rateBound (G : FiniteJumpGenerator Ω) (x : Ω) :
+    G.escapeRate x ≤ G.rateBound :=
+  Finset.single_le_sum (f := G.escapeRate) (fun _ _ => zero_le) (Finset.mem_univ x)
+
+/-- Total jump-rate weight of the sequences of `n` jumps out of `x`. -/
+noncomputable def jumpMassFrom
+    (G : FiniteJumpGenerator Ω) (x : Ω) (n : ℕ) : ℝ≥0∞ :=
+  ∑ states : Fin (n + 1) → Ω,
+    fixedInitialWeight x (states 0) * G.jumpProduct states
+
+omit [MeasurableSpace Ω] [MeasurableSingletonClass Ω] in
+@[simp]
+theorem jumpMassFrom_zero (G : FiniteJumpGenerator Ω) (x : Ω) :
+    G.jumpMassFrom x 0 = 1 := by
+  unfold jumpMassFrom
+  rw [← Fintype.sum_equiv (Equiv.funUnique (Fin 1) Ω).symm
+    (fun y : Ω => fixedInitialWeight x y * G.jumpProduct (fun _ : Fin 1 => y))
+    _ (fun y => rfl)]
+  simp [fixedInitialWeight, jumpProduct]
+
+omit [MeasurableSpace Ω] [MeasurableSingletonClass Ω] in
+/-- Folding the branching sum turns one more jump into one more factor of the
+escape rate, hence at most one more factor of the rate bound. -/
+theorem jumpMassFrom_succ_le
+    (G : FiniteJumpGenerator Ω) (x : Ω) (n : ℕ) :
+    G.jumpMassFrom x (n + 1) ≤ (G.rateBound : ℝ≥0∞) * G.jumpMassFrom x n := by
+  have hreindex :
+      G.jumpMassFrom x (n + 1) =
+        ∑ init : Fin (n + 1) → Ω,
+          fixedInitialWeight x (init 0) *
+            (G.jumpProduct init *
+              (G.escapeRate (init (Fin.last n)) : ℝ≥0∞)) := by
+    unfold jumpMassFrom
+    rw [← Fintype.sum_equiv (snocEquiv Ω n)
+      (fun p : (Fin (n + 1) → Ω) × Ω =>
+        fixedInitialWeight x ((Fin.snoc p.1 p.2 : Fin (n + 2) → Ω) 0) *
+          G.jumpProduct (Fin.snoc p.1 p.2))
+      _ (fun p => rfl)]
+    rw [Fintype.sum_prod_type]
+    refine Finset.sum_congr rfl fun init _ => ?_
+    simp only [snoc_zero, ← Finset.mul_sum, G.sum_jumpProduct_snoc init]
+  rw [hreindex]
+  unfold jumpMassFrom
+  rw [Finset.mul_sum]
+  refine Finset.sum_le_sum fun init _ => ?_
+  rw [show (G.rateBound : ℝ≥0∞) *
+      (fixedInitialWeight x (init 0) * G.jumpProduct init) =
+    fixedInitialWeight x (init 0) *
+      (G.jumpProduct init * (G.rateBound : ℝ≥0∞)) from by ring]
+  gcongr
+  exact G.escapeRate_le_rateBound _
+
+omit [MeasurableSpace Ω] [MeasurableSingletonClass Ω] in
+theorem jumpMassFrom_le_pow
+    (G : FiniteJumpGenerator Ω) (x : Ω) (n : ℕ) :
+    G.jumpMassFrom x n ≤ (G.rateBound : ℝ≥0∞) ^ n := by
+  induction n with
+  | zero => simp
+  | succ n ih =>
+      calc
+        G.jumpMassFrom x (n + 1)
+            ≤ (G.rateBound : ℝ≥0∞) * G.jumpMassFrom x n :=
+              G.jumpMassFrom_succ_le x n
+        _ ≤ (G.rateBound : ℝ≥0∞) * (G.rateBound : ℝ≥0∞) ^ n := by gcongr
+        _ = (G.rateBound : ℝ≥0∞) ^ (n + 1) := by ring
+
+theorem cubeExpWeight_le_one
+    {n : ℕ} (r : Fin n → NNReal) (T : NNReal) (u : Fin n → I) :
+    cubeExpWeight r T u ≤ 1 := by
+  unfold cubeExpWeight
+  refine Finset.prod_le_one (fun _ _ => zero_le) fun i _ => ?_
+  rw [← ENNReal.ofReal_one]
+  refine ENNReal.ofReal_le_ofReal (Real.exp_le_one_iff.2 (neg_nonpos.mpr ?_))
+  have h0 : (0 : ℝ) ≤ (u i : ℝ) := (u i).2.1
+  positivity
+
+theorem arrivalOn_le {n : ℕ} (r : Fin n → NNReal) (T : NNReal) :
+    arrivalOn r T ≤ ENNReal.ofReal (1 / (n.factorial : ℝ)) := by
+  unfold arrivalOn
+  calc
+    (∫⁻ u in Simplex.freeSimplexSet n, cubeExpWeight r T u)
+        ≤ ∫⁻ _ in Simplex.freeSimplexSet n, 1 :=
+          lintegral_mono fun u => cubeExpWeight_le_one r T u
+    _ = (volume : Measure (Fin n → I)) (Simplex.freeSimplexSet n) := by
+          simp
+    _ = ENNReal.ofReal (1 / (n.factorial : ℝ)) :=
+          Simplex.volume_freeSimplexSet n
+
+omit [MeasurableSpace Ω] [MeasurableSingletonClass Ω] in
+/-- The arrival masses obey the Poisson-type tail of a chain whose every escape
+rate is capped by `rateBound`. -/
+theorem arrivalMassFrom_le
+    (G : FiniteJumpGenerator Ω) (T : NNReal) (x : Ω) (n : ℕ) :
+    G.arrivalMassFrom T x n ≤
+      ((G.rateBound : ℝ≥0∞) * (T : ℝ≥0∞)) ^ n *
+        ENNReal.ofReal (1 / (n.factorial : ℝ)) := by
+  have hstep : ∀ states : Fin (n + 1) → Ω,
+      fixedInitialWeight x (states 0) * G.sequenceArrivalMass T states ≤
+        (fixedInitialWeight x (states 0) * G.jumpProduct states) *
+          ((T : ℝ≥0∞) ^ n * ENNReal.ofReal (1 / (n.factorial : ℝ))) := by
+    intro states
+    unfold sequenceArrivalMass
+    calc
+      fixedInitialWeight x (states 0) *
+            ((T : ℝ≥0∞) ^ n * G.jumpProduct states *
+              arrivalOn (G.stateEscapeRates states) T)
+          ≤ fixedInitialWeight x (states 0) *
+              ((T : ℝ≥0∞) ^ n * G.jumpProduct states *
+                ENNReal.ofReal (1 / (n.factorial : ℝ))) := by
+            gcongr
+            exact arrivalOn_le _ _
+      _ = (fixedInitialWeight x (states 0) * G.jumpProduct states) *
+            ((T : ℝ≥0∞) ^ n * ENNReal.ofReal (1 / (n.factorial : ℝ))) := by
+            ring
+  calc
+    G.arrivalMassFrom T x n
+        ≤ ∑ states : Fin (n + 1) → Ω,
+            (fixedInitialWeight x (states 0) * G.jumpProduct states) *
+              ((T : ℝ≥0∞) ^ n * ENNReal.ofReal (1 / (n.factorial : ℝ))) :=
+          Finset.sum_le_sum fun states _ => hstep states
+    _ = G.jumpMassFrom x n *
+          ((T : ℝ≥0∞) ^ n * ENNReal.ofReal (1 / (n.factorial : ℝ))) := by
+          rw [← Finset.sum_mul]
+          rfl
+    _ ≤ (G.rateBound : ℝ≥0∞) ^ n *
+          ((T : ℝ≥0∞) ^ n * ENNReal.ofReal (1 / (n.factorial : ℝ))) := by
+          gcongr
+          exact G.jumpMassFrom_le_pow x n
+    _ = ((G.rateBound : ℝ≥0∞) * (T : ℝ≥0∞)) ^ n *
+          ENNReal.ofReal (1 / (n.factorial : ℝ)) := by
+          rw [mul_pow]
+          ring
+
+omit [MeasurableSpace Ω] [MeasurableSingletonClass Ω] in
+/-- Non-explosion: almost every path jumps only finitely often, so the arrival
+masses vanish. -/
+theorem tendsto_arrivalMassFrom
+    (G : FiniteJumpGenerator Ω) (T : NNReal) (x : Ω) :
+    Filter.Tendsto (fun n => G.arrivalMassFrom T x n) Filter.atTop
+      (nhds 0) := by
+  apply tendsto_of_tendsto_of_tendsto_of_le_of_le
+    (g := fun _ : ℕ => (0 : ℝ≥0∞))
+    (h := fun n : ℕ =>
+      ((G.rateBound : ℝ≥0∞) * (T : ℝ≥0∞)) ^ n *
+        ENNReal.ofReal (1 / (n.factorial : ℝ)))
+    tendsto_const_nhds
+    (TwoState.AsymmetricExample.tendsto_pow_mul_factorial_inv T G.rateBound)
+    (fun n => bot_le)
+    (fun n => G.arrivalMassFrom_le T x n)
+
+omit [MeasurableSpace Ω] [MeasurableSingletonClass Ω] in
+@[simp]
+theorem arrivalMassFrom_zero (G : FiniteJumpGenerator Ω) (T : NNReal) (x : Ω) :
+    G.arrivalMassFrom T x 0 = 1 := by
+  have harrivalOne : ∀ s : Fin 1 → Ω,
+      arrivalOn (G.stateEscapeRates s) T = 1 := by
+    intro s
+    unfold arrivalOn cubeExpWeight
+    simp [Simplex.volume_freeSimplexSet]
+  unfold arrivalMassFrom sequenceArrivalMass
+  rw [← Fintype.sum_equiv (Equiv.funUnique (Fin 1) Ω).symm
+    (fun y : Ω =>
+      fixedInitialWeight x y *
+        ((T : ℝ≥0∞) ^ 0 * G.jumpProduct (fun _ : Fin 1 => y) *
+          arrivalOn (G.stateEscapeRates (fun _ : Fin 1 => y)) T))
+    _ (fun y => rfl)]
+  simp [harrivalOne, jumpProduct, fixedInitialWeight]
+
+omit [MeasurableSpace Ω] [MeasurableSingletonClass Ω] in
+/-- Partial sums of the sector masses telescope against the arrival mass. -/
+theorem sum_sectorMassFrom_add_arrivalMassFrom
+    (G : FiniteJumpGenerator Ω) (T : NNReal) (x : Ω) (N : ℕ) :
+    (∑ n ∈ Finset.range N, G.sectorMassFrom T x n) +
+        G.arrivalMassFrom T x N = 1 := by
+  induction N with
+  | zero => simp
+  | succ N ih =>
+      rw [Finset.sum_range_succ, add_assoc,
+        G.sectorMassFrom_add_arrivalMassFrom_succ T x N]
+      exact ih
+
+omit [MeasurableSpace Ω] [MeasurableSingletonClass Ω] in
+/-- **Normalization for a general finite-state jump generator.**  The sector
+masses of the fixed-initial path law sum to one, so the chain does not explode
+within the horizon. -/
+theorem tsum_sectorMassFrom
+    (G : FiniteJumpGenerator Ω) (T : NNReal) (x : Ω) :
+    ∑' n, G.sectorMassFrom T x n = 1 := by
+  have hpartial :
+      Filter.Tendsto (fun N => ∑ n ∈ Finset.range N, G.sectorMassFrom T x n)
+        Filter.atTop (nhds (∑' n, G.sectorMassFrom T x n)) :=
+    ENNReal.tendsto_nat_tsum _
+  have hsum :
+      Filter.Tendsto
+        (fun N =>
+          (∑ n ∈ Finset.range N, G.sectorMassFrom T x n) +
+            G.arrivalMassFrom T x N)
+        Filter.atTop (nhds ((∑' n, G.sectorMassFrom T x n) + 0)) :=
+    hpartial.add (G.tendsto_arrivalMassFrom T x)
+  rw [add_zero] at hsum
+  have hone :
+      Filter.Tendsto
+        (fun N =>
+          (∑ n ∈ Finset.range N, G.sectorMassFrom T x n) +
+            G.arrivalMassFrom T x N)
+        Filter.atTop (nhds 1) := by
+    simp only [G.sum_sectorMassFrom_add_arrivalMassFrom T x]
+    exact tendsto_const_nhds
+  exact tendsto_nhds_unique hsum hone
+
 end FiniteJumpGenerator
 end ContinuousTimeJump
 end MeasureProtocol

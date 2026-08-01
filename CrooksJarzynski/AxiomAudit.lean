@@ -162,3 +162,6 @@ the trusted base of the development.
 #print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.TwoState.transitionKernel_zero
 #print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.TwoState.transitionKernel_add
 #print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.simplexSectorMass_eq
+#print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.sectorMassFrom_add_arrivalMassFrom_succ
+#print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.tendsto_arrivalMassFrom
+#print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.tsum_sectorMassFrom
