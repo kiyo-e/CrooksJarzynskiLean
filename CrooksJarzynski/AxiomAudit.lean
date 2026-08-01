@@ -166,3 +166,4 @@ the trusted base of the development.
 #print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.tendsto_arrivalMassFrom
 #print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.tsum_sectorMassFrom
 #print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.sum_transitionMass
+#print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.exp_smul_apply_eq_add_integral
