@@ -504,6 +504,40 @@ theorem exp_smul_apply_renewal
   · simp [hxy]
   · simp [hxy]
 
+/-- **Renewal equation in a residual fraction at fixed horizon scale.**
+Rescaling the integration variable by `T` turns the first-jump decomposition
+into a statement about the fraction `ρ` of the horizon still available, with the
+scale `T` held fixed throughout.
+
+This is the form the jump-process side produces: the simplex chart is normalized
+to the full horizon `T`, so peeling one holding coordinate shortens the
+*fraction* and never changes the scale.  Matching in this form is what avoids
+needing a rescaling of the chart. -/
+theorem exp_smul_apply_renewal_fraction
+    (G : FiniteJumpGenerator Ω) (T : ℝ) (x y : Ω) (ρ : ℝ) :
+    NormedSpace.exp ((T * ρ) • G.generator) x y =
+      (if x = y then Real.exp (-(G.escapeRate x : ℝ) * (T * ρ)) else 0) +
+        T * ∫ v in (0 : ℝ)..ρ,
+          Real.exp (-(G.escapeRate x : ℝ) * (T * v)) *
+            ∑ z, (G.jumpRate x z : ℝ) *
+              NormedSpace.exp ((T * (ρ - v)) • G.generator) z y := by
+  have hscale := intervalIntegral.smul_integral_comp_mul_left
+    (a := (0 : ℝ)) (b := ρ)
+    (fun s : ℝ =>
+      Real.exp (-(G.escapeRate x : ℝ) * s) * G.jumpFlow x y (T * ρ - s)) T
+  rw [mul_zero] at hscale
+  have hinner : ∀ v : ℝ,
+      Real.exp (-(G.escapeRate x : ℝ) * (T * v)) *
+          G.jumpFlow x y (T * ρ - T * v) =
+        Real.exp (-(G.escapeRate x : ℝ) * (T * v)) *
+          ∑ z, (G.jumpRate x z : ℝ) *
+            NormedSpace.exp ((T * (ρ - v)) • G.generator) z y := by
+    intro v
+    rw [← mul_sub]
+    rfl
+  rw [G.exp_smul_apply_renewal x y (T * ρ), ← hscale]
+  simp only [smul_eq_mul, hinner]
+
 theorem continuous_exp_smul_apply (Q : Matrix Ω Ω ℝ) (x y : Ω) :
     Continuous fun t : ℝ => NormedSpace.exp (t • Q) x y :=
   (entryCLM x y).continuous.comp
