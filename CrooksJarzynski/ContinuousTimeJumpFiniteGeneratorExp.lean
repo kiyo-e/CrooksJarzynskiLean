@@ -137,6 +137,53 @@ theorem generator_mul_apply
     (fun _ => -(G.escapeRate x : ℝ) * M x y)]
   simp
 
+/-- The entrywise derivative of the exponential curve.  This is the one place
+that has to cross from the matrix norm to scalars; everything downstream works
+with real-valued functions, which keeps the `NormedSpace ℝ ℝ` instance diamond
+out of the integrating-factor argument. -/
+theorem hasDerivAt_exp_smul_apply (Q : Matrix Ω Ω ℝ) (t : ℝ) (x y : Ω) :
+    HasDerivAt (fun u : ℝ => NormedSpace.exp (u • Q) x y)
+      ((Q * NormedSpace.exp (t • Q)) x y) t :=
+  (entryCLM x y).hasFDerivAt.comp_hasDerivAt t (hasDerivAt_exp_smul Q t)
+
+/-- The rate of arriving at `y` from `x` after one more jump. -/
+noncomputable def jumpFlow
+    (G : FiniteJumpGenerator Ω) (x y : Ω) (t : ℝ) : ℝ :=
+  ∑ z, (G.jumpRate x z : ℝ) * NormedSpace.exp (t • G.generator) z y
+
+theorem continuous_jumpFlow (G : FiniteJumpGenerator Ω) (x y : Ω) :
+    Continuous (G.jumpFlow x y) := by
+  unfold jumpFlow
+  refine continuous_finsetSum _ fun z _ => continuous_const.mul ?_
+  exact (entryCLM z y).continuous.comp
+    ((NormedSpace.exp_continuous (𝔸 := Matrix Ω Ω ℝ)).comp
+      (continuous_id.smul continuous_const))
+
+/-- The integrating factor `e^{λ(x) t}` cancels the escape term, leaving the
+jump flow as an exact derivative. -/
+theorem hasDerivAt_expScaled
+    (G : FiniteJumpGenerator Ω) (x y : Ω) (t : ℝ) :
+    HasDerivAt
+      (fun u : ℝ =>
+        Real.exp ((G.escapeRate x : ℝ) * u) *
+          NormedSpace.exp (u • G.generator) x y)
+      (Real.exp ((G.escapeRate x : ℝ) * t) * G.jumpFlow x y t) t := by
+  have hlin : HasDerivAt (fun u : ℝ => (G.escapeRate x : ℝ) * u)
+      (G.escapeRate x : ℝ) t := by
+    simpa using (hasDerivAt_id t).const_mul (G.escapeRate x : ℝ)
+  have hmul := hlin.exp.mul (hasDerivAt_exp_smul_apply G.generator t x y)
+  have hval :
+      Real.exp ((G.escapeRate x : ℝ) * t) * G.jumpFlow x y t =
+        Real.exp ((G.escapeRate x : ℝ) * t) * (G.escapeRate x : ℝ) *
+            NormedSpace.exp (t • G.generator) x y +
+          Real.exp ((G.escapeRate x : ℝ) * t) *
+            (G.generator * NormedSpace.exp (t • G.generator)) x y := by
+    rw [generator_mul_apply]
+    unfold jumpFlow
+    ring
+  rw [hval]
+  exact hmul
+
 end MatrixNorm
 
 end FiniteJumpGenerator
