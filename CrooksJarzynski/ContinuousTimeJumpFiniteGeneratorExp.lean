@@ -31,6 +31,252 @@ namespace FiniteJumpGenerator
 
 universe u
 
+/-! ### Uniqueness for the renewal equation
+
+The renewal equation determines its solution, so any other family satisfying it
+is forced to agree with the exponential.  Nothing here mentions matrices: the
+argument is the standard iterated Volterra estimate, driven by the uniform rate
+bound already used for non-explosion. -/
+
+section Volterra
+
+variable {Ω : Type u} [Fintype Ω] [DecidableEq Ω]
+
+omit [DecidableEq Ω] in
+theorem sum_jumpRate_real (G : FiniteJumpGenerator Ω) (x : Ω) :
+    ∑ z, (G.jumpRate x z : ℝ) = (G.escapeRate x : ℝ) := by
+  simp [escapeRate]
+
+omit [DecidableEq Ω] in
+theorem escapeRate_le_rateBound_real (G : FiniteJumpGenerator Ω) (x : Ω) :
+    (G.escapeRate x : ℝ) ≤ (G.rateBound : ℝ) := by
+  exact_mod_cast G.escapeRate_le_rateBound x
+
+omit [DecidableEq Ω] in
+/-- **Iterated Volterra bound.**  A bounded continuous family satisfying the
+homogeneous renewal equation obeys the factorial bound at every order.  Each
+iteration trades one factor of the rate bound for one integration of the
+elapsed time, which is what produces the factorial. -/
+theorem abs_le_of_homogeneous_renewal
+    (G : FiniteJumpGenerator Ω) (D : Ω → Ω → ℝ → ℝ) (C T : ℝ)
+    (hcont : ∀ x y, Continuous (D x y))
+    (hbdd : ∀ x y, ∀ t ∈ Set.Icc (0 : ℝ) T, |D x y t| ≤ C)
+    (hrec : ∀ x y, ∀ t ∈ Set.Icc (0 : ℝ) T,
+      D x y t = ∫ s in (0 : ℝ)..t,
+        Real.exp (-(G.escapeRate x : ℝ) * s) *
+          ∑ z, (G.jumpRate x z : ℝ) * D z y (t - s)) :
+    ∀ (n : ℕ) (x y : Ω), ∀ t ∈ Set.Icc (0 : ℝ) T,
+      |D x y t| ≤ C * ((G.rateBound : ℝ) * t) ^ n / (n.factorial : ℝ) := by
+  intro n
+  induction n with
+  | zero =>
+      intro x y t ht
+      simpa using hbdd x y t ht
+  | succ n ih =>
+      intro x y t ht
+      have ht0 : (0 : ℝ) ≤ t := ht.1
+      have hgcont : Continuous fun s : ℝ =>
+          Real.exp (-(G.escapeRate x : ℝ) * s) *
+            ∑ z, (G.jumpRate x z : ℝ) * D z y (t - s) := by
+        have h1 : Continuous fun s : ℝ => -(G.escapeRate x : ℝ) * s :=
+          continuous_const.mul continuous_id
+        refine (Real.continuous_exp.comp h1).mul ?_
+        refine continuous_finsetSum _ fun z _ => continuous_const.mul ?_
+        exact (hcont z y).comp (continuous_const.sub continuous_id)
+      have hhcont : Continuous fun s : ℝ =>
+          (G.rateBound : ℝ) *
+            (C * ((G.rateBound : ℝ) * (t - s)) ^ n / (n.factorial : ℝ)) := by
+        fun_prop
+      have hpoint : ∀ s ∈ Set.Icc (0 : ℝ) t,
+          |Real.exp (-(G.escapeRate x : ℝ) * s) *
+              ∑ z, (G.jumpRate x z : ℝ) * D z y (t - s)| ≤
+            (G.rateBound : ℝ) *
+              (C * ((G.rateBound : ℝ) * (t - s)) ^ n / (n.factorial : ℝ)) := by
+        intro s hs
+        have hs0 : (0 : ℝ) ≤ s := hs.1
+        have hst : s ≤ t := hs.2
+        have hts : t - s ∈ Set.Icc (0 : ℝ) T :=
+          ⟨by linarith, by linarith [ht.2]⟩
+        have hB0 : 0 ≤ C * ((G.rateBound : ℝ) * (t - s)) ^ n /
+            (n.factorial : ℝ) := by
+          refine le_trans (abs_nonneg (D x y (t - s))) (ih x y (t - s) hts)
+        have hsum : |∑ z, (G.jumpRate x z : ℝ) * D z y (t - s)| ≤
+            (G.escapeRate x : ℝ) *
+              (C * ((G.rateBound : ℝ) * (t - s)) ^ n / (n.factorial : ℝ)) := by
+          calc |∑ z, (G.jumpRate x z : ℝ) * D z y (t - s)|
+              ≤ ∑ z, |(G.jumpRate x z : ℝ) * D z y (t - s)| :=
+                Finset.abs_sum_le_sum_abs _ _
+            _ = ∑ z, (G.jumpRate x z : ℝ) * |D z y (t - s)| := by
+                refine Finset.sum_congr rfl fun z _ => ?_
+                rw [abs_mul, abs_of_nonneg (G.jumpRate x z).coe_nonneg]
+            _ ≤ ∑ z, (G.jumpRate x z : ℝ) *
+                  (C * ((G.rateBound : ℝ) * (t - s)) ^ n /
+                    (n.factorial : ℝ)) :=
+                Finset.sum_le_sum fun z _ =>
+                  mul_le_mul_of_nonneg_left (ih z y (t - s) hts)
+                    (G.jumpRate x z).coe_nonneg
+            _ = (G.escapeRate x : ℝ) *
+                  (C * ((G.rateBound : ℝ) * (t - s)) ^ n /
+                    (n.factorial : ℝ)) := by
+                rw [← Finset.sum_mul, G.sum_jumpRate_real x]
+        have hexp1 : Real.exp (-(G.escapeRate x : ℝ) * s) ≤ 1 := by
+          refine Real.exp_le_one_iff.2 ?_
+          have : (0 : ℝ) ≤ (G.escapeRate x : ℝ) * s :=
+            mul_nonneg (G.escapeRate x).coe_nonneg hs0
+          linarith
+        calc |Real.exp (-(G.escapeRate x : ℝ) * s) *
+                ∑ z, (G.jumpRate x z : ℝ) * D z y (t - s)|
+            = Real.exp (-(G.escapeRate x : ℝ) * s) *
+                |∑ z, (G.jumpRate x z : ℝ) * D z y (t - s)| := by
+              rw [abs_mul, abs_of_nonneg (Real.exp_nonneg _)]
+          _ ≤ 1 * ((G.escapeRate x : ℝ) *
+                (C * ((G.rateBound : ℝ) * (t - s)) ^ n /
+                  (n.factorial : ℝ))) :=
+              mul_le_mul hexp1 hsum (abs_nonneg _) zero_le_one
+          _ ≤ (G.rateBound : ℝ) *
+                (C * ((G.rateBound : ℝ) * (t - s)) ^ n /
+                  (n.factorial : ℝ)) := by
+              rw [one_mul]
+              exact mul_le_mul_of_nonneg_right
+                (G.escapeRate_le_rateBound_real x) hB0
+      have hbound : |D x y t| ≤
+          ∫ s in (0 : ℝ)..t,
+            (G.rateBound : ℝ) *
+              (C * ((G.rateBound : ℝ) * (t - s)) ^ n / (n.factorial : ℝ)) := by
+        rw [hrec x y t ht]
+        refine le_trans ?_
+          (intervalIntegral.integral_mono_on ht0
+            (hgcont.abs.intervalIntegrable _ _)
+            (hhcont.intervalIntegrable _ _) hpoint)
+        simpa [Real.norm_eq_abs] using
+          intervalIntegral.norm_integral_le_integral_norm
+            (f := fun s : ℝ => Real.exp (-(G.escapeRate x : ℝ) * s) *
+              ∑ z, (G.jumpRate x z : ℝ) * D z y (t - s))
+            (μ := volume) ht0
+      have heval : (∫ s in (0 : ℝ)..t,
+            (G.rateBound : ℝ) *
+              (C * ((G.rateBound : ℝ) * (t - s)) ^ n / (n.factorial : ℝ))) =
+          C * ((G.rateBound : ℝ) * t) ^ (n + 1) /
+            ((n + 1).factorial : ℝ) := by
+        have hcongr : ∀ s : ℝ,
+            (G.rateBound : ℝ) *
+                (C * ((G.rateBound : ℝ) * (t - s)) ^ n /
+                  (n.factorial : ℝ)) =
+              ((G.rateBound : ℝ) * C * (G.rateBound : ℝ) ^ n /
+                (n.factorial : ℝ)) * (t - s) ^ n := by
+          intro s
+          rw [mul_pow]
+          ring
+        simp_rw [hcongr]
+        rw [intervalIntegral.integral_const_mul]
+        have hsub : (∫ s in (0 : ℝ)..t, (t - s) ^ n) = t ^ (n + 1) / (n + 1) := by
+          rw [intervalIntegral.integral_comp_sub_left (fun u : ℝ => u ^ n) t,
+            sub_self, sub_zero, integral_pow]
+          simp
+        rw [hsub, Nat.factorial_succ]
+        have hne : (n.factorial : ℝ) ≠ 0 :=
+          Nat.cast_ne_zero.mpr (Nat.factorial_ne_zero n)
+        push_cast
+        field_simp
+        ring
+      rw [← heval]
+      exact hbound
+
+/-- **Uniqueness for the renewal equation.**  Two bounded continuous families
+satisfying the same renewal equation agree on the horizon. -/
+theorem eq_of_renewal
+    (G : FiniteJumpGenerator Ω) (F₁ F₂ : Ω → Ω → ℝ → ℝ) (T : ℝ)
+    (hcont₁ : ∀ x y, Continuous (F₁ x y))
+    (hcont₂ : ∀ x y, Continuous (F₂ x y))
+    (hrec₁ : ∀ x y, ∀ t ∈ Set.Icc (0 : ℝ) T,
+      F₁ x y t = (if x = y then Real.exp (-(G.escapeRate x : ℝ) * t) else 0) +
+        ∫ s in (0 : ℝ)..t, Real.exp (-(G.escapeRate x : ℝ) * s) *
+          ∑ z, (G.jumpRate x z : ℝ) * F₁ z y (t - s))
+    (hrec₂ : ∀ x y, ∀ t ∈ Set.Icc (0 : ℝ) T,
+      F₂ x y t = (if x = y then Real.exp (-(G.escapeRate x : ℝ) * t) else 0) +
+        ∫ s in (0 : ℝ)..t, Real.exp (-(G.escapeRate x : ℝ) * s) *
+          ∑ z, (G.jumpRate x z : ℝ) * F₂ z y (t - s)) :
+    ∀ x y, ∀ t ∈ Set.Icc (0 : ℝ) T, F₁ x y t = F₂ x y t := by
+  set D : Ω → Ω → ℝ → ℝ := fun x y t => F₁ x y t - F₂ x y t with hD
+  have hDcont : ∀ x y, Continuous (D x y) := fun x y =>
+    (hcont₁ x y).sub (hcont₂ x y)
+  -- One uniform bound for the finitely many entries.
+  choose Cf hCf using fun p : Ω × Ω =>
+    (isCompact_Icc (a := (0 : ℝ)) (b := T)).exists_bound_of_continuousOn
+      (hDcont p.1 p.2).continuousOn
+  have hDbdd : ∀ x y, ∀ t ∈ Set.Icc (0 : ℝ) T,
+      |D x y t| ≤ ∑ p : Ω × Ω, |Cf p| := by
+    intro x y t ht
+    refine le_trans (le_trans (hCf (x, y) t ht) (le_abs_self _)) ?_
+    exact Finset.single_le_sum (f := fun p : Ω × Ω => |Cf p|)
+      (fun _ _ => abs_nonneg _) (Finset.mem_univ (x, y))
+  -- Subtracting the two equations kills the inhomogeneous term.
+  have hDrec : ∀ x y, ∀ t ∈ Set.Icc (0 : ℝ) T,
+      D x y t = ∫ s in (0 : ℝ)..t,
+        Real.exp (-(G.escapeRate x : ℝ) * s) *
+          ∑ z, (G.jumpRate x z : ℝ) * D z y (t - s) := by
+    intro x y t ht
+    have hcont₁' : Continuous fun s : ℝ =>
+        Real.exp (-(G.escapeRate x : ℝ) * s) *
+          ∑ z, (G.jumpRate x z : ℝ) * F₁ z y (t - s) := by
+      have h1 : Continuous fun s : ℝ => -(G.escapeRate x : ℝ) * s :=
+        continuous_const.mul continuous_id
+      refine (Real.continuous_exp.comp h1).mul ?_
+      refine continuous_finsetSum _ fun z _ => continuous_const.mul ?_
+      exact (hcont₁ z y).comp (continuous_const.sub continuous_id)
+    have hcont₂' : Continuous fun s : ℝ =>
+        Real.exp (-(G.escapeRate x : ℝ) * s) *
+          ∑ z, (G.jumpRate x z : ℝ) * F₂ z y (t - s) := by
+      have h1 : Continuous fun s : ℝ => -(G.escapeRate x : ℝ) * s :=
+        continuous_const.mul continuous_id
+      refine (Real.continuous_exp.comp h1).mul ?_
+      refine continuous_finsetSum _ fun z _ => continuous_const.mul ?_
+      exact (hcont₂ z y).comp (continuous_const.sub continuous_id)
+    have hsplit : ∀ s : ℝ,
+        Real.exp (-(G.escapeRate x : ℝ) * s) *
+            ∑ z, (G.jumpRate x z : ℝ) * D z y (t - s) =
+          Real.exp (-(G.escapeRate x : ℝ) * s) *
+              ∑ z, (G.jumpRate x z : ℝ) * F₁ z y (t - s) -
+            Real.exp (-(G.escapeRate x : ℝ) * s) *
+              ∑ z, (G.jumpRate x z : ℝ) * F₂ z y (t - s) := by
+      intro s
+      rw [← mul_sub, ← Finset.sum_sub_distrib]
+      simp only [hD, mul_sub]
+    have h₁ : (∫ s in (0 : ℝ)..t, Real.exp (-(G.escapeRate x : ℝ) * s) *
+          ∑ z, (G.jumpRate x z : ℝ) * F₁ z y (t - s)) =
+        F₁ x y t -
+          (if x = y then Real.exp (-(G.escapeRate x : ℝ) * t) else 0) := by
+      rw [hrec₁ x y t ht]
+      ring
+    have h₂ : (∫ s in (0 : ℝ)..t, Real.exp (-(G.escapeRate x : ℝ) * s) *
+          ∑ z, (G.jumpRate x z : ℝ) * F₂ z y (t - s)) =
+        F₂ x y t -
+          (if x = y then Real.exp (-(G.escapeRate x : ℝ) * t) else 0) := by
+      rw [hrec₂ x y t ht]
+      ring
+    simp_rw [hsplit]
+    rw [intervalIntegral.integral_sub (hcont₁'.intervalIntegrable _ _)
+      (hcont₂'.intervalIntegrable _ _), h₁, h₂]
+    simp only [hD]
+    ring
+  intro x y t ht
+  have hlimit : |D x y t| ≤ 0 := by
+    have htend : Filter.Tendsto
+        (fun n : ℕ => (∑ p : Ω × Ω, |Cf p|) *
+          (((G.rateBound : ℝ) * t) ^ n / (n.factorial : ℝ)))
+        Filter.atTop (nhds 0) := by
+      simpa using
+        (FloorSemiring.tendsto_pow_div_factorial_atTop
+          ((G.rateBound : ℝ) * t)).const_mul (∑ p : Ω × Ω, |Cf p|)
+    refine ge_of_tendsto' htend fun n => ?_
+    simpa [mul_div_assoc] using
+      G.abs_le_of_homogeneous_renewal D (∑ p : Ω × Ω, |Cf p|) T hDcont
+        hDbdd hDrec n x y t ht
+  have : D x y t = 0 := abs_eq_zero.1 (le_antisymm hlimit (abs_nonneg _))
+  simpa [hD, sub_eq_zero] using this
+
+end Volterra
+
 section MatrixNorm
 
 attribute [local instance] Matrix.linftyOpNormedAddCommGroup
@@ -257,6 +503,30 @@ theorem exp_smul_apply_renewal
   by_cases hxy : x = y
   · simp [hxy]
   · simp [hxy]
+
+theorem continuous_exp_smul_apply (Q : Matrix Ω Ω ℝ) (x y : Ω) :
+    Continuous fun t : ℝ => NormedSpace.exp (t • Q) x y :=
+  (entryCLM x y).continuous.comp
+    ((NormedSpace.exp_continuous (𝔸 := Matrix Ω Ω ℝ)).comp
+      (continuous_id.smul continuous_const))
+
+/-- **The exponential is the unique solution of the renewal equation.**  This is
+the hook the jump-process side plugs into: exhibiting a continuous family that
+satisfies the same first-jump decomposition identifies it with `exp (tQ)`
+entrywise, with no further analysis of the matrix exponential. -/
+theorem eq_exp_smul_apply_of_renewal
+    (G : FiniteJumpGenerator Ω) (F : Ω → Ω → ℝ → ℝ) (T : ℝ)
+    (hcont : ∀ x y, Continuous (F x y))
+    (hrec : ∀ x y, ∀ t ∈ Set.Icc (0 : ℝ) T,
+      F x y t = (if x = y then Real.exp (-(G.escapeRate x : ℝ) * t) else 0) +
+        ∫ s in (0 : ℝ)..t, Real.exp (-(G.escapeRate x : ℝ) * s) *
+          ∑ z, (G.jumpRate x z : ℝ) * F z y (t - s)) :
+    ∀ x y, ∀ t ∈ Set.Icc (0 : ℝ) T,
+      F x y t = NormedSpace.exp (t • G.generator) x y :=
+  eq_of_renewal G F (fun x y t => NormedSpace.exp (t • G.generator) x y) T
+    hcont (fun x y => continuous_exp_smul_apply G.generator x y) hrec
+    fun x y t _ => by
+      simpa [jumpFlow] using G.exp_smul_apply_renewal x y t
 
 end MatrixNorm
 
