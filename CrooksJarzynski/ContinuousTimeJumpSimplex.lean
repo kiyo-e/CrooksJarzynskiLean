@@ -231,6 +231,43 @@ theorem volume_freeSimplexSet (n : ℕ) :
   simpa [freeSimplexSet, freeSimplexSetAt] using
     volume_freeSimplexSetAt n (1 : I)
 
+/-- Convert a nonnegative continuous Lebesgue integral over an initial segment
+of the unit interval into an ordinary interval integral.
+
+This is the one-dimensional transfer between the unit-interval chart and the
+real line.  Renewal arguments in the horizon direction peel a single holding
+coordinate, which lands in the chart, while the analytic side works with
+interval integrals; this is the only place the two have to be reconciled. -/
+theorem lintegral_unitInterval_Iic_of_continuous_nonneg
+    (f : ℝ → ℝ) (ρ : ℝ) (hρ0 : 0 ≤ ρ) (hρ1 : ρ ≤ 1)
+    (hf : Continuous f)
+    (hfnn : ∀ z ∈ Set.Icc (0 : ℝ) ρ, 0 ≤ f z) :
+    ∫⁻ a : I in {a : I | (a : ℝ) ≤ ρ}, ENNReal.ofReal (f (a : ℝ)) =
+      ENNReal.ofReal (∫ z : ℝ in (0 : ℝ)..ρ, f z) := by
+  have hpre :
+      ((fun a : I => (a : ℝ)) ⁻¹' Set.Icc (0 : ℝ) ρ) =
+        {a : I | (a : ℝ) ≤ ρ} := by
+    ext a
+    simp only [Set.mem_preimage, Set.mem_Icc, Set.mem_setOf_eq]
+    exact ⟨fun h => h.2, fun h => ⟨a.2.1, h⟩⟩
+  rw [← hpre]
+  rw [unitInterval.measurePreserving_coe.setLIntegral_comp_preimage_emb
+    unitInterval.measurableEmbedding_coe
+    (fun z : ℝ => ENNReal.ofReal (f z)) (Set.Icc 0 ρ)]
+  change (∫⁻ z : ℝ, ENNReal.ofReal (f z)
+      ∂((volume.restrict (Set.Icc (0 : ℝ) 1)).restrict
+        (Set.Icc 0 ρ))) = _
+  rw [Measure.restrict_restrict measurableSet_Icc,
+    Set.inter_eq_left.mpr (Set.Icc_subset_Icc le_rfl hρ1)]
+  have hint : Integrable f (volume.restrict (Set.Icc 0 ρ)) :=
+    hf.integrableOn_Icc
+  have hnn : 0 ≤ᵐ[volume.restrict (Set.Icc (0 : ℝ) ρ)] f := by
+    filter_upwards [self_mem_ae_restrict measurableSet_Icc] with z hz
+    exact hfnn z hz
+  rw [← ofReal_integral_eq_lintegral_ofReal hint hnn,
+    integral_Icc_eq_integral_Ioc,
+    ← intervalIntegral.integral_of_le hρ0]
+
 /-- The simplex event has strictly positive product volume, so conditioning on
 it is nondegenerate for every jump count, including `n = 0`. -/
 theorem volume_freeSimplexSet_pos (n : ℕ) :
