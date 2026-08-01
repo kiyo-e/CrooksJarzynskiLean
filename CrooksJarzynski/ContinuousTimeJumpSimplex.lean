@@ -231,8 +231,22 @@ theorem volume_freeSimplexSet (n : ℕ) :
   simpa [freeSimplexSet, freeSimplexSetAt] using
     volume_freeSimplexSetAt n (1 : I)
 
-/-- Convert a nonnegative continuous Lebesgue integral over an initial segment
-of the unit interval into an ordinary interval integral.
+/-- A bounded measurable function is integrable on a bounded interval.  The
+transfer below wants integrability, and a renewal argument supplies exactly
+this: its solution is known to be bounded and measurable long before it is
+known to be continuous. -/
+theorem integrableOn_Icc_of_bound {f : ℝ → ℝ} {a b : ℝ}
+    (hm : Measurable f) {M : ℝ} (hM : ∀ w ∈ Set.Icc a b, |f w| ≤ M) :
+    IntegrableOn f (Set.Icc a b) := by
+  refine Measure.integrableOn_of_bounded (M := M)
+    (by rw [Real.volume_Icc]; exact ENNReal.ofReal_ne_top)
+    hm.aestronglyMeasurable ?_
+  filter_upwards [self_mem_ae_restrict measurableSet_Icc] with w hw
+  rw [Real.norm_eq_abs]
+  exact hM w hw
+
+/-- Convert a nonnegative Lebesgue integral over an initial segment of the unit
+interval into an ordinary interval integral.
 
 This is the one-dimensional transfer between the unit-interval chart and the
 real line.  Renewal arguments in the horizon direction peel a single holding

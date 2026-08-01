@@ -806,6 +806,326 @@ theorem transitionMassAt_ne_top
     G.transitionMassAt T x y ρ ≠ ∞ :=
   ne_top_of_le_ne_top ENNReal.ofReal_ne_top (G.transitionMassAt_le T x y h0 h1)
 
+/-! ### The real-valued transition mass
+
+The uniqueness hook works with real-valued families, so the `ENNReal` renewal
+has to be transported.  Clamping the fraction to `[0, 1]` is what makes the
+family globally defined and, later, globally continuous; the renewal equation
+only ever evaluates it on the fraction still available, where the clamp is the
+identity. -/
+
+/-- The transition mass on a clamped available fraction, as a real number. -/
+noncomputable def transitionReal
+    (G : FiniteJumpGenerator Ω) (T : NNReal) (x y : Ω) (ρ : ℝ) : ℝ :=
+  (G.transitionMassAt T x y (max 0 (min ρ 1))).toReal
+
+/-- The clamp used by `transitionReal` really does land in the fraction range. -/
+theorem clamp_mem_Icc (ρ : ℝ) : max 0 (min ρ 1) ∈ Set.Icc (0 : ℝ) 1 :=
+  ⟨le_max_left _ _, max_le zero_le_one (min_le_right _ _)⟩
+
+omit [MeasurableSpace Ω] [MeasurableSingletonClass Ω] in
+theorem transitionReal_apply
+    (G : FiniteJumpGenerator Ω) (T : NNReal) (x y : Ω) {ρ : ℝ}
+    (h0 : 0 ≤ ρ) (h1 : ρ ≤ 1) :
+    G.transitionReal T x y ρ = (G.transitionMassAt T x y ρ).toReal := by
+  rw [transitionReal, min_eq_left h1, max_eq_right h0]
+
+omit [MeasurableSpace Ω] [MeasurableSingletonClass Ω] in
+theorem transitionReal_nonneg
+    (G : FiniteJumpGenerator Ω) (T : NNReal) (x y : Ω) (ρ : ℝ) :
+    0 ≤ G.transitionReal T x y ρ :=
+  ENNReal.toReal_nonneg
+
+omit [MeasurableSpace Ω] [MeasurableSingletonClass Ω] in
+theorem transitionReal_le
+    (G : FiniteJumpGenerator Ω) (T : NNReal) (x y : Ω) (ρ : ℝ) :
+    G.transitionReal T x y ρ ≤ G.fractionBound T := by
+  obtain ⟨hc0, hc1⟩ := clamp_mem_Icc ρ
+  refine le_trans (ENNReal.toReal_mono ENNReal.ofReal_ne_top
+    (G.transitionMassAt_le T x y hc0 hc1)) ?_
+  rw [ENNReal.toReal_ofReal (le_trans zero_le_one (G.one_le_fractionBound T))]
+
+omit [MeasurableSpace Ω] [MeasurableSingletonClass Ω] in
+theorem measurable_transitionReal
+    (G : FiniteJumpGenerator Ω) (T : NNReal) (x y : Ω) :
+    Measurable (G.transitionReal T x y) :=
+  ((G.measurable_transitionMassAt T x y).comp
+    (measurable_const.max (measurable_id.min measurable_const))).ennreal_toReal
+
+/-- The branching sum of the real transition masses over the state the first
+jump reaches. -/
+noncomputable def branchSum
+    (G : FiniteJumpGenerator Ω) (T : NNReal) (x y : Ω) (w : ℝ) : ℝ :=
+  ∑ z, (G.jumpRate x z : ℝ) * G.transitionReal T z y w
+
+omit [MeasurableSpace Ω] [MeasurableSingletonClass Ω] in
+theorem branchSum_apply
+    (G : FiniteJumpGenerator Ω) (T : NNReal) (x y : Ω) (w : ℝ) :
+    G.branchSum T x y w =
+      ∑ z, (G.jumpRate x z : ℝ) * G.transitionReal T z y w :=
+  rfl
+
+omit [MeasurableSpace Ω] [MeasurableSingletonClass Ω] in
+theorem branchSum_nonneg
+    (G : FiniteJumpGenerator Ω) (T : NNReal) (x y : Ω) (w : ℝ) :
+    0 ≤ G.branchSum T x y w :=
+  Finset.sum_nonneg fun z _ =>
+    mul_nonneg (G.jumpRate x z).coe_nonneg (G.transitionReal_nonneg T z y w)
+
+omit [MeasurableSpace Ω] [MeasurableSingletonClass Ω] in
+theorem branchSum_le
+    (G : FiniteJumpGenerator Ω) (T : NNReal) (x y : Ω) (w : ℝ) :
+    G.branchSum T x y w ≤ (G.escapeRate x : ℝ) * G.fractionBound T := by
+  have hb : ∀ z : Ω, (G.jumpRate x z : ℝ) * G.transitionReal T z y w ≤
+      (G.jumpRate x z : ℝ) * G.fractionBound T := fun z =>
+    mul_le_mul_of_nonneg_left (G.transitionReal_le T z y w)
+      (G.jumpRate x z).coe_nonneg
+  refine le_trans (Finset.sum_le_sum fun z _ => hb z) ?_
+  rw [← Finset.sum_mul]
+  refine mul_le_mul_of_nonneg_right (le_of_eq ?_) ?_
+  · exact_mod_cast congrArg (NNReal.toReal) (rfl : G.escapeRate x = ∑ z, G.jumpRate x z)
+  · exact le_trans zero_le_one (G.one_le_fractionBound T)
+
+omit [MeasurableSpace Ω] [MeasurableSingletonClass Ω] in
+theorem measurable_branchSum
+    (G : FiniteJumpGenerator Ω) (T : NNReal) (x y : Ω) :
+    Measurable (G.branchSum T x y) :=
+  Finset.measurable_sum _ fun z _ =>
+    measurable_const.mul (G.measurable_transitionReal T z y)
+
+omit [MeasurableSpace Ω] [MeasurableSingletonClass Ω] in
+theorem integrableOn_renewalIntegrand
+    (G : FiniteJumpGenerator Ω) (T : NNReal) (x y : Ω) (ρ : ℝ) :
+    IntegrableOn
+      (fun v : ℝ =>
+        Real.exp (-((G.escapeRate x : ℝ) * ((T : ℝ) * v))) *
+          G.branchSum T x y (ρ - v))
+      (Set.Icc (0 : ℝ) ρ) := by
+  have h1 : Measurable fun v : ℝ =>
+      Real.exp (-((G.escapeRate x : ℝ) * ((T : ℝ) * v))) := by fun_prop
+  have h2 : Measurable fun v : ℝ => G.branchSum T x y (ρ - v) :=
+    (G.measurable_branchSum T x y).comp (measurable_const.sub measurable_id)
+  refine Simplex.integrableOn_Icc_of_bound (h1.mul h2)
+    (M := (G.escapeRate x : ℝ) * G.fractionBound T) ?_
+  intro v hv
+  have hexp : Real.exp (-((G.escapeRate x : ℝ) * ((T : ℝ) * v))) ≤ 1 :=
+    Real.exp_le_one_iff.2 (neg_nonpos.mpr
+      (mul_nonneg (G.escapeRate x).coe_nonneg
+        (mul_nonneg T.coe_nonneg hv.1)))
+  rw [abs_mul, abs_of_nonneg (Real.exp_nonneg _),
+    abs_of_nonneg (G.branchSum_nonneg T x y _)]
+  calc Real.exp (-((G.escapeRate x : ℝ) * ((T : ℝ) * v))) *
+          G.branchSum T x y (ρ - v)
+      ≤ 1 * ((G.escapeRate x : ℝ) * G.fractionBound T) :=
+        mul_le_mul hexp (G.branchSum_le T x y _)
+          (G.branchSum_nonneg T x y _) zero_le_one
+    _ = (G.escapeRate x : ℝ) * G.fractionBound T := one_mul _
+
+omit [MeasurableSpace Ω] [MeasurableSingletonClass Ω] in
+/-- **The renewal equation in real form.**  Transporting the `ENNReal` renewal
+costs only the vanishing past the horizon -- which cuts the chart integral down
+to the fraction actually available -- and the uniform bound, which makes every
+`toReal` faithful. -/
+theorem transitionReal_renewal
+    (G : FiniteJumpGenerator Ω) (T : NNReal) (x y : Ω) {ρ : ℝ}
+    (h0 : 0 ≤ ρ) (h1 : ρ ≤ 1) :
+    G.transitionReal T x y ρ =
+      (if x = y then
+        Real.exp (-((G.escapeRate x : ℝ) * ((T : ℝ) * ρ))) else 0) +
+      (T : ℝ) * ∫ v in (0 : ℝ)..ρ,
+        Real.exp (-((G.escapeRate x : ℝ) * ((T : ℝ) * v))) *
+          ∑ z, (G.jumpRate x z : ℝ) * G.transitionReal T z y (ρ - v) := by
+  classical
+  set g : ℝ → ℝ := fun v =>
+    Real.exp (-((G.escapeRate x : ℝ) * ((T : ℝ) * v))) *
+      G.branchSum T x y (ρ - v) with hgdef
+  have hgnn : ∀ v : ℝ, 0 ≤ g v := fun v =>
+    mul_nonneg (Real.exp_nonneg _) (G.branchSum_nonneg T x y _)
+  have hmeasset : MeasurableSet {v : I | (v : ℝ) ≤ ρ} :=
+    measurableSet_le (by fun_prop) measurable_const
+  -- Off the available fraction the integrand vanishes, so the chart integral
+  -- only ever sees the fraction that is left.
+  have hzero : ∀ v : I, ¬ ((v : ℝ) ≤ ρ) →
+      ENNReal.ofReal
+            (Real.exp (-((G.escapeRate x : ℝ) * (T : ℝ) * (v : ℝ)))) *
+          ∑ z, (G.jumpRate x z : ℝ≥0∞) *
+            G.transitionMassAt T z y (ρ - (v : ℝ)) = 0 := by
+    intro v hv
+    have : ∀ z : Ω, (G.jumpRate x z : ℝ≥0∞) *
+        G.transitionMassAt T z y (ρ - (v : ℝ)) = 0 := fun z => by
+      rw [G.transitionMassAt_of_neg T z y (by linarith [not_le.mp hv]), mul_zero]
+    simp [this]
+  have hrestrict :
+      (∫⁻ v : I,
+          ENNReal.ofReal
+              (Real.exp (-((G.escapeRate x : ℝ) * (T : ℝ) * (v : ℝ)))) *
+            ∑ z, (G.jumpRate x z : ℝ≥0∞) *
+              G.transitionMassAt T z y (ρ - (v : ℝ))) =
+        ∫⁻ v : I in {v : I | (v : ℝ) ≤ ρ},
+          ENNReal.ofReal (g (v : ℝ)) := by
+    rw [← lintegral_indicator hmeasset]
+    refine lintegral_congr fun v => ?_
+    by_cases hv : (v : ℝ) ≤ ρ
+    · have hsub0 : 0 ≤ ρ - (v : ℝ) := by linarith
+      have hsub1 : ρ - (v : ℝ) ≤ 1 := by linarith [v.2.1]
+      have hsum : ∑ z, (G.jumpRate x z : ℝ≥0∞) *
+            G.transitionMassAt T z y (ρ - (v : ℝ)) =
+          ENNReal.ofReal (G.branchSum T x y (ρ - (v : ℝ))) := by
+        rw [branchSum, ENNReal.ofReal_sum_of_nonneg fun z _ =>
+          mul_nonneg (G.jumpRate x z).coe_nonneg
+            (G.transitionReal_nonneg T z y _)]
+        refine Finset.sum_congr rfl fun z _ => ?_
+        rw [ENNReal.ofReal_mul (G.jumpRate x z).coe_nonneg,
+          ENNReal.ofReal_coe_nnreal,
+          G.transitionReal_apply T z y hsub0 hsub1,
+          ENNReal.ofReal_toReal (G.transitionMassAt_ne_top T z y hsub0 hsub1)]
+      rw [Set.indicator_of_mem (show v ∈ {v : I | (v : ℝ) ≤ ρ} from hv), hgdef]
+      simp only [hsum, ENNReal.ofReal_mul (Real.exp_nonneg _)]
+      rw [mul_assoc]
+    · rw [Set.indicator_of_notMem (show v ∉ {v : I | (v : ℝ) ≤ ρ} from hv),
+        hzero v hv]
+  have htransfer := Simplex.lintegral_unitInterval_Iic_of_integrableOn
+    g ρ h0 h1 (G.integrableOn_renewalIntegrand T x y ρ)
+    (fun z _ => hgnn z)
+  have hJnn : 0 ≤ ∫ v in (0 : ℝ)..ρ, g v :=
+    intervalIntegral.integral_nonneg h0 fun v _ => hgnn v
+  -- Now transport the `ENNReal` renewal.
+  rw [G.transitionReal_apply T x y h0 h1, G.transitionMassAt_renewal T x y h0,
+    hrestrict, htransfer]
+  have hifne : (if x = y then
+      ENNReal.ofReal (Real.exp (-((G.escapeRate x : ℝ) * (T : ℝ) * ρ)))
+    else 0) ≠ ∞ := by split <;> simp
+  rw [ENNReal.toReal_add hifne
+    (ENNReal.mul_ne_top ENNReal.coe_ne_top ENNReal.ofReal_ne_top),
+    ENNReal.toReal_mul, ENNReal.toReal_ofReal hJnn, ENNReal.coe_toReal]
+  refine congrArg₂ _ ?_ rfl
+  by_cases hxy : x = y
+  · rw [if_pos hxy, if_pos hxy, ENNReal.toReal_ofReal (Real.exp_nonneg _),
+      mul_assoc]
+  · rw [if_neg hxy, if_neg hxy, ENNReal.toReal_zero]
+
+/-! ### Continuity as a consequence of the renewal equation
+
+The convolution variable can be substituted so that the whole dependence on the
+fraction leaves the integral.  What is left is a primitive of a bounded
+measurable function, which is continuous -- so continuity comes out of the
+renewal equation rather than having to be established before it. -/
+
+omit [MeasurableSpace Ω] [MeasurableSingletonClass Ω] in
+/-- The renewal equation with the fraction moved out of the integral. -/
+theorem transitionReal_eq_primitive
+    (G : FiniteJumpGenerator Ω) (T : NNReal) (x y : Ω) {ρ : ℝ}
+    (h0 : 0 ≤ ρ) (h1 : ρ ≤ 1) :
+    G.transitionReal T x y ρ =
+      Real.exp (-((G.escapeRate x : ℝ) * ((T : ℝ) * ρ))) *
+        ((if x = y then (1 : ℝ) else 0) +
+          (T : ℝ) * ∫ w in (0 : ℝ)..ρ,
+            Real.exp ((G.escapeRate x : ℝ) * ((T : ℝ) * w)) *
+              G.branchSum T x y w) := by
+  classical
+  have hsubst : (∫ v in (0 : ℝ)..ρ,
+        Real.exp (-((G.escapeRate x : ℝ) * ((T : ℝ) * v))) *
+          G.branchSum T x y (ρ - v)) =
+      ∫ w in (0 : ℝ)..ρ,
+        Real.exp (-((G.escapeRate x : ℝ) * ((T : ℝ) * (ρ - w)))) *
+          G.branchSum T x y w := by
+    have hcomp := intervalIntegral.integral_comp_sub_left
+      (a := (0 : ℝ)) (b := ρ)
+      (fun w : ℝ =>
+        Real.exp (-((G.escapeRate x : ℝ) * ((T : ℝ) * (ρ - w)))) *
+          G.branchSum T x y w) ρ
+    rw [sub_self, sub_zero] at hcomp
+    rw [← hcomp]
+    refine intervalIntegral.integral_congr fun v _ => ?_
+    rw [show ρ - (ρ - v) = v by ring]
+  have hfactor : (∫ w in (0 : ℝ)..ρ,
+        Real.exp (-((G.escapeRate x : ℝ) * ((T : ℝ) * (ρ - w)))) *
+          G.branchSum T x y w) =
+      Real.exp (-((G.escapeRate x : ℝ) * ((T : ℝ) * ρ))) *
+        ∫ w in (0 : ℝ)..ρ,
+          Real.exp ((G.escapeRate x : ℝ) * ((T : ℝ) * w)) *
+            G.branchSum T x y w := by
+    rw [← intervalIntegral.integral_const_mul]
+    refine intervalIntegral.integral_congr fun w _ => ?_
+    have hexp : Real.exp (-((G.escapeRate x : ℝ) * ((T : ℝ) * (ρ - w)))) =
+        Real.exp (-((G.escapeRate x : ℝ) * ((T : ℝ) * ρ))) *
+          Real.exp ((G.escapeRate x : ℝ) * ((T : ℝ) * w)) := by
+      rw [← Real.exp_add]
+      congr 1
+      ring
+    rw [hexp]
+    ring
+  rw [G.transitionReal_renewal T x y h0 h1]
+  simp only [← G.branchSum_apply T x y]
+  rw [hsubst, hfactor]
+  by_cases hxy : x = y
+  · rw [if_pos hxy, if_pos hxy]; ring
+  · rw [if_neg hxy, if_neg hxy]; ring
+
+omit [MeasurableSpace Ω] [MeasurableSingletonClass Ω] in
+theorem integrableOn_primitiveIntegrand
+    (G : FiniteJumpGenerator Ω) (T : NNReal) (x y : Ω) :
+    IntegrableOn
+      (fun w : ℝ =>
+        Real.exp ((G.escapeRate x : ℝ) * ((T : ℝ) * w)) *
+          G.branchSum T x y w)
+      (Set.uIcc (0 : ℝ) 1) := by
+  rw [Set.uIcc_of_le zero_le_one]
+  have h1 : Measurable fun w : ℝ =>
+      Real.exp ((G.escapeRate x : ℝ) * ((T : ℝ) * w)) := by fun_prop
+  refine Simplex.integrableOn_Icc_of_bound (h1.mul (G.measurable_branchSum T x y))
+    (M := Real.exp ((G.escapeRate x : ℝ) * (T : ℝ)) *
+      ((G.escapeRate x : ℝ) * G.fractionBound T)) ?_
+  intro w hw
+  have hexp : Real.exp ((G.escapeRate x : ℝ) * ((T : ℝ) * w)) ≤
+      Real.exp ((G.escapeRate x : ℝ) * (T : ℝ)) := by
+    refine Real.exp_le_exp.2 ?_
+    have hT : (0 : ℝ) ≤ (T : ℝ) := T.coe_nonneg
+    have hc : (0 : ℝ) ≤ (G.escapeRate x : ℝ) := (G.escapeRate x).coe_nonneg
+    calc (G.escapeRate x : ℝ) * ((T : ℝ) * w)
+        ≤ (G.escapeRate x : ℝ) * ((T : ℝ) * 1) :=
+          mul_le_mul_of_nonneg_left
+            (mul_le_mul_of_nonneg_left hw.2 hT) hc
+      _ = (G.escapeRate x : ℝ) * (T : ℝ) := by ring
+  rw [abs_mul, abs_of_nonneg (Real.exp_nonneg _),
+    abs_of_nonneg (G.branchSum_nonneg T x y w)]
+  exact mul_le_mul hexp (G.branchSum_le T x y w) (G.branchSum_nonneg T x y w)
+    (Real.exp_nonneg _)
+
+omit [MeasurableSpace Ω] [MeasurableSingletonClass Ω] in
+/-- **The real transition mass is continuous.**  Clamping the fraction is what
+makes this a global statement; on the fraction range itself it is exactly the
+continuity the uniqueness hook asks for. -/
+theorem continuous_transitionReal
+    (G : FiniteJumpGenerator Ω) (T : NNReal) (x y : Ω) :
+    Continuous (G.transitionReal T x y) := by
+  classical
+  have hprimOn : ContinuousOn
+      (fun ρ : ℝ => ∫ w in (0 : ℝ)..ρ,
+        Real.exp ((G.escapeRate x : ℝ) * ((T : ℝ) * w)) *
+          G.branchSum T x y w) (Set.Icc (0 : ℝ) 1) := by
+    have h := intervalIntegral.continuousOn_primitive_interval
+      (G.integrableOn_primitiveIntegrand T x y)
+    rwa [Set.uIcc_of_le zero_le_one] at h
+  have hrhs : ContinuousOn
+      (fun ρ : ℝ =>
+        Real.exp (-((G.escapeRate x : ℝ) * ((T : ℝ) * ρ))) *
+          ((if x = y then (1 : ℝ) else 0) +
+            (T : ℝ) * ∫ w in (0 : ℝ)..ρ,
+              Real.exp ((G.escapeRate x : ℝ) * ((T : ℝ) * w)) *
+                G.branchSum T x y w)) (Set.Icc (0 : ℝ) 1) :=
+    (Continuous.continuousOn (by fun_prop)).mul
+      (continuousOn_const.add (continuousOn_const.mul hprimOn))
+  have hOn : ContinuousOn
+      (fun ρ : ℝ => (G.transitionMassAt T x y ρ).toReal)
+      (Set.Icc (0 : ℝ) 1) := by
+    refine hrhs.congr fun ρ hρ => ?_
+    rw [← G.transitionReal_apply T x y hρ.1 hρ.2,
+      G.transitionReal_eq_primitive T x y hρ.1 hρ.2]
+  exact hOn.comp_continuous
+    (continuous_const.max (continuous_id.min continuous_const))
+    fun ρ => clamp_mem_Icc ρ
+
 end FiniteJumpGenerator
 end ContinuousTimeJump
 end MeasureProtocol
