@@ -33,6 +33,7 @@ import CrooksJarzynski.ContinuousTimeJumpTwoStateAsymmetricParity
 import CrooksJarzynski.ContinuousTimeJumpTwoStatePhysicalWork
 import CrooksJarzynski.ContinuousTimeJumpTwoStateSemigroup
 import CrooksJarzynski.ContinuousTimeJumpFiniteGeneratorPathLaw
+import CrooksJarzynski.ContinuousTimeJumpFiniteGeneratorFullPath
 import CrooksJarzynski.ContinuousTimeJumpFiniteGeneratorExp
 import CrooksJarzynski.MathlibBridge
 import CrooksJarzynski.MeasureProtocolFiniteBridge
@@ -68,7 +69,12 @@ waiting-time cancellation, and local jump balance, and proves fixed-sector,
 full-path, and fixed-horizon Crooks and Jarzynski statements. A general
 `FiniteJumpGenerator` packages nonnegative finite-state jump rates, derives a
 conservative real generator, and supplies a fixed-horizon counting reference;
-a three-state Y-shaped chain demonstrates genuine branching.
+a three-state Y-shaped chain demonstrates genuine branching. Its fixed-initial
+sector laws are proved non-explosive and assembled into a probability measure
+on the disjoint union of all jump-count sectors, whose actual terminal
+coordinate pushes forward to the transition mass. On the real side the
+exponential of the generator is shown to satisfy the entrywise first-jump
+renewal equation and to be its unique bounded continuous solution.
 
 A normalized unit-rate two-state CTMC identifies every jump-count sector with
 its Poisson probability and proves non-explosion by constructing a probability
