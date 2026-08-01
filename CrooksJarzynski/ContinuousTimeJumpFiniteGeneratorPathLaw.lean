@@ -672,6 +672,53 @@ theorem tsum_sectorMassFrom
     exact tendsto_const_nhds
   exact tendsto_nhds_unique hsum hone
 
+/-! ### The terminal transition mass
+
+Summing the sector masses that also land on a prescribed final state gives the
+terminal-state marginal of the fixed-initial path law.  Working with the sector
+sum directly avoids building the dependent-sum measure over all jump counts;
+the row-sum identity below is exactly the normalization just proved. -/
+
+/-- The mass the `n`-jump sector sends from `x` to `y`. -/
+noncomputable def sectorTerminalMassFrom
+    (G : FiniteJumpGenerator Ω) (T : NNReal) (x y : Ω) (n : ℕ) : ℝ≥0∞ :=
+  ∑ states : Fin (n + 1) → Ω,
+    fixedInitialWeight x (states 0) *
+      (fixedInitialWeight y (states (Fin.last n)) * G.sequenceMass T states)
+
+/-- The terminal-state transition mass over the horizon `T`. -/
+noncomputable def transitionMass
+    (G : FiniteJumpGenerator Ω) (T : NNReal) (x y : Ω) : ℝ≥0∞ :=
+  ∑' n, G.sectorTerminalMassFrom T x y n
+
+omit [MeasurableSpace Ω] [MeasurableSingletonClass Ω] in
+@[simp]
+theorem sum_fixedInitialWeight (y : Ω) :
+    ∑ z : Ω, fixedInitialWeight z y = 1 := by
+  simp [fixedInitialWeight]
+
+omit [MeasurableSpace Ω] [MeasurableSingletonClass Ω] in
+/-- Every sector distributes its whole mass over the possible final states. -/
+theorem sum_sectorTerminalMassFrom
+    (G : FiniteJumpGenerator Ω) (T : NNReal) (x : Ω) (n : ℕ) :
+    ∑ y : Ω, G.sectorTerminalMassFrom T x y n = G.sectorMassFrom T x n := by
+  unfold sectorTerminalMassFrom sectorMassFrom
+  rw [Finset.sum_comm]
+  refine Finset.sum_congr rfl fun states _ => ?_
+  rw [← Finset.mul_sum, ← Finset.sum_mul,
+    sum_fixedInitialWeight (states (Fin.last n)), one_mul]
+
+omit [MeasurableSpace Ω] [MeasurableSingletonClass Ω] in
+/-- **The terminal transition mass is a stochastic row.**  Its entries sum to
+one because the sector masses do. -/
+theorem sum_transitionMass
+    (G : FiniteJumpGenerator Ω) (T : NNReal) (x : Ω) :
+    ∑ y : Ω, G.transitionMass T x y = 1 := by
+  unfold transitionMass
+  rw [← Summable.tsum_finsetSum (fun _ _ => ENNReal.summable)]
+  simp only [G.sum_sectorTerminalMassFrom T x]
+  exact G.tsum_sectorMassFrom T x
+
 end FiniteJumpGenerator
 end ContinuousTimeJump
 end MeasureProtocol

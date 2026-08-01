@@ -165,3 +165,4 @@ the trusted base of the development.
 #print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.sectorMassFrom_add_arrivalMassFrom_succ
 #print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.tendsto_arrivalMassFrom
 #print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.tsum_sectorMassFrom
+#print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.sum_transitionMass
