@@ -613,6 +613,199 @@ theorem transitionMassAt_renewal
   rw [Summable.tsum_finsetSum fun _ _ => ENNReal.summable]
   exact Finset.sum_congr rfl fun z _ => ENNReal.tsum_mul_left
 
+/-! ### Vanishing past the horizon and a uniform bound
+
+The two facts the real-valued form needs.  A negative fraction leaves nothing
+for the holding times, so the chart is empty.  And shrinking the fraction only
+changes the residual survival factor, by a factor the rate bound controls,
+which reduces every bound to the already-proved `rho = 1` normalization. -/
+
+omit [DecidableEq Ω] [MeasurableSpace Ω] [MeasurableSingletonClass Ω] in
+theorem holdingIntegralAt_of_neg
+    (G : FiniteJumpGenerator Ω) (T : NNReal) {n : ℕ}
+    (states : Fin (n + 1) → Ω) {ρ : ℝ} (hρ : ρ < 0) :
+    G.holdingIntegralAt T states ρ = 0 := by
+  have hempty : TwoState.AsymmetricExample.freeSimplexSetAt n ρ = ∅ := by
+    ext u
+    simp only [TwoState.AsymmetricExample.freeSimplexSetAt, Set.mem_setOf_eq,
+      Set.mem_empty_iff_false, iff_false, not_le]
+    exact lt_of_lt_of_le hρ (Finset.sum_nonneg fun i _ => (u i).2.1)
+  rw [holdingIntegralAt, hempty, Measure.restrict_empty, lintegral_zero_measure]
+
+omit [DecidableEq Ω] [MeasurableSpace Ω] [MeasurableSingletonClass Ω] in
+theorem sequenceMassAt_of_neg
+    (G : FiniteJumpGenerator Ω) (T : NNReal) {n : ℕ}
+    (states : Fin (n + 1) → Ω) {ρ : ℝ} (hρ : ρ < 0) :
+    G.sequenceMassAt T states ρ = 0 := by
+  rw [sequenceMassAt, G.holdingIntegralAt_of_neg T states hρ, mul_zero]
+
+omit [MeasurableSpace Ω] [MeasurableSingletonClass Ω] in
+theorem sectorTerminalMassAtFrom_of_neg
+    (G : FiniteJumpGenerator Ω) (T : NNReal) (x y : Ω) (n : ℕ)
+    {ρ : ℝ} (hρ : ρ < 0) :
+    G.sectorTerminalMassAtFrom T x y n ρ = 0 :=
+  Finset.sum_eq_zero fun states _ => by
+    rw [G.sequenceMassAt_of_neg T states hρ, mul_zero, mul_zero]
+
+omit [MeasurableSpace Ω] [MeasurableSingletonClass Ω] in
+/-- A negative fraction leaves no room for even the first holding time. -/
+theorem transitionMassAt_of_neg
+    (G : FiniteJumpGenerator Ω) (T : NNReal) (x y : Ω) {ρ : ℝ} (hρ : ρ < 0) :
+    G.transitionMassAt T x y ρ = 0 := by
+  rw [transitionMassAt]
+  simp [G.sectorTerminalMassAtFrom_of_neg T x y _ hρ]
+
+/-- The factor by which shrinking the available fraction can inflate a residual
+survival factor. -/
+noncomputable def fractionBound (G : FiniteJumpGenerator Ω) (T : NNReal) : ℝ :=
+  Real.exp ((G.rateBound : ℝ) * (T : ℝ))
+
+omit [DecidableEq Ω] [MeasurableSpace Ω] [MeasurableSingletonClass Ω] in
+theorem one_le_fractionBound (G : FiniteJumpGenerator Ω) (T : NNReal) :
+    1 ≤ G.fractionBound T :=
+  Real.one_le_exp (by positivity)
+
+omit [DecidableEq Ω] [MeasurableSpace Ω] [MeasurableSingletonClass Ω] in
+theorem holdingIntegralAt_le
+    (G : FiniteJumpGenerator Ω) (T : NNReal) {n : ℕ}
+    (states : Fin (n + 1) → Ω) {ρ : ℝ} (h0 : 0 ≤ ρ) (h1 : ρ ≤ 1) :
+    G.holdingIntegralAt T states ρ ≤
+      ENNReal.ofReal (G.fractionBound T) * G.holdingIntegral T states := by
+  set c : ℝ := (G.escapeRate (states (Fin.last n)) : ℝ) with hc
+  have hc0 : 0 ≤ c := (G.escapeRate _).coe_nonneg
+  have hcb : c ≤ (G.rateBound : ℝ) := by
+    exact_mod_cast G.escapeRate_le_rateBound (states (Fin.last n))
+  have hsub : TwoState.AsymmetricExample.freeSimplexSetAt n ρ ⊆
+      Simplex.freeSimplexSet n := by
+    intro u hu
+    exact le_trans hu h1
+  have hpt : ∀ u : Fin n → I,
+      cubeExpWeight (G.stateEscapeRates states) T u *
+          ENNReal.ofReal
+            (Real.exp (-(c * (T : ℝ) * residualAt ρ u))) ≤
+        ENNReal.ofReal (G.fractionBound T) *
+          (cubeExpWeight (G.stateEscapeRates states) T u *
+            ENNReal.ofReal
+              (Real.exp
+                (-(c * (T : ℝ) *
+                  TwoState.AsymmetricExample.residual u)))) := by
+    intro u
+    have hexp : Real.exp (-(c * (T : ℝ) * residualAt ρ u)) ≤
+        G.fractionBound T *
+          Real.exp (-(c * (T : ℝ) * TwoState.AsymmetricExample.residual u)) := by
+      rw [fractionBound, ← Real.exp_add]
+      refine Real.exp_le_exp.2 ?_
+      have hT : (0 : ℝ) ≤ (T : ℝ) := T.coe_nonneg
+      have hstep : c * (T : ℝ) * (1 - ρ) ≤ (G.rateBound : ℝ) * (T : ℝ) := by
+        have h1' : c * (T : ℝ) * (1 - ρ) ≤ c * (T : ℝ) * 1 :=
+          mul_le_mul_of_nonneg_left (by linarith) (mul_nonneg hc0 hT)
+        have h2' : c * (T : ℝ) ≤ (G.rateBound : ℝ) * (T : ℝ) :=
+          mul_le_mul_of_nonneg_right hcb hT
+        linarith
+      simp only [residualAt, TwoState.AsymmetricExample.residual]
+      nlinarith [hstep]
+    calc cubeExpWeight (G.stateEscapeRates states) T u *
+            ENNReal.ofReal (Real.exp (-(c * (T : ℝ) * residualAt ρ u)))
+        ≤ cubeExpWeight (G.stateEscapeRates states) T u *
+            ENNReal.ofReal
+              (G.fractionBound T *
+                Real.exp
+                  (-(c * (T : ℝ) *
+                    TwoState.AsymmetricExample.residual u))) :=
+          mul_le_mul_right (ENNReal.ofReal_le_ofReal hexp) _
+      _ = ENNReal.ofReal (G.fractionBound T) *
+            (cubeExpWeight (G.stateEscapeRates states) T u *
+              ENNReal.ofReal
+                (Real.exp
+                  (-(c * (T : ℝ) *
+                    TwoState.AsymmetricExample.residual u)))) := by
+          rw [ENNReal.ofReal_mul (le_trans zero_le_one (G.one_le_fractionBound T))]
+          ring
+  calc G.holdingIntegralAt T states ρ
+      ≤ ∫⁻ u in Simplex.freeSimplexSet n,
+          cubeExpWeight (G.stateEscapeRates states) T u *
+            ENNReal.ofReal
+              (Real.exp (-(c * (T : ℝ) * residualAt ρ u))) :=
+        lintegral_mono_set hsub
+    _ ≤ ∫⁻ u in Simplex.freeSimplexSet n,
+          ENNReal.ofReal (G.fractionBound T) *
+            (cubeExpWeight (G.stateEscapeRates states) T u *
+              ENNReal.ofReal
+                (Real.exp
+                  (-(c * (T : ℝ) *
+                    TwoState.AsymmetricExample.residual u)))) :=
+        lintegral_mono hpt
+    _ = ENNReal.ofReal (G.fractionBound T) * G.holdingIntegral T states := by
+        rw [lintegral_const_mul' _ _ ENNReal.ofReal_ne_top, holdingIntegral]
+
+omit [DecidableEq Ω] [MeasurableSpace Ω] [MeasurableSingletonClass Ω] in
+theorem sequenceMassAt_le
+    (G : FiniteJumpGenerator Ω) (T : NNReal) {n : ℕ}
+    (states : Fin (n + 1) → Ω) {ρ : ℝ} (h0 : 0 ≤ ρ) (h1 : ρ ≤ 1) :
+    G.sequenceMassAt T states ρ ≤
+      ENNReal.ofReal (G.fractionBound T) * G.sequenceMass T states := by
+  rw [sequenceMassAt, sequenceMass]
+  calc (T : ℝ≥0∞) ^ n * G.jumpProduct states * G.holdingIntegralAt T states ρ
+      ≤ (T : ℝ≥0∞) ^ n * G.jumpProduct states *
+          (ENNReal.ofReal (G.fractionBound T) * G.holdingIntegral T states) :=
+        mul_le_mul_right (G.holdingIntegralAt_le T states h0 h1) _
+    _ = ENNReal.ofReal (G.fractionBound T) *
+          ((T : ℝ≥0∞) ^ n * G.jumpProduct states *
+            G.holdingIntegral T states) := by ring
+
+omit [MeasurableSpace Ω] [MeasurableSingletonClass Ω] in
+theorem sectorTerminalMassAtFrom_le
+    (G : FiniteJumpGenerator Ω) (T : NNReal) (x y : Ω) (n : ℕ)
+    {ρ : ℝ} (h0 : 0 ≤ ρ) (h1 : ρ ≤ 1) :
+    G.sectorTerminalMassAtFrom T x y n ρ ≤
+      ENNReal.ofReal (G.fractionBound T) * G.sectorTerminalMassFrom T x y n := by
+  rw [sectorTerminalMassAtFrom, sectorTerminalMassFrom, Finset.mul_sum]
+  refine Finset.sum_le_sum fun states _ => ?_
+  calc fixedInitialWeight x (states 0) *
+          (fixedInitialWeight y (states (Fin.last n)) *
+            G.sequenceMassAt T states ρ)
+      ≤ fixedInitialWeight x (states 0) *
+          (fixedInitialWeight y (states (Fin.last n)) *
+            (ENNReal.ofReal (G.fractionBound T) * G.sequenceMass T states)) :=
+        mul_le_mul_right (mul_le_mul_right (G.sequenceMassAt_le T states h0 h1) _) _
+    _ = ENNReal.ofReal (G.fractionBound T) *
+          (fixedInitialWeight x (states 0) *
+            (fixedInitialWeight y (states (Fin.last n)) *
+              G.sequenceMass T states)) := by ring
+
+omit [MeasurableSpace Ω] [MeasurableSingletonClass Ω] in
+theorem transitionMass_le_one
+    (G : FiniteJumpGenerator Ω) (T : NNReal) (x y : Ω) :
+    G.transitionMass T x y ≤ 1 := by
+  rw [← G.sum_transitionMass T x]
+  exact Finset.single_le_sum (f := fun y : Ω => G.transitionMass T x y)
+    (fun _ _ => zero_le) (Finset.mem_univ y)
+
+omit [MeasurableSpace Ω] [MeasurableSingletonClass Ω] in
+/-- **A uniform bound on the whole fraction range.**  Everything reduces to the
+normalization already proved at `rho = 1`. -/
+theorem transitionMassAt_le
+    (G : FiniteJumpGenerator Ω) (T : NNReal) (x y : Ω)
+    {ρ : ℝ} (h0 : 0 ≤ ρ) (h1 : ρ ≤ 1) :
+    G.transitionMassAt T x y ρ ≤ ENNReal.ofReal (G.fractionBound T) := by
+  calc G.transitionMassAt T x y ρ
+      ≤ ∑' n, ENNReal.ofReal (G.fractionBound T) *
+          G.sectorTerminalMassFrom T x y n :=
+        ENNReal.tsum_le_tsum fun n =>
+          G.sectorTerminalMassAtFrom_le T x y n h0 h1
+    _ = ENNReal.ofReal (G.fractionBound T) * G.transitionMass T x y :=
+        ENNReal.tsum_mul_left
+    _ ≤ ENNReal.ofReal (G.fractionBound T) * 1 :=
+        mul_le_mul_right (G.transitionMass_le_one T x y) _
+    _ = ENNReal.ofReal (G.fractionBound T) := mul_one _
+
+omit [MeasurableSpace Ω] [MeasurableSingletonClass Ω] in
+theorem transitionMassAt_ne_top
+    (G : FiniteJumpGenerator Ω) (T : NNReal) (x y : Ω)
+    {ρ : ℝ} (h0 : 0 ≤ ρ) (h1 : ρ ≤ 1) :
+    G.transitionMassAt T x y ρ ≠ ∞ :=
+  ne_top_of_le_ne_top ENNReal.ofReal_ne_top (G.transitionMassAt_le T x y h0 h1)
+
 end FiniteJumpGenerator
 end ContinuousTimeJump
 end MeasureProtocol

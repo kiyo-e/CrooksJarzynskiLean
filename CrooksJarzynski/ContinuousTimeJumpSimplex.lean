@@ -238,9 +238,9 @@ This is the one-dimensional transfer between the unit-interval chart and the
 real line.  Renewal arguments in the horizon direction peel a single holding
 coordinate, which lands in the chart, while the analytic side works with
 interval integrals; this is the only place the two have to be reconciled. -/
-theorem lintegral_unitInterval_Iic_of_continuous_nonneg
+theorem lintegral_unitInterval_Iic_of_integrableOn
     (f : ℝ → ℝ) (ρ : ℝ) (hρ0 : 0 ≤ ρ) (hρ1 : ρ ≤ 1)
-    (hf : Continuous f)
+    (hf : IntegrableOn f (Set.Icc (0 : ℝ) ρ))
     (hfnn : ∀ z ∈ Set.Icc (0 : ℝ) ρ, 0 ≤ f z) :
     ∫⁻ a : I in {a : I | (a : ℝ) ≤ ρ}, ENNReal.ofReal (f (a : ℝ)) =
       ENNReal.ofReal (∫ z : ℝ in (0 : ℝ)..ρ, f z) := by
@@ -259,14 +259,24 @@ theorem lintegral_unitInterval_Iic_of_continuous_nonneg
         (Set.Icc 0 ρ))) = _
   rw [Measure.restrict_restrict measurableSet_Icc,
     Set.inter_eq_left.mpr (Set.Icc_subset_Icc le_rfl hρ1)]
-  have hint : Integrable f (volume.restrict (Set.Icc 0 ρ)) :=
-    hf.integrableOn_Icc
   have hnn : 0 ≤ᵐ[volume.restrict (Set.Icc (0 : ℝ) ρ)] f := by
     filter_upwards [self_mem_ae_restrict measurableSet_Icc] with z hz
     exact hfnn z hz
-  rw [← ofReal_integral_eq_lintegral_ofReal hint hnn,
+  rw [← ofReal_integral_eq_lintegral_ofReal hf hnn,
     integral_Icc_eq_integral_Ioc,
     ← intervalIntegral.integral_of_le hρ0]
+
+/-- The transfer for a continuous integrand.  Continuity is only used to get
+integrability, which is why the general form above asks for that directly: a
+renewal argument produces a bounded measurable integrand before it knows the
+solution is continuous. -/
+theorem lintegral_unitInterval_Iic_of_continuous_nonneg
+    (f : ℝ → ℝ) (ρ : ℝ) (hρ0 : 0 ≤ ρ) (hρ1 : ρ ≤ 1)
+    (hf : Continuous f)
+    (hfnn : ∀ z ∈ Set.Icc (0 : ℝ) ρ, 0 ≤ f z) :
+    ∫⁻ a : I in {a : I | (a : ℝ) ≤ ρ}, ENNReal.ofReal (f (a : ℝ)) =
+      ENNReal.ofReal (∫ z : ℝ in (0 : ℝ)..ρ, f z) :=
+  lintegral_unitInterval_Iic_of_integrableOn f ρ hρ0 hρ1 hf.integrableOn_Icc hfnn
 
 /-- The simplex event has strictly positive product volume, so conditioning on
 it is nondegenerate for every jump count, including `n = 0`. -/
