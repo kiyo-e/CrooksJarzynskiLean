@@ -185,6 +185,121 @@ theorem holdingIntegralAt_succ
   rw [lintegral_const_mul' _ _ (by simp [hhead] : head a ≠ ∞)]
   congr 1
 
+
+/-! ### Measurability in the available fraction -/
+
+omit [DecidableEq Ω] [MeasurableSpace Ω] [MeasurableSingletonClass Ω] in
+/-- The holding-time integral is measurable in the available fraction.  Both the
+domain and the residual factor move with `ρ`, so this goes through the jointly
+measurable integrand rather than through any continuity in `ρ`. -/
+theorem measurable_holdingIntegralAt
+    (G : FiniteJumpGenerator Ω) (T : NNReal) {n : ℕ}
+    (states : Fin (n + 1) → Ω) :
+    Measurable fun ρ : ℝ => G.holdingIntegralAt T states ρ := by
+  classical
+  set F : ℝ × (Fin n → I) → ℝ≥0∞ :=
+    {q : ℝ × (Fin n → I) | ∑ j, (q.2 j : ℝ) ≤ q.1}.indicator
+      (fun q => cubeExpWeight (G.stateEscapeRates states) T q.2 *
+        ENNReal.ofReal
+          (Real.exp
+            (-((G.escapeRate (states (Fin.last n)) : ℝ) * (T : ℝ) *
+              residualAt q.1 q.2)))) with hF
+  have hset : MeasurableSet
+      {q : ℝ × (Fin n → I) | ∑ j, (q.2 j : ℝ) ≤ q.1} :=
+    measurableSet_le (by fun_prop) (by fun_prop)
+  have hbody : Measurable fun q : ℝ × (Fin n → I) =>
+      cubeExpWeight (G.stateEscapeRates states) T q.2 *
+        ENNReal.ofReal
+          (Real.exp
+            (-((G.escapeRate (states (Fin.last n)) : ℝ) * (T : ℝ) *
+              residualAt q.1 q.2))) := by
+    simp only [residualAt]
+    refine Measurable.mul ?_ (by fun_prop)
+    exact (TwoState.AsymmetricExample.measurable_cubeExpWeight
+      (G.stateEscapeRates states) T).comp measurable_snd
+  have hFmeas : Measurable F := hbody.indicator hset
+  have hrw : ∀ ρ : ℝ,
+      G.holdingIntegralAt T states ρ = ∫⁻ u : Fin n → I, F (ρ, u) := by
+    intro ρ
+    rw [holdingIntegralAt,
+      ← lintegral_indicator
+        (TwoState.AsymmetricExample.measurableSet_freeSimplexSetAt n ρ)]
+    refine lintegral_congr fun u => ?_
+    simp only [hF, Set.indicator_apply,
+      TwoState.AsymmetricExample.freeSimplexSetAt, Set.mem_setOf_eq]
+  simp_rw [hrw]
+  exact hFmeas.lintegral_prod_right'
+
+/-! ### The sequence mass on a variable fraction -/
+
+omit [DecidableEq Ω] [MeasurableSpace Ω] [MeasurableSingletonClass Ω] in
+/-- Splitting the first jump out of the realized jump-rate product. -/
+theorem jumpProduct_succ
+    (G : FiniteJumpGenerator Ω) {n : ℕ} (states : Fin (n + 2) → Ω) :
+    G.jumpProduct states =
+      (G.jumpRate (states 0) (states 1) : ℝ≥0∞) *
+        G.jumpProduct (fun i : Fin (n + 1) => states i.succ) := by
+  unfold jumpProduct
+  rw [Fin.prod_univ_succ]
+  congr 1
+
+/-- The unnormalized mass of one state sequence on a variable available fraction
+`ρ`, at fixed horizon scale `T`. -/
+noncomputable def sequenceMassAt
+    (G : FiniteJumpGenerator Ω) (T : NNReal) {n : ℕ}
+    (states : Fin (n + 1) → Ω) (ρ : ℝ) : ℝ≥0∞ :=
+  (T : ℝ≥0∞) ^ n * G.jumpProduct states * G.holdingIntegralAt T states ρ
+
+omit [DecidableEq Ω] [MeasurableSpace Ω] [MeasurableSingletonClass Ω] in
+theorem sequenceMassAt_one
+    (G : FiniteJumpGenerator Ω) (T : NNReal) {n : ℕ}
+    (states : Fin (n + 1) → Ω) :
+    G.sequenceMassAt T states 1 = G.sequenceMass T states := by
+  rw [sequenceMassAt, G.holdingIntegralAt_one T states, sequenceMass]
+
+omit [DecidableEq Ω] [MeasurableSpace Ω] [MeasurableSingletonClass Ω] in
+/-- **First-jump decomposition of a single state sequence.**  One factor of the
+horizon scale is spent on the jump that leaves the initial state; the rest of
+the sequence carries the same construction on the remaining fraction. -/
+theorem sequenceMassAt_succ
+    (G : FiniteJumpGenerator Ω) (T : NNReal) {n : ℕ}
+    (states : Fin (n + 2) → Ω) (ρ : ℝ) :
+    G.sequenceMassAt T states ρ =
+      (T : ℝ≥0∞) * (G.jumpRate (states 0) (states 1) : ℝ≥0∞) *
+        ∫⁻ v : I,
+          ENNReal.ofReal
+              (Real.exp
+                (-((G.escapeRate (states 0) : ℝ) * (T : ℝ) * (v : ℝ)))) *
+            G.sequenceMassAt T (fun i : Fin (n + 1) => states i.succ)
+              (ρ - (v : ℝ)) := by
+  have hconst : (T : ℝ≥0∞) ^ n * G.jumpProduct
+      (fun i : Fin (n + 1) => states i.succ) ≠ ∞ :=
+    ENNReal.mul_ne_top (ENNReal.pow_ne_top ENNReal.coe_ne_top)
+      (G.jumpProduct_ne_top _)
+  rw [sequenceMassAt, G.holdingIntegralAt_succ T states ρ,
+    G.jumpProduct_succ states]
+  have hpull :
+      (∫⁻ v : I,
+          ENNReal.ofReal
+              (Real.exp
+                (-((G.escapeRate (states 0) : ℝ) * (T : ℝ) * (v : ℝ)))) *
+            G.sequenceMassAt T (fun i : Fin (n + 1) => states i.succ)
+              (ρ - (v : ℝ))) =
+        ((T : ℝ≥0∞) ^ n *
+            G.jumpProduct (fun i : Fin (n + 1) => states i.succ)) *
+          ∫⁻ v : I,
+            ENNReal.ofReal
+                (Real.exp
+                  (-((G.escapeRate (states 0) : ℝ) * (T : ℝ) * (v : ℝ)))) *
+              G.holdingIntegralAt T (fun i : Fin (n + 1) => states i.succ)
+                (ρ - (v : ℝ)) := by
+    rw [← lintegral_const_mul' _ _ hconst]
+    refine lintegral_congr fun v => ?_
+    rw [sequenceMassAt]
+    ring
+  rw [hpull]
+  ring
+
 end FiniteJumpGenerator
 end ContinuousTimeJump
 end MeasureProtocol
