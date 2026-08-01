@@ -300,6 +300,253 @@ theorem sequenceMassAt_succ
   rw [hpull]
   ring
 
+omit [DecidableEq Ω] [MeasurableSpace Ω] [MeasurableSingletonClass Ω] in
+theorem measurable_sequenceMassAt
+    (G : FiniteJumpGenerator Ω) (T : NNReal) {n : ℕ}
+    (states : Fin (n + 1) → Ω) :
+    Measurable fun ρ : ℝ => G.sequenceMassAt T states ρ := by
+  simp only [sequenceMassAt]
+  exact measurable_const.mul (G.measurable_holdingIntegralAt T states)
+
+/-! ### Folding the branching sum over the state reached by the first jump
+
+Summing the single-sequence decomposition over all state sequences is what
+turns the jump-rate prefactor into a genuine renewal kernel: the head of the
+sequence is pinned to the initial state, and the state reached by the first
+jump becomes the branching index. -/
+
+/-- The mass the `n`-jump sector sends from `x` to `y` on a variable available
+fraction `ρ` of the horizon, at fixed horizon scale `T`.  At `ρ = 1` this is
+`sectorTerminalMassFrom`. -/
+noncomputable def sectorTerminalMassAtFrom
+    (G : FiniteJumpGenerator Ω) (T : NNReal) (x y : Ω) (n : ℕ) (ρ : ℝ) : ℝ≥0∞ :=
+  ∑ states : Fin (n + 1) → Ω,
+    fixedInitialWeight x (states 0) *
+      (fixedInitialWeight y (states (Fin.last n)) * G.sequenceMassAt T states ρ)
+
+omit [MeasurableSpace Ω] [MeasurableSingletonClass Ω] in
+theorem sectorTerminalMassAtFrom_one
+    (G : FiniteJumpGenerator Ω) (T : NNReal) (x y : Ω) (n : ℕ) :
+    G.sectorTerminalMassAtFrom T x y n 1 = G.sectorTerminalMassFrom T x y n :=
+  Finset.sum_congr rfl fun states _ => by rw [G.sequenceMassAt_one T states]
+
+omit [MeasurableSpace Ω] [MeasurableSingletonClass Ω] in
+theorem measurable_sectorTerminalMassAtFrom
+    (G : FiniteJumpGenerator Ω) (T : NNReal) (x y : Ω) (n : ℕ) :
+    Measurable fun ρ : ℝ => G.sectorTerminalMassAtFrom T x y n ρ := by
+  simp only [sectorTerminalMassAtFrom]
+  exact Finset.measurable_sum _ fun states _ =>
+    measurable_const.mul (measurable_const.mul (G.measurable_sequenceMassAt T states))
+
+omit [MeasurableSpace Ω] [MeasurableSingletonClass Ω] in
+/-- **First-jump renewal for the sector terminal mass.**  The initial state
+survives the first holding interval, jumps to some state `z`, and the remaining
+`n` jumps have to land on `y` within the fraction that is left. -/
+theorem sectorTerminalMassAtFrom_succ
+    (G : FiniteJumpGenerator Ω) (T : NNReal) (x y : Ω) (n : ℕ) (ρ : ℝ) :
+    G.sectorTerminalMassAtFrom T x y (n + 1) ρ =
+      (T : ℝ≥0∞) *
+        ∫⁻ v : I,
+          ENNReal.ofReal
+              (Real.exp (-((G.escapeRate x : ℝ) * (T : ℝ) * (v : ℝ)))) *
+            ∑ z : Ω,
+              (G.jumpRate x z : ℝ≥0∞) *
+                G.sectorTerminalMassAtFrom T z y n (ρ - (v : ℝ)) := by
+  classical
+  -- The branching sum, already folded onto the state the first jump reaches.
+  set H : ℝ → ℝ≥0∞ := fun s =>
+    ∑ rest : Fin (n + 1) → Ω,
+      (G.jumpRate x (rest 0) : ℝ≥0∞) *
+        (fixedInitialWeight y (rest (Fin.last n)) * G.sequenceMassAt T rest s)
+    with hH
+  have hfold : ∀ s : ℝ,
+      (∑ z : Ω, (G.jumpRate x z : ℝ≥0∞) *
+        G.sectorTerminalMassAtFrom T z y n s) = H s := by
+    intro s
+    simp only [hH, sectorTerminalMassAtFrom, Finset.mul_sum]
+    rw [Finset.sum_comm]
+    refine Finset.sum_congr rfl fun rest _ => ?_
+    have hterm : ∀ z : Ω,
+        (G.jumpRate x z : ℝ≥0∞) *
+            (fixedInitialWeight z (rest 0) *
+              (fixedInitialWeight y (rest (Fin.last n)) *
+                G.sequenceMassAt T rest s)) =
+          if rest 0 = z then
+            (G.jumpRate x (rest 0) : ℝ≥0∞) *
+              (fixedInitialWeight y (rest (Fin.last n)) *
+                G.sequenceMassAt T rest s)
+          else 0 := by
+      intro z
+      by_cases h : rest 0 = z
+      · subst h; simp [fixedInitialWeight]
+      · simp [fixedInitialWeight, h]
+    simp only [hterm]
+    rw [Finset.sum_ite_eq]
+    simp
+  simp only [hfold]
+  -- Split the state sequence into its initial state and the rest.
+  have hreindex :
+      G.sectorTerminalMassAtFrom T x y (n + 1) ρ =
+        ∑ z : Ω, fixedInitialWeight x z *
+          ∑ rest : Fin (n + 1) → Ω,
+            fixedInitialWeight y (rest (Fin.last n)) *
+              G.sequenceMassAt T (Fin.cons z rest) ρ := by
+    rw [sectorTerminalMassAtFrom,
+      ← Equiv.sum_comp (Fin.consEquiv fun _ : Fin (n + 2) => Ω)
+        (fun states : Fin (n + 2) → Ω =>
+          fixedInitialWeight x (states 0) *
+            (fixedInitialWeight y (states (Fin.last (n + 1))) *
+              G.sequenceMassAt T states ρ)),
+      Fintype.sum_prod_type]
+    refine Finset.sum_congr rfl fun z _ => ?_
+    rw [Finset.mul_sum]
+    refine Finset.sum_congr rfl fun rest _ => ?_
+    have hlast : (Fin.cons z rest : Fin (n + 2) → Ω) (Fin.last (n + 1)) =
+        rest (Fin.last n) := by
+      rw [← Fin.succ_last, Fin.cons_succ]
+    show fixedInitialWeight x ((Fin.cons z rest : Fin (n + 2) → Ω) 0) *
+        (fixedInitialWeight y ((Fin.cons z rest : Fin (n + 2) → Ω)
+            (Fin.last (n + 1))) *
+          G.sequenceMassAt T (Fin.cons z rest) ρ) = _
+    rw [Fin.cons_zero, hlast]
+  rw [hreindex]
+  -- The initial weight pins the head of the sequence to `x`.
+  have hhead : ∀ F : Ω → ℝ≥0∞, (∑ z : Ω, fixedInitialWeight x z * F z) = F x := by
+    intro F
+    simp [fixedInitialWeight]
+  rw [hhead fun z => ∑ rest : Fin (n + 1) → Ω,
+    fixedInitialWeight y (rest (Fin.last n)) *
+      G.sequenceMassAt T (Fin.cons z rest) ρ]
+  -- Decompose each surviving sequence at its first jump.
+  have hcons : ∀ rest : Fin (n + 1) → Ω,
+      G.sequenceMassAt T (Fin.cons x rest) ρ =
+        (T : ℝ≥0∞) * (G.jumpRate x (rest 0) : ℝ≥0∞) *
+          ∫⁻ v : I,
+            ENNReal.ofReal
+                (Real.exp (-((G.escapeRate x : ℝ) * (T : ℝ) * (v : ℝ)))) *
+              G.sequenceMassAt T rest (ρ - (v : ℝ)) := by
+    intro rest
+    have htail : (fun i : Fin (n + 1) => (Fin.cons x rest : Fin (n + 2) → Ω) i.succ) =
+        rest := funext fun i => Fin.cons_succ _ _ _
+    have hone : (Fin.cons x rest : Fin (n + 2) → Ω) 1 = rest 0 := by
+      rw [← Fin.succ_zero_eq_one, Fin.cons_succ]
+    rw [G.sequenceMassAt_succ T (Fin.cons x rest) ρ]
+    simp only [Fin.cons_zero, hone, htail]
+  simp only [hcons]
+  -- Move the sequence-dependent constants inside the integral, then exchange the
+  -- finite sum with it.
+  have hpull : ∀ rest : Fin (n + 1) → Ω,
+      fixedInitialWeight y (rest (Fin.last n)) *
+          ((T : ℝ≥0∞) * (G.jumpRate x (rest 0) : ℝ≥0∞) *
+            ∫⁻ v : I,
+              ENNReal.ofReal
+                  (Real.exp (-((G.escapeRate x : ℝ) * (T : ℝ) * (v : ℝ)))) *
+                G.sequenceMassAt T rest (ρ - (v : ℝ))) =
+        (T : ℝ≥0∞) *
+          ∫⁻ v : I,
+            ENNReal.ofReal
+                (Real.exp (-((G.escapeRate x : ℝ) * (T : ℝ) * (v : ℝ)))) *
+              ((G.jumpRate x (rest 0) : ℝ≥0∞) *
+                (fixedInitialWeight y (rest (Fin.last n)) *
+                  G.sequenceMassAt T rest (ρ - (v : ℝ)))) := by
+    intro rest
+    have hne : (G.jumpRate x (rest 0) : ℝ≥0∞) *
+        fixedInitialWeight y (rest (Fin.last n)) ≠ ∞ := by
+      refine ENNReal.mul_ne_top ENNReal.coe_ne_top ?_
+      unfold fixedInitialWeight
+      split <;> simp
+    have hconst :
+        (∫⁻ v : I,
+            ENNReal.ofReal
+                (Real.exp (-((G.escapeRate x : ℝ) * (T : ℝ) * (v : ℝ)))) *
+              ((G.jumpRate x (rest 0) : ℝ≥0∞) *
+                (fixedInitialWeight y (rest (Fin.last n)) *
+                  G.sequenceMassAt T rest (ρ - (v : ℝ))))) =
+          ((G.jumpRate x (rest 0) : ℝ≥0∞) *
+              fixedInitialWeight y (rest (Fin.last n))) *
+            ∫⁻ v : I,
+              ENNReal.ofReal
+                  (Real.exp (-((G.escapeRate x : ℝ) * (T : ℝ) * (v : ℝ)))) *
+                G.sequenceMassAt T rest (ρ - (v : ℝ)) := by
+      rw [← lintegral_const_mul' _ _ hne]
+      exact lintegral_congr fun v => by ring
+    rw [hconst]
+    ring
+  simp only [hpull]
+  have hmeas : ∀ rest : Fin (n + 1) → Ω,
+      Measurable fun v : I =>
+        ENNReal.ofReal
+            (Real.exp (-((G.escapeRate x : ℝ) * (T : ℝ) * (v : ℝ)))) *
+          ((G.jumpRate x (rest 0) : ℝ≥0∞) *
+            (fixedInitialWeight y (rest (Fin.last n)) *
+              G.sequenceMassAt T rest (ρ - (v : ℝ)))) := by
+    intro rest
+    refine Measurable.mul (by fun_prop)
+      (measurable_const.mul (measurable_const.mul ?_))
+    exact (G.measurable_sequenceMassAt T rest).comp
+      (measurable_const.sub measurable_subtype_coe)
+  rw [← Finset.mul_sum,
+    (lintegral_finsetSum (μ := (volume : Measure I)) Finset.univ
+      fun rest _ => hmeas rest).symm]
+  refine congrArg _ (lintegral_congr fun v => ?_)
+  simp only [hH, Finset.mul_sum]
+
+/-! ### The jump-free base case
+
+With no jumps there is nothing left to integrate over: the chart is a single
+point and the whole available fraction is spent surviving in the initial
+state. -/
+
+omit [DecidableEq Ω] [MeasurableSpace Ω] [MeasurableSingletonClass Ω] in
+theorem holdingIntegralAt_zero
+    (G : FiniteJumpGenerator Ω) (T : NNReal) (states : Fin 1 → Ω) {ρ : ℝ}
+    (hρ : 0 ≤ ρ) :
+    G.holdingIntegralAt T states ρ =
+      ENNReal.ofReal
+        (Real.exp (-((G.escapeRate (states 0) : ℝ) * (T : ℝ) * ρ))) := by
+  have hset : TwoState.AsymmetricExample.freeSimplexSetAt 0 ρ = Set.univ := by
+    ext u
+    simp [TwoState.AsymmetricExample.freeSimplexSetAt, hρ]
+  have hpoint : (Fin.last 0 : Fin 1) = 0 := rfl
+  have huniv : (volume : Measure (Fin 0 → I)) Set.univ = 1 := by simp
+  rw [holdingIntegralAt, hset, Measure.restrict_univ]
+  have hbody : ∀ u : Fin 0 → I,
+      cubeExpWeight (G.stateEscapeRates states) T u *
+          ENNReal.ofReal
+            (Real.exp
+              (-((G.escapeRate (states (Fin.last 0)) : ℝ) * (T : ℝ) *
+                residualAt ρ u))) =
+        ENNReal.ofReal
+          (Real.exp (-((G.escapeRate (states 0) : ℝ) * (T : ℝ) * ρ))) := by
+    intro u
+    simp [cubeExpWeight, residualAt, hpoint]
+  simp only [hbody]
+  rw [lintegral_const, huniv, mul_one]
+
+omit [MeasurableSpace Ω] [MeasurableSingletonClass Ω] in
+/-- Without a jump the sector can only stay where it started. -/
+theorem sectorTerminalMassAtFrom_zero
+    (G : FiniteJumpGenerator Ω) (T : NNReal) (x y : Ω) {ρ : ℝ} (hρ : 0 ≤ ρ) :
+    G.sectorTerminalMassAtFrom T x y 0 ρ =
+      if x = y then
+        ENNReal.ofReal (Real.exp (-((G.escapeRate x : ℝ) * (T : ℝ) * ρ)))
+      else 0 := by
+  classical
+  have hmain : G.sectorTerminalMassAtFrom T x y 0 ρ =
+      fixedInitialWeight x x *
+        (fixedInitialWeight y x * G.sequenceMassAt T (fun _ : Fin 1 => x) ρ) := by
+    rw [sectorTerminalMassAtFrom]
+    refine Finset.sum_eq_single (fun _ : Fin 1 => x) (fun states _ hne => ?_)
+      (by simp)
+    have h0 : states 0 ≠ x := fun h =>
+      hne (funext fun i => by rw [Subsingleton.elim i 0, h])
+    rw [fixedInitialWeight_of_ne h0, zero_mul]
+  rw [hmain, fixedInitialWeight_self, one_mul, sequenceMassAt,
+    G.holdingIntegralAt_zero T (fun _ : Fin 1 => x) hρ]
+  by_cases h : x = y
+  · simp [h, fixedInitialWeight, jumpProduct]
+  · simp [fixedInitialWeight, h]
+
 end FiniteJumpGenerator
 end ContinuousTimeJump
 end MeasureProtocol
