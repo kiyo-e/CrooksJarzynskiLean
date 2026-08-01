@@ -57,10 +57,18 @@ theorem measurableSet_freeSimplexSet (n : ℕ) :
   unfold freeSimplexSet
   exact measurableSet_le (by fun_prop) measurable_const
 
-private def freeSimplexSetAt (n : ℕ) (t : I) : Set (Fin n → I) :=
+/-- The free-coordinate simplex cut down to a sub-horizon `t`.  The chart scale
+is unchanged, so this expresses a shorter horizon without rescaling the
+coordinates; `freeSimplexSet n` is the case `t = 1`.
+
+This is the shape the horizon-direction renewal argument needs: splitting off
+the first coordinate leaves the remaining ones in `freeSimplexSetAt n (t - u 0)`
+at the same scale. -/
+def freeSimplexSetAt (n : ℕ) (t : I) : Set (Fin n → I) :=
   {u | ∑ i, (unitNNReal (u i) : ℝ) ≤ (t : ℝ)}
 
-private theorem measurableSet_freeSimplexSetAt (n : ℕ) (t : I) :
+/-- The sub-horizon simplex is measurable. -/
+theorem measurableSet_freeSimplexSetAt (n : ℕ) (t : I) :
     MeasurableSet (freeSimplexSetAt n t) := by
   unfold freeSimplexSetAt
   exact measurableSet_le (by fun_prop) measurable_const
@@ -146,14 +154,14 @@ private theorem lintegral_freeSimplexSection (n : ℕ) (t : I) :
   field_simp
   ring
 
-/-- The standard free-coordinate `n`-simplex has volume `1 / n!`. -/
-theorem volume_freeSimplexSet (n : ℕ) :
-    (volume : Measure (Fin n → I)) (freeSimplexSet n) =
-      ENNReal.ofReal (1 / (n.factorial : ℝ)) := by
-  have volume_freeSimplexSetAt (n : ℕ) (t : I) :
-      (volume : Measure (Fin n → I)) (freeSimplexSetAt n t) =
-        ENNReal.ofReal ((t : ℝ) ^ n / (n.factorial : ℝ)) := by
-    induction n generalizing t with
+/-- **The sub-horizon simplex has volume `t^n / n!`.**  The induction splits off
+the first coordinate with `piFinSuccAbove` and recurses on the remaining
+sub-horizon `t - u 0`, which is the same peeling the horizon-direction renewal
+argument needs; the `t^n` here is the Jacobian such a rescaling would carry. -/
+theorem volume_freeSimplexSetAt (n : ℕ) (t : I) :
+    (volume : Measure (Fin n → I)) (freeSimplexSetAt n t) =
+      ENNReal.ofReal ((t : ℝ) ^ n / (n.factorial : ℝ)) := by
+  induction n generalizing t with
     | zero =>
         have hset : freeSimplexSetAt 0 t = Set.univ := by
           ext u
@@ -214,6 +222,12 @@ theorem volume_freeSimplexSet (n : ℕ) :
           split_ifs <;> rfl
         rw [hind, MeasureTheory.lintegral_indicator measurableSet_Iic,
           lintegral_freeSimplexSection]
+
+/-- The standard free-coordinate `n`-simplex has volume `1 / n!`.  It is the
+sub-horizon simplex at full horizon. -/
+theorem volume_freeSimplexSet (n : ℕ) :
+    (volume : Measure (Fin n → I)) (freeSimplexSet n) =
+      ENNReal.ofReal (1 / (n.factorial : ℝ)) := by
   simpa [freeSimplexSet, freeSimplexSetAt] using
     volume_freeSimplexSetAt n (1 : I)
 
