@@ -109,6 +109,34 @@ theorem exp_smul_apply_eq_add_integral
   rw [hpull, exp_smul_eq_one_add_integral Q T]
   rfl
 
+/-- Splitting the generator into its escape and jump parts.  The diagonal
+contributes `-λ(x)` times the entry being left, and the off-diagonal
+contributes the jump rates; the `z = x` jump term is zero, so the jump sum can
+run over all states.
+
+This is the algebraic input to the renewal equation: the escape term is what
+the integrating factor `e^{λ(x) t}` cancels, leaving the jump term as the
+integrand. -/
+theorem generator_mul_apply
+    (G : FiniteJumpGenerator Ω) (M : Matrix Ω Ω ℝ) (x y : Ω) :
+    (G.generator * M) x y =
+      -(G.escapeRate x : ℝ) * M x y +
+        ∑ z, (G.jumpRate x z : ℝ) * M z y := by
+  rw [Matrix.mul_apply]
+  have hterm : ∀ z : Ω,
+      G.generator x z * M z y =
+        (if z = x then -(G.escapeRate x : ℝ) * M x y else 0) +
+          (G.jumpRate x z : ℝ) * M z y := by
+    intro z
+    by_cases h : z = x
+    · subst h
+      simp [FiniteJumpGenerator.generator]
+    · simp [FiniteJumpGenerator.generator, h]
+  simp_rw [hterm]
+  rw [Finset.sum_add_distrib, Finset.sum_ite_eq' Finset.univ x
+    (fun _ => -(G.escapeRate x : ℝ) * M x y)]
+  simp
+
 end MatrixNorm
 
 end FiniteJumpGenerator
