@@ -6,6 +6,8 @@ authors:
   - name: "kiyo-e"
 repository-code: "https://github.com/kiyo-e/CrooksJarzynskiLean"
 license: Apache-2.0
+version: "0.1.0"
+date-released: "2026-07-31"
 keywords:
   - Lean 4
   - Mathlib
@@ -14,14 +16,31 @@ keywords:
   - fluctuation theorems
   - Crooks theorem
   - Jarzynski equality
+  - continuous-time Markov chains
+  - matrix exponential semigroup
 abstract: >-
-  A machine-checked development of discrete-time stochastic thermodynamics in
-  Lean 4. It proves finite-horizon Crooks and Jarzynski theorems for arbitrary
-  measurable state spaces directly with Mathlib measures and Markov kernels,
-  specializes them to Gibbs measures and standard physical work and
+  A machine-checked development of stochastic thermodynamics in Lean 4. In
+  discrete time it proves finite-horizon Crooks and Jarzynski theorems for
+  arbitrary measurable state spaces directly with Mathlib measures and Markov
+  kernels, specializes them to Gibbs measures and standard physical work and
   free-energy weights, and provides real-integral, work-distribution,
   average-work second-law, non-atomic Gaussian, Metropolis–Hastings, and
-  finite-state specializations. It also formalizes an
-  explicit physical time-reversal protocol, compares discrete-time work
-  conventions, and proves a path-uniform O(1/N) refinement bound. No sorry
-  placeholders or custom axioms.
+  finite-state specializations. It also formalizes an explicit physical
+  time-reversal protocol, compares discrete-time work conventions, and proves a
+  path-uniform O(1/N) refinement bound. In continuous time it develops a
+  finite-jump path space with segment-indexed factorized path densities and
+  piecewise-constant rate factors on jump sectors, constructs a nonzero
+  reversal-invariant fixed-horizon simplex reference measure with free-coordinate
+  volume 1/n!, and derives fixed-sector, all-sector and fixed-horizon Crooks and
+  Jarzynski theorems from local detailed balance. For the symmetric unit-rate
+  two-state chain it proves normalization, Poisson jump-count masses and
+  non-explosion, identifies the fixed-initial terminal marginals with the rows of
+  the matrix exponential exp(TQ), and packages them as a Mathlib Markov kernel
+  satisfying Chapman–Kolmogorov. An asymmetric reversible two-state chain
+  followed by an energy quench supplies the physical layer: Gibbs equilibrium,
+  partition functions, free-energy difference, real work, physical Crooks and
+  Jarzynski relations, work-distribution Crooks, a strict second law, and the
+  entropy-production integral fluctuation theorem. A general finite-state jump
+  generator layer packages nonnegative rates into a conservative generator with a
+  fixed-horizon counting reference, instantiated on a branching three-state
+  chain. No sorry placeholders or custom axioms.

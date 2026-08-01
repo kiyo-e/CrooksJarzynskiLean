@@ -113,6 +113,7 @@ theorem sum_reverseWeight (P : Protocol Ω n) :
   exact sum_reverseTransitionWeight n P.reverseKernel
     (gibbsDistribution P.β P.finalEnergy)
 
+omit [Nonempty Ω] in
 /-- Unnormalized pathwise Crooks identity. -/
 theorem boltzmann_crooks (P : Protocol Ω n) (γ : Trajectory Ω n) :
     boltzmannWeight P.β P.initialEnergy γ.1 *
@@ -362,7 +363,7 @@ theorem second_law (P : Protocol Ω n) :
               P.forwardWeight γ * P.work γ) +
             (P.β * P.deltaFreeEnergy) *
               (∑ γ : Trajectory Ω n, P.forwardWeight γ) := by
-            simpa only [Finset.mul_sum]
+            simp only [Finset.mul_sum]
       _ = 1 - P.β * P.meanWork + P.β * P.deltaFreeEnergy := by
             simp [P.sum_forwardWeight, meanWork]
       _ = 1 - P.β * (P.meanWork - P.deltaFreeEnergy) := by ring

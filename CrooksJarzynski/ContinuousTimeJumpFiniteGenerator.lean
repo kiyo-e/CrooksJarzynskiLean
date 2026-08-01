@@ -142,6 +142,7 @@ noncomputable def countingReference
   Simplex.reference T (G.stateSequenceCountingReference n)
     (simplexSectorMass T n)
 
+omit [DecidableEq Ω] in
 /-- The counting reference is invariant under path reversal. -/
 theorem map_countingReference_reverse
     (G : FiniteJumpGenerator Ω) (T : NNReal) (n : ℕ) :
@@ -150,6 +151,7 @@ theorem map_countingReference_reverse
   exact Simplex.map_reference_reverse T
     (G.stateSequenceCountingReference n) (simplexSectorMass T n)
 
+omit [DecidableEq Ω] in
 /-- The counting reference is supported on paths of duration `T`. -/
 theorem countingReference_ae_horizon
     (G : FiniteJumpGenerator Ω) (T : NNReal) (n : ℕ) :
@@ -160,6 +162,7 @@ theorem countingReference_ae_horizon
 
 variable [MeasurableSingletonClass Ω]
 
+omit [DecidableEq Ω] in
 /-- Every state sequence has unit counting mass. -/
 @[simp]
 theorem stateSequenceCountingReference_singleton
@@ -205,18 +208,16 @@ theorem model_jumpRate (x y : State) :
 
 @[simp]
 theorem escapeRate_center : model.escapeRate .center = 2 := by
-  simp [FiniteJumpGenerator.escapeRate, model, jumpRate, state_univ] <;>
-    norm_num
+  simp [FiniteJumpGenerator.escapeRate, model, jumpRate, state_univ]
+  norm_num
 
 @[simp]
 theorem escapeRate_left : model.escapeRate .left = 1 := by
-  simp [FiniteJumpGenerator.escapeRate, model, jumpRate, state_univ] <;>
-    norm_num
+  simp [FiniteJumpGenerator.escapeRate, model, jumpRate, state_univ]
 
 @[simp]
 theorem escapeRate_right : model.escapeRate .right = 1 := by
-  simp [FiniteJumpGenerator.escapeRate, model, jumpRate, state_univ] <;>
-    norm_num
+  simp [FiniteJumpGenerator.escapeRate, model, jumpRate, state_univ]
 
 /-- The center has two distinct positive-rate successors. -/
 theorem has_two_distinct_successors :
@@ -235,8 +236,7 @@ theorem jumpRate_symm (x y : State) :
 theorem generator_symm (x y : State) :
     model.generator x y = model.generator y x := by
   cases x <;> cases y <;>
-    simp [FiniteJumpGenerator.generator, escapeRate_center,
-      escapeRate_left, escapeRate_right, model, jumpRate]
+    simp [FiniteJumpGenerator.generator, model, jumpRate]
 
 /-- The three-state generator is conservative. -/
 theorem generator_isConservative :

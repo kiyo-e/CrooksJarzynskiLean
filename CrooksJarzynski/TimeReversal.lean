@@ -80,7 +80,7 @@ def reverse {n : ℕ} (γ : Trajectory Ω n) : Trajectory Ω n :=
 @[simp]
 theorem stateAt_reverse {n : ℕ} (γ : Trajectory Ω n) (i : Fin (n + 1)) :
     stateAt (reverse γ) i = stateAt γ i.rev := by
-  simpa [reverse] using congrFun (stateAt_ofFn (fun j => stateAt γ j.rev)) i
+  simp [reverse]
 
 @[simp]
 theorem reverse_reverse {n : ℕ} (γ : Trajectory Ω n) :
@@ -125,13 +125,13 @@ theorem stateAt_last {n : ℕ} (γ : Trajectory Ω n) :
 theorem reverse_fst {n : ℕ} (γ : Trajectory Ω n) :
     (reverse γ).1 = finalState γ.1 γ.2 := by
   rw [← stateAt_zero (reverse γ), stateAt_reverse]
-  simpa using stateAt_last γ
+  simp
 
 @[simp]
 theorem finalState_reverse {n : ℕ} (γ : Trajectory Ω n) :
     finalState (reverse γ).1 (reverse γ).2 = γ.1 := by
   rw [← stateAt_last (reverse γ), stateAt_reverse]
-  simpa using stateAt_zero γ
+  simp
 
 /-- Reversal exchanges the left vertex of an edge with the right vertex of the
 reversed edge. -/
@@ -241,6 +241,7 @@ namespace Protocol
 variable {Ω : Type u} [Fintype Ω] [Nonempty Ω]
 variable {n : ℕ}
 
+omit [Fintype Ω] [Nonempty Ω] in
 private theorem workAux_eq_sum_quenchThenTransitionIncrement
     {n : ℕ} (E : ℕ → Energy Ω) (x : Ω) (c : Continuation Ω n) :
     workAux E x c =
@@ -402,16 +403,19 @@ def reverseProtocol (P : Protocol Ω n) : TransitionThenQuenchProtocol Ω n wher
     intro t x y
     simpa [Fin.rev_castSucc] using (P.localBalance t.rev y x).symm
 
+omit [Nonempty Ω] in
 @[simp]
 theorem reverseProtocol_initialEnergy (P : Protocol Ω n) :
     P.reverseProtocol.initialEnergy = P.finalEnergy := by
   simp [reverseProtocol, TransitionThenQuenchProtocol.initialEnergy, finalEnergy]
 
+omit [Nonempty Ω] in
 @[simp]
 theorem reverseProtocol_finalEnergy (P : Protocol Ω n) :
     P.reverseProtocol.finalEnergy = P.initialEnergy := by
   simp [reverseProtocol, TransitionThenQuenchProtocol.finalEnergy, initialEnergy]
 
+omit [Nonempty Ω] in
 @[simp]
 theorem reverseProtocol_deltaFreeEnergy (P : Protocol Ω n) :
     P.reverseProtocol.deltaFreeEnergy = -P.deltaFreeEnergy := by
@@ -421,6 +425,7 @@ theorem reverseProtocol_deltaFreeEnergy (P : Protocol Ω n) :
     -(freeEnergy P.β P.finalEnergy - freeEnergy P.β P.initialEnergy)
   ring
 
+omit [Nonempty Ω] in
 /-- The explicit reverse protocol assigns exactly `reverseWeight` to the
 reversed trajectory. -/
 @[simp]
