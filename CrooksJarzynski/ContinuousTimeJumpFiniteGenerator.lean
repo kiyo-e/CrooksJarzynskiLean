@@ -44,6 +44,28 @@ theorem jumpRate_self_apply (G : FiniteJumpGenerator Ω) (x : Ω) :
 def escapeRate (G : FiniteJumpGenerator Ω) (x : Ω) : NNReal :=
   ∑ y, G.jumpRate x y
 
+/-! ### Scaling every rate
+
+Multiplying all jump rates by a common factor multiplies the generator by that
+factor, so it is exactly a reparametrization of time.  This is what lets a
+statement about a residual *fraction* of a fixed horizon be read as a statement
+about elapsed time for a rescaled chain. -/
+
+/-- All jump rates scaled by a common nonnegative factor. -/
+def scale (G : FiniteJumpGenerator Ω) (K : NNReal) : FiniteJumpGenerator Ω where
+  jumpRate x z := K * G.jumpRate x z
+  jumpRate_self x := by simp
+
+@[simp]
+theorem scale_jumpRate (G : FiniteJumpGenerator Ω) (K : NNReal) (x z : Ω) :
+    (G.scale K).jumpRate x z = K * G.jumpRate x z :=
+  rfl
+
+@[simp]
+theorem scale_escapeRate (G : FiniteJumpGenerator Ω) (K : NNReal) (x : Ω) :
+    (G.scale K).escapeRate x = K * G.escapeRate x := by
+  simp [escapeRate, Finset.mul_sum]
+
 variable [DecidableEq Ω]
 
 /-- The real conservative generator associated with the jump rates. -/
@@ -95,6 +117,16 @@ theorem generator_row_sum (G : FiniteJumpGenerator Ω) (x : Ω) :
     simp
   rw [hsum]
   simp [escapeRate]
+
+/-- Scaling every jump rate scales the generator. -/
+theorem scale_generator (G : FiniteJumpGenerator Ω) (K : NNReal) :
+    (G.scale K).generator = (K : ℝ) • G.generator := by
+  ext x y
+  rcases eq_or_ne y x with h | h
+  · subst h
+    simp [Matrix.smul_apply]
+  · simp [G.generator_apply_of_ne h, (G.scale K).generator_apply_of_ne h,
+      Matrix.smul_apply]
 
 /-- The derived matrix is conservative. -/
 theorem generator_isConservative (G : FiniteJumpGenerator Ω) :

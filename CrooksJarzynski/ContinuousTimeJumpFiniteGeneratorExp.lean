@@ -562,6 +562,62 @@ theorem eq_exp_smul_apply_of_renewal
     fun x y t _ => by
       simpa [jumpFlow] using G.exp_smul_apply_renewal x y t
 
+/-- **Uniqueness in the residual-fraction form.**  Scaling every jump rate by
+`K` scales the generator, so a renewal equation in the fraction `ρ` of a horizon
+of scale `K` is literally the real-time renewal equation of the scaled chain.
+That is what lets the jump-process side -- whose simplex chart is normalized to
+a fixed horizon and therefore only ever shortens the fraction -- plug into the
+uniqueness hook without rescaling its chart. -/
+theorem eq_exp_smul_apply_of_renewal_fraction
+    (G : FiniteJumpGenerator Ω) (F : Ω → Ω → ℝ → ℝ) (K : NNReal) (R : ℝ)
+    (hcont : ∀ x y, Continuous (F x y))
+    (hrec : ∀ x y, ∀ ρ ∈ Set.Icc (0 : ℝ) R,
+      F x y ρ =
+        (if x = y then
+          Real.exp (-((G.escapeRate x : ℝ) * ((K : ℝ) * ρ))) else 0) +
+        (K : ℝ) * ∫ v in (0 : ℝ)..ρ,
+          Real.exp (-((G.escapeRate x : ℝ) * ((K : ℝ) * v))) *
+            ∑ z, (G.jumpRate x z : ℝ) * F z y (ρ - v)) :
+    ∀ x y, ∀ ρ ∈ Set.Icc (0 : ℝ) R,
+      F x y ρ = NormedSpace.exp (((K : ℝ) * ρ) • G.generator) x y := by
+  have hscaled : ∀ x y, ∀ ρ ∈ Set.Icc (0 : ℝ) R,
+      F x y ρ =
+        (if x = y then
+          Real.exp (-((G.scale K).escapeRate x : ℝ) * ρ) else 0) +
+        ∫ s in (0 : ℝ)..ρ, Real.exp (-((G.scale K).escapeRate x : ℝ) * s) *
+          ∑ z, ((G.scale K).jumpRate x z : ℝ) * F z y (ρ - s) := by
+    intro x y ρ hρ
+    have hexp : ∀ s : ℝ,
+        Real.exp (-((G.scale K).escapeRate x : ℝ) * s) =
+          Real.exp (-((G.escapeRate x : ℝ) * ((K : ℝ) * s))) := by
+      intro s
+      refine congrArg _ ?_
+      rw [G.scale_escapeRate K x]
+      push_cast
+      ring
+    have hbody : ∀ s : ℝ,
+        Real.exp (-((G.scale K).escapeRate x : ℝ) * s) *
+            ∑ z, ((G.scale K).jumpRate x z : ℝ) * F z y (ρ - s) =
+          (K : ℝ) *
+            (Real.exp (-((G.escapeRate x : ℝ) * ((K : ℝ) * s))) *
+              ∑ z, (G.jumpRate x z : ℝ) * F z y (ρ - s)) := by
+      intro s
+      have hsum : ∑ z, ((G.scale K).jumpRate x z : ℝ) * F z y (ρ - s) =
+          (K : ℝ) * ∑ z, (G.jumpRate x z : ℝ) * F z y (ρ - s) := by
+        rw [Finset.mul_sum]
+        refine Finset.sum_congr rfl fun z _ => ?_
+        rw [G.scale_jumpRate K x z]
+        push_cast
+        ring
+      rw [hexp s, hsum]
+      ring
+    simp_rw [hbody]
+    rw [intervalIntegral.integral_const_mul, hexp ρ]
+    exact hrec x y ρ hρ
+  intro x y ρ hρ
+  rw [(G.scale K).eq_exp_smul_apply_of_renewal F R hcont hscaled x y ρ hρ,
+    G.scale_generator K, smul_smul, mul_comm ρ (K : ℝ)]
+
 end MatrixNorm
 
 end FiniteJumpGenerator

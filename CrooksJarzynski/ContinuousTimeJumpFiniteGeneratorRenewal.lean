@@ -547,6 +547,72 @@ theorem sectorTerminalMassAtFrom_zero
   · simp [h, fixedInitialWeight, jumpProduct]
   · simp [fixedInitialWeight, h]
 
+/-! ### The renewal equation for the transition mass
+
+Summing the sector renewal over the jump count closes the recursion: the whole
+tail of the expansion reassembles into the transition mass on the remaining
+fraction.  Interchanging the sum with the integral is unconditional here
+because everything is `ℝ≥0∞`-valued. -/
+
+/-- The terminal transition mass on a variable available fraction `ρ` of the
+horizon, at fixed horizon scale `T`.  At `ρ = 1` this is `transitionMass`. -/
+noncomputable def transitionMassAt
+    (G : FiniteJumpGenerator Ω) (T : NNReal) (x y : Ω) (ρ : ℝ) : ℝ≥0∞ :=
+  ∑' n, G.sectorTerminalMassAtFrom T x y n ρ
+
+omit [MeasurableSpace Ω] [MeasurableSingletonClass Ω] in
+theorem transitionMassAt_one
+    (G : FiniteJumpGenerator Ω) (T : NNReal) (x y : Ω) :
+    G.transitionMassAt T x y 1 = G.transitionMass T x y :=
+  tsum_congr fun n => G.sectorTerminalMassAtFrom_one T x y n
+
+omit [MeasurableSpace Ω] [MeasurableSingletonClass Ω] in
+theorem measurable_transitionMassAt
+    (G : FiniteJumpGenerator Ω) (T : NNReal) (x y : Ω) :
+    Measurable fun ρ : ℝ => G.transitionMassAt T x y ρ :=
+  Measurable.tsum fun n => G.measurable_sectorTerminalMassAtFrom T x y n
+
+omit [MeasurableSpace Ω] [MeasurableSingletonClass Ω] in
+/-- **The renewal equation for the transition mass.**  Either the initial state
+survives the whole available fraction without jumping, or it jumps at some
+point inside it and the process starts afresh from wherever it lands. -/
+theorem transitionMassAt_renewal
+    (G : FiniteJumpGenerator Ω) (T : NNReal) (x y : Ω) {ρ : ℝ} (hρ : 0 ≤ ρ) :
+    G.transitionMassAt T x y ρ =
+      (if x = y then
+        ENNReal.ofReal (Real.exp (-((G.escapeRate x : ℝ) * (T : ℝ) * ρ)))
+      else 0) +
+        (T : ℝ≥0∞) *
+          ∫⁻ v : I,
+            ENNReal.ofReal
+                (Real.exp (-((G.escapeRate x : ℝ) * (T : ℝ) * (v : ℝ)))) *
+              ∑ z : Ω,
+                (G.jumpRate x z : ℝ≥0∞) *
+                  G.transitionMassAt T z y (ρ - (v : ℝ)) := by
+  classical
+  have hmeas : ∀ n : ℕ, Measurable fun v : I =>
+      ENNReal.ofReal
+          (Real.exp (-((G.escapeRate x : ℝ) * (T : ℝ) * (v : ℝ)))) *
+        ∑ z : Ω, (G.jumpRate x z : ℝ≥0∞) *
+          G.sectorTerminalMassAtFrom T z y n (ρ - (v : ℝ)) := by
+    intro n
+    refine Measurable.mul (by fun_prop) (Finset.measurable_sum _ fun z _ => ?_)
+    exact measurable_const.mul
+      ((G.measurable_sectorTerminalMassAtFrom T z y n).comp
+        (measurable_const.sub measurable_subtype_coe))
+  rw [transitionMassAt, tsum_eq_zero_add' ENNReal.summable,
+    G.sectorTerminalMassAtFrom_zero T x y hρ]
+  refine congrArg _ ?_
+  simp only [G.sectorTerminalMassAtFrom_succ T x y _ ρ]
+  rw [ENNReal.tsum_mul_left]
+  refine congrArg _ ?_
+  rw [← lintegral_tsum fun n => (hmeas n).aemeasurable]
+  refine lintegral_congr fun v => ?_
+  rw [ENNReal.tsum_mul_left]
+  refine congrArg _ ?_
+  rw [Summable.tsum_finsetSum fun _ _ => ENNReal.summable]
+  exact Finset.sum_congr rfl fun z _ => ENNReal.tsum_mul_left
+
 end FiniteJumpGenerator
 end ContinuousTimeJump
 end MeasureProtocol
