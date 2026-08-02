@@ -23,7 +23,7 @@ namespace Measure
 
 /-- Two finite measures on a right-associated fourfold product that agree on
 measurable rectangles are equal. -/
-lemma ext_prod₄
+lemma _root_.CrooksJarzynski.MeasureProtocol.Marked.ext_prod₄
     {α β γ δ : Type*}
     {mα : MeasurableSpace α} {mβ : MeasurableSpace β}
     {mγ : MeasurableSpace γ} {mδ : MeasurableSpace δ}
@@ -163,7 +163,7 @@ theorem liftLocalBalance_past
   apply flatten.map_measurableEquiv_injective
   letI : IsProbabilityMeasure ((source.map prepend).map flatten) :=
     Measure.isProbabilityMeasure_map flatten.measurable.aemeasurable
-  apply Measure.ext_prod₄
+  apply ext_prod₄
   intro s t v u hs ht hv hu
   let fForward : Ω × A → ℝ≥0∞ := fun p => forward p.1 (s ×ˢ v)
   have hfForward : Measurable fForward :=
