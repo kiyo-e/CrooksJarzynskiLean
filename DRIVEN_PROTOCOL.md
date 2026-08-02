@@ -66,8 +66,8 @@ The product of the endpoint Gibbs work factors is proved equal to
 
 ## Headline results
 
-Assuming measure-level path balance for every window, the constructed path laws
-satisfy:
+The low-level marked-path theorems accept one measure-level `WindowBalance`
+hypothesis per window:
 
 ```lean
 MeasureProtocol.ContinuousTimeJump.Driven.crooks
@@ -75,8 +75,19 @@ MeasureProtocol.ContinuousTimeJump.Driven.jarzynski
 MeasureProtocol.ContinuousTimeJump.Driven.second_law
 ```
 
-These theorems concern the recursively constructed `pathLawFrom`-driven
-measures, rather than an abstract sequence of endpoint kernels.
+For finite counting spaces, the generator-to-window bridge discharges those
+hypotheses from instantaneous Gibbs detailed balance. The resulting public
+statements are:
+
+```lean
+MeasureProtocol.ContinuousTimeJump.Driven.crooks_of_gibbsDetailedBalance
+MeasureProtocol.ContinuousTimeJump.Driven.jarzynski_of_gibbsDetailedBalance
+MeasureProtocol.ContinuousTimeJump.Driven.second_law_of_gibbsDetailedBalance
+```
+
+All of these theorems concern the recursively constructed `pathLawFrom`-driven
+measures, rather than an abstract sequence of endpoint kernels or a sector-mass
+surrogate.
 
 The marked-path induction supporting them is exposed separately through:
 
@@ -106,28 +117,33 @@ FiniteJumpGenerator.weight_mul_jumpProduct_eq_reverse
 FiniteJumpGenerator.gibbsWeight_mul_jumpProduct_eq_reverse
 ```
 
-The same module proves that the unsymmetrized finite-state counting chart is
-already invariant under path reversal, and that the canonical symmetrized
-reference therefore agrees with the raw reference used by `pathLawFrom`.
+The unsymmetrized finite-state counting chart is already invariant under path
+reversal. The weighted sum of the actual fixed-initial sector laws is identified
+with the common-reference weighted sector law, and the identity is summed over
+all jump counts. Normalizing the finite Gibbs weights then gives a reversible
+mixture of the actual `pathLawFrom` laws.
+
+The endpoint-marked transport is summarized by:
+
+```lean
+FiniteJumpGenerator.sum_smul_pathLawFrom
+FiniteJumpGenerator.map_weightedFullPathLaw_reverse
+FiniteJumpGenerator.gibbsPathLaw_eq_weightedFullPathLaw
+FiniteJumpGenerator.windowBalance_of_gibbsDetailedBalance
+```
 
 For the counting-measure Gibbs specialization, the partition function and free
-energy are also exposed in explicit finite-sum form through
-`finitePartitionFunction` and `finiteFreeEnergy`.
+energy are exposed in explicit finite-sum form through
+`FiniteJumpGenerator.finitePartitionFunction` and
+`FiniteJumpGenerator.finiteFreeEnergy`.
 
-This pathwise identity is the algebraic core required to derive the remaining
-measure-level `WindowBalance` theorem from generator detailed balance.
+## Deferred extensions
 
-## Remaining bridge
+The present path carrier is a reverse-oriented tuple of complete window paths.
+Boundary continuity is proved almost surely for the constructed laws; a subtype
+or structure that stores the same equalities as fields can be added without
+changing the measure construction.
 
-The current public Crooks, Jarzynski, and second-law theorems accept one
-`WindowBalance` hypothesis per protocol window. The remaining general bridge is
-to combine:
-
-1. reversal invariance of the fixed-jump-count simplex reference;
-2. the Gibbs jump-product identity above;
-3. equality of forward and aligned reverse holding factors;
-4. the Gibbs mixture of fixed-initial sector laws; and
-5. the countable sum over all jump-count sectors.
-
-Once that bridge is complete, the headline results can expose only the
-instantaneous generator detailed-balance assumptions.
+A later extension may also concatenate the window marks into one global
+real-time trajectory. General calendar-time-dependent rates and integrated
+hazards remain outside this stepwise protocol layer.
