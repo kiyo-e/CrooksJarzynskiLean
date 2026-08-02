@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: kiyo-e
 -/
 import CrooksJarzynski.ContinuousTimeJumpDrivenWindowBalance
-import CrooksJarzynski.ContinuousTimeJumpDrivenTwoState
+import CrooksJarzynski.ContinuousTimeJumpDrivenWorkSum
 
 /-!
 # Stepwise driven fluctuation relations from Gibbs detailed balance
@@ -104,23 +104,29 @@ theorem jarzynski_of_gibbsDetailedBalance
         (duration i) β (energy i.castSucc) (hbalance i))
 
 /-- **Average-work second law for the constructed stepwise driven law, derived
-only from instantaneous Gibbs detailed balance.** -/
+only from instantaneous Gibbs detailed balance.**
+
+The work-integrability hypothesis is discharged internally: on a finite state
+space and over finitely many protocol windows, the endpoint work is uniformly
+bounded. -/
 theorem second_law_of_gibbsDetailedBalance
     {M : ℕ} (β : ℝ) (hβ : 0 < β)
     (energy : Fin (M + 1) → Ω → ℝ)
     (generator : Fin M → FiniteJumpGenerator Ω)
     (duration : Fin M → NNReal)
     (hbalance : ∀ i,
-      (generator i).IsGibbsDetailedBalance β (energy i.castSucc))
-    (hworkInt : Integrable (work energy)
-      (forwardDrivenLaw
-        (Gibbs.measure (Measure.count : Measure Ω) β (energy 0))
-        generator duration)) :
+      (generator i).IsGibbsDetailedBalance β (energy i.castSucc)) :
     deltaFreeEnergy (Measure.count : Measure Ω) β energy ≤
       ∫ γ, work energy γ
         ∂forwardDrivenLaw
           (Gibbs.measure (Measure.count : Measure Ω) β (energy 0))
           generator duration := by
+  letI : IsProbabilityMeasure
+      (Gibbs.measure (Measure.count : Measure Ω) β (energy 0)) :=
+    Gibbs.isProbabilityMeasure_measure
+      (Measure.count : Measure Ω) β (energy 0)
+      (integrable_count_fintype (Ω := Ω)
+        (fun x => Real.exp (-β * energy 0 x)))
   exact second_law (Measure.count : Measure Ω) β hβ energy
     generator duration
     (fun _ => Measurable.of_discrete)
@@ -129,7 +135,9 @@ theorem second_law_of_gibbsDetailedBalance
     (fun i =>
       (generator i).windowBalance_of_gibbsDetailedBalance
         (duration i) β (energy i.castSucc) (hbalance i))
-    hworkInt
+    (integrable_work
+      (Gibbs.measure (Measure.count : Measure Ω) β (energy 0))
+      energy generator duration)
 
 end Driven
 end ContinuousTimeJump
