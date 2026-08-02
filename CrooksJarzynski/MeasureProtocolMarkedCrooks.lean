@@ -129,7 +129,7 @@ theorem liftLocalBalance_past
     (hbalance :
       μ ⊗ₘ forward =
         (μ ⊗ₘ reverse).map (swapEndpointsEquiv (Ω := Ω) (Λ := Λ))) :
-    (((μ ⊗ₘ past) ⊗ₘ
+    ((μ ⊗ₘ past) ⊗ₘ
         forward.comap (fun p : Ω × A => p.1)
           (measurable_fst : Measurable (fun p : Ω × A => p.1))).map
           (prependPastEquiv (Ω := Ω) (Λ := Λ) (A := A)) =
