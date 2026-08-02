@@ -144,6 +144,44 @@ theorem gibbsSector_crooks
       JumpPath.reverseExperimentDensity_reverse]
     exact G.rateDensity_gibbs_eq_alignedReverse β energy hbalance γ
 
+/-- Summing the equilibrium sector relations yields a Crooks relation on the
+complete finite-jump path space. -/
+theorem gibbsFullPath_crooks
+    (G : FiniteJumpGenerator Ω) (T : NNReal)
+    (β : ℝ) (energy : Ω → ℝ)
+    (hbalance : G.IsGibbsDetailedBalance β energy) :
+    CrooksRelation
+      (FullPath.measure fun n =>
+        pathMeasure (G.rawCountingReference T n)
+          (JumpPath.rateDensity
+            (fun x => ENNReal.ofReal (Real.exp (-β * energy x)))
+            G.pathEscapeRate G.pathJumpRate))
+      (FullPath.measure fun n =>
+        JumpPath.timeReversedMeasure
+          (pathMeasure (G.rawCountingReference T n)
+            (JumpPath.reverseExperimentDensity
+              (fun x => ENNReal.ofReal (Real.exp (-β * energy x)))
+              (JumpPath.holdingWeightOfEscapeRate G.pathEscapeRate)
+              (JumpPath.jumpWeightOfRate G.pathJumpRate))))
+      (fun _ => 1) 1 := by
+  simpa [FullPath.weight] using
+    (FullPath.crooks_of_sector_relations
+      (fun n =>
+        pathMeasure (G.rawCountingReference T n)
+          (JumpPath.rateDensity
+            (fun x => ENNReal.ofReal (Real.exp (-β * energy x)))
+            G.pathEscapeRate G.pathJumpRate))
+      (fun n =>
+        JumpPath.timeReversedMeasure
+          (pathMeasure (G.rawCountingReference T n)
+            (JumpPath.reverseExperimentDensity
+              (fun x => ENNReal.ofReal (Real.exp (-β * energy x)))
+              (JumpPath.holdingWeightOfEscapeRate G.pathEscapeRate)
+              (JumpPath.jumpWeightOfRate G.pathJumpRate))))
+      (fun _ _ => 1) 1
+      (fun _ => measurable_const)
+      (fun n => G.gibbsSector_crooks T n β energy hbalance))
+
 end FiniteJumpGenerator
 end ContinuousTimeJump
 end MeasureProtocol
