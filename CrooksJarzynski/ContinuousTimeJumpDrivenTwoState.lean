@@ -71,7 +71,7 @@ theorem physicalFiniteGenerator_generator_eq :
   funext x y
   cases x <;> cases y <;>
     simp [FiniteJumpGenerator.generator, physicalGenerator,
-      physicalFiniteGenerator]
+      physicalFiniteGenerator, physicalEscapeRate, physicalJumpRate]
 
 /-- The explicit asymmetric generator satisfies the Gibbs detailed-balance
 hypothesis used by the driven-window theorem. -/
@@ -105,7 +105,8 @@ def oneWindowGenerator : Fin 1 → FiniteJumpGenerator State :=
 def oneWindowDuration (T : NNReal) : Fin 1 → NNReal :=
   fun _ => T
 
-/-- The one-window detailed-balance family required by the driven theorem. -/
+/-- The unique protocol window satisfies the Gibbs detailed-balance hypothesis
+required by the driven theorem. -/
 theorem oneWindow_isGibbsDetailedBalance (i : Fin 1) :
     (oneWindowGenerator i).IsGibbsDetailedBalance
       thermodynamicBeta (oneWindowEnergy i.castSucc) := by
@@ -149,7 +150,7 @@ theorem forwardWindowKernel_ae_thermodynamicWork
   filter_upwards
     [physicalFiniteGenerator.forwardWindowKernel_ae_boundary T x] with p hp
   unfold thermodynamicWork
-  rw [hp.2]
+  exact congrArg thermodynamicStateWork hp.2.symm
 
 /-- At inverse temperature one, the general finite-state free energy agrees
 with the explicit free energy used by the asymmetric example. -/
@@ -241,13 +242,24 @@ terminal endpoint. -/
 theorem integrable_drivenOneWindowWork (T : NNReal) :
     Integrable (fun γ : Driven.Path State 1 => thermodynamicStateWork γ.1)
       (drivenForwardLaw T) := by
+  letI : IsProbabilityMeasure
+      (Gibbs.measure (Measure.count : Measure State)
+        thermodynamicBeta initialEnergy) :=
+    Gibbs.isProbabilityMeasure_measure
+      (Measure.count : Measure State) thermodynamicBeta initialEnergy
+      (integrable_count_state
+        (fun x => Real.exp (-thermodynamicBeta * initialEnergy x)))
+  letI : IsProbabilityMeasure (drivenForwardLaw T) := by
+    unfold drivenForwardLaw
+    infer_instance
   apply Integrable.of_bound
     (((Measurable.of_discrete : Measurable thermodynamicStateWork).comp
       measurable_fst).aestronglyMeasurable)
     (max ‖thermodynamicStateWork State.zero‖
       ‖thermodynamicStateWork State.one‖)
   filter_upwards [] with γ
-  cases γ.1
+  rcases γ with ⟨s, rest⟩
+  cases s
   · exact le_max_left _ _
   · exact le_max_right _ _
 
