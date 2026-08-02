@@ -13,6 +13,7 @@ order. This module reads the endpoint reached in each window and identifies the
 recursive endpoint work with the ordinary finite sum over protocol indices.
 -/
 
+open MeasureTheory ProbabilityTheory
 open scoped BigOperators
 
 namespace CrooksJarzynski
@@ -74,6 +75,58 @@ theorem work_eq_sum
   simpa [work, Marked.endpointPathWork] using
     (reversedEndpointSum_eq_sum
       (q := fun i x => energy i.succ x - energy i.castSucc x) γ)
+
+variable [Fintype Ω]
+
+/-- A uniform finite bound for endpoint work over all driven paths. -/
+noncomputable def workBound
+    {M : ℕ} (energy : Fin (M + 1) → Ω → ℝ) : ℝ :=
+  ∑ i : Fin M, ∑ x : Ω,
+    ‖energy i.succ x - energy i.castSucc x‖
+
+/-- Driven work is uniformly bounded because both the protocol and the state
+space are finite. -/
+theorem norm_work_le
+    {M : ℕ} (energy : Fin (M + 1) → Ω → ℝ) (γ : Path Ω M) :
+    ‖work energy γ‖ ≤ workBound energy := by
+  rw [work_eq_sum]
+  calc
+    ‖∑ i : Fin M,
+        (energy i.succ (endpointAt γ i) -
+          energy i.castSucc (endpointAt γ i))‖ ≤
+        ∑ i : Fin M,
+          ‖energy i.succ (endpointAt γ i) -
+            energy i.castSucc (endpointAt γ i)‖ :=
+      norm_sum_le _ _
+    _ ≤ workBound energy := by
+      unfold workBound
+      apply Finset.sum_le_sum
+      intro i _
+      exact Finset.single_le_sum
+        (f := fun x : Ω =>
+          ‖energy i.succ x - energy i.castSucc x‖)
+        (fun _ _ => norm_nonneg _)
+        (Finset.mem_univ (endpointAt γ i))
+
+variable [DecidableEq Ω] [MeasurableSingletonClass Ω]
+
+/-- Work is automatically integrable under every constructed finite-state
+forward driven law with a probability initial state. -/
+theorem integrable_work
+    {M : ℕ} (initial : Measure Ω) [IsProbabilityMeasure initial]
+    (energy : Fin (M + 1) → Ω → ℝ)
+    (generator : Fin M → FiniteJumpGenerator Ω)
+    (duration : Fin M → NNReal) :
+    Integrable (work energy)
+      (forwardDrivenLaw initial generator duration) := by
+  letI : IsProbabilityMeasure
+      (forwardDrivenLaw initial generator duration) := by
+    infer_instance
+  apply Integrable.of_bound
+    (measurable_work energy
+      (fun _ => Measurable.of_discrete)).aestronglyMeasurable
+    (workBound energy)
+  exact ae_of_all _ fun γ => norm_work_le energy γ
 
 end Driven
 end ContinuousTimeJump
