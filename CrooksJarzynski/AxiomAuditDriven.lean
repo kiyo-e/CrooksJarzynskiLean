@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: kiyo-e
 -/
 import CrooksJarzynski.ContinuousTimeJumpDrivenPhysical
-import CrooksJarzynski.ContinuousTimeJumpDrivenTwoState
+import CrooksJarzynski.ContinuousTimeJumpDrivenTwoStateComparison
 
 /-!
 # Axiom audit for stepwise driven jump protocols
@@ -28,3 +28,5 @@ headline list while subjecting both files to the same CI allowlist.
 #print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.driven_oneWindow_jarzynski_physical
 #print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.integrable_drivenOneWindowWork
 #print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.driven_oneWindow_second_law
+#print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.physicalFiniteGenerator_terminalState_real_singleton_eq_legacy
+#print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.map_physicalFiniteGenerator_pathLawFrom_terminalState_eq_legacy
