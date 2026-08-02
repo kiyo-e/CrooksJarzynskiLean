@@ -73,10 +73,12 @@ theorem physicalFiniteGenerator_generator_eq :
       physicalEscapeRate]
   · rw [physicalFiniteGenerator.generator_apply_of_ne
       (x := State.zero) (y := State.one) (by decide)]
-    norm_num [physicalGenerator, physicalFiniteGenerator, physicalJumpRate]
+    simp [physicalGenerator, physicalFiniteGenerator, physicalJumpRate,
+      show State.one ≠ State.zero by decide]
   · rw [physicalFiniteGenerator.generator_apply_of_ne
       (x := State.one) (y := State.zero) (by decide)]
-    norm_num [physicalGenerator, physicalFiniteGenerator, physicalJumpRate]
+    simp [physicalGenerator, physicalFiniteGenerator, physicalJumpRate,
+      show State.zero ≠ State.one by decide]
   · simp [FiniteJumpGenerator.generator, physicalGenerator,
       physicalEscapeRate]
 
