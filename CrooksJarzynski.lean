@@ -50,6 +50,7 @@ import CrooksJarzynski.ContinuousTimeJumpDrivenWorkSum
 import CrooksJarzynski.ContinuousTimeJumpDrivenWindowBalance
 import CrooksJarzynski.ContinuousTimeJumpDrivenPhysical
 import CrooksJarzynski.ContinuousTimeJumpDrivenTwoState
+import CrooksJarzynski.ContinuousTimeJumpDrivenTwoStateComparison
 import CrooksJarzynski.ContinuousTimeJumpFiniteGeneratorRenewal
 import CrooksJarzynski.ContinuousTimeJumpFiniteGeneratorExp
 import CrooksJarzynski.ContinuousTimeJumpFiniteGeneratorBridge
@@ -121,7 +122,9 @@ and is therefore automatically integrable. Division-free instantaneous Gibbs
 detailed balance is lifted to the complete-path `WindowBalance`, yielding
 Crooks, Jarzynski, and the average-work second law without an external
 work-integrability hypothesis. The asymmetric reversible two-state final
-quench is also recovered as an explicit one-window specialization.
+quench is also recovered as an explicit one-window specialization. Its generic
+and legacy fixed-initial constructions have identical terminal-state
+pushforward measures because both are the same row of `exp (TQ)`.
 
 A normalized unit-rate two-state CTMC identifies every jump-count sector with
 its Poisson probability and proves non-explosion by constructing a probability
@@ -202,6 +205,7 @@ canonical-ensemble API. The main results include `Protocol.crooks`,
 `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.driven_oneWindow_crooks_physical`,
 `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.driven_oneWindow_jarzynski_physical`,
 `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.driven_oneWindow_second_law`,
+`MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.map_physicalFiniteGenerator_pathLawFrom_terminalState_eq_legacy`,
 `MeasureProtocol.ContinuousTimeJump.TwoState.pathLawFrom_terminalState_eq_exp_generator`,
 `MeasureProtocol.ContinuousTimeJump.TwoState.transitionKernel_real_singleton_eq_exp_generator`,
 `MeasureProtocol.ContinuousTimeJump.TwoState.transitionKernel_chapman_kolmogorov`,
