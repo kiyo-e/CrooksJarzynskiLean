@@ -205,6 +205,17 @@ TwoState.AsymmetricExample.integrable_drivenOneWindowWork
 TwoState.AsymmetricExample.driven_oneWindow_second_law
 ```
 
+The generic finite-generator path law and the earlier hand-built asymmetric
+path law use different simplex reference charts. Their terminal-state
+pushforwards are nevertheless identical: both have singleton masses equal to
+the same row of `exp (TQ)`, where the generator identity above identifies the
+two matrices.
+
+```lean
+TwoState.AsymmetricExample.physicalFiniteGenerator_terminalState_real_singleton_eq_legacy
+TwoState.AsymmetricExample.map_physicalFiniteGenerator_pathLawFrom_terminalState_eq_legacy
+```
+
 ## Deferred extensions
 
 The measure construction intentionally remains on the raw reverse-oriented
