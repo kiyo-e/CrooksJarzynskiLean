@@ -136,13 +136,32 @@ theorem liftLocalBalance_past
       μ ⊗ₘ (reverse ⊗ₖ
         ProbabilityTheory.Kernel.prodMkLeft Ω
           (ProbabilityTheory.Kernel.prodMkRight Λ past)) := by
+  let forwardPast : ProbabilityTheory.Kernel (Ω × A) (Ω × Λ) :=
+    forward.comap (fun p : Ω × A => p.1)
+      (measurable_fst : Measurable (fun p : Ω × A => p.1))
+  let reversePast : ProbabilityTheory.Kernel Ω ((Ω × Λ) × A) :=
+    reverse ⊗ₖ
+      ProbabilityTheory.Kernel.prodMkLeft Ω
+        (ProbabilityTheory.Kernel.prodMkRight Λ past)
+  let source : Measure ((Ω × A) × (Ω × Λ)) :=
+    (μ ⊗ₘ past) ⊗ₘ forwardPast
+  let prepend := prependPastEquiv (Ω := Ω) (Λ := Λ) (A := A)
+  change source.map prepend = μ ⊗ₘ reversePast
+  letI : IsMarkovKernel forwardPast := by
+    dsimp [forwardPast]
+    infer_instance
+  letI : IsMarkovKernel reversePast := by
+    dsimp [reversePast]
+    infer_instance
+  letI : IsProbabilityMeasure (μ ⊗ₘ past) := by infer_instance
+  letI : IsProbabilityMeasure source := by
+    dsimp [source]
+    infer_instance
+  letI : IsProbabilityMeasure (source.map prepend) :=
+    Measure.isProbabilityMeasure_map prepend.measurable.aemeasurable
   let flatten := flattenMarkedPastEquiv (Ω := Ω) (Λ := Λ) (A := A)
   apply flatten.map_measurableEquiv_injective
-  haveI : IsProbabilityMeasure
-      ((((μ ⊗ₘ past) ⊗ₘ
-          forward.comap (fun p : Ω × A => p.1)
-            (measurable_fst : Measurable (fun p : Ω × A => p.1))).map
-            (prependPastEquiv (Ω := Ω) (Λ := Λ) (A := A))).map flatten) :=
+  letI : IsProbabilityMeasure ((source.map prepend).map flatten) :=
     Measure.isProbabilityMeasure_map flatten.measurable.aemeasurable
   apply Measure.ext_prod₄
   intro s t v u hs ht hv hu
@@ -155,38 +174,33 @@ theorem liftLocalBalance_past
     (past.measurable_coe hu).comp
       (measurable_fst : Measurable (fun p : Ω × (Ω × Λ) => p.1))
   have hpre :
-      (prependPastEquiv (Ω := Ω) (Λ := Λ) (A := A)) ⁻¹'
-          (flatten ⁻¹' (s ×ˢ t ×ˢ v ×ˢ u)) =
+      prepend ⁻¹' (flatten ⁻¹' (s ×ˢ t ×ˢ v ×ˢ u)) =
         (t ×ˢ u) ×ˢ (s ×ˢ v) := by
     ext p
-    simp [flatten, flattenMarkedPastEquiv, prependPastEquiv]
+    simp [prepend, flatten, flattenMarkedPastEquiv, prependPastEquiv,
+      and_assoc, and_left_comm, and_comm]
   have hpreLocal :
       (swapEndpointsEquiv (Ω := Ω) (Λ := Λ)) ⁻¹'
           (t ×ˢ s ×ˢ v) =
         s ×ˢ t ×ˢ v := by
     ext p
-    simp [swapEndpointsEquiv]
+    simp [swapEndpointsEquiv, and_assoc, and_left_comm, and_comm]
   have hpreFlatten :
       flatten ⁻¹' (s ×ˢ t ×ˢ v ×ˢ u) =
         s ×ˢ ((t ×ˢ v) ×ˢ u) := by
     ext p
-    simp [flatten, flattenMarkedPastEquiv]
+    simp [flatten, flattenMarkedPastEquiv,
+      and_assoc, and_left_comm, and_comm]
   calc
-    (((((μ ⊗ₘ past) ⊗ₘ
-        forward.comap (fun p : Ω × A => p.1)
-          (measurable_fst : Measurable (fun p : Ω × A => p.1))).map
-          (prependPastEquiv (Ω := Ω) (Λ := Λ) (A := A))).map flatten)
-          (s ×ˢ t ×ˢ v ×ˢ u)) =
-        (((μ ⊗ₘ past) ⊗ₘ
-          forward.comap (fun p : Ω × A => p.1)
-            (measurable_fst : Measurable (fun p : Ω × A => p.1)))
-          ((t ×ˢ u) ×ˢ (s ×ˢ v)) := by
+    ((source.map prepend).map flatten) (s ×ˢ t ×ˢ v ×ˢ u) =
+        source ((t ×ˢ u) ×ˢ (s ×ˢ v)) := by
       rw [Measure.map_apply flatten.measurable
         (hs.prod (ht.prod (hv.prod hu))),
-        Measure.map_apply
-          (prependPastEquiv (Ω := Ω) (Λ := Λ) (A := A)).measurable
+        Measure.map_apply prepend.measurable
           (flatten.measurable (hs.prod (ht.prod (hv.prod hu)))), hpre]
     _ = ∫⁻ p in t ×ˢ u, forward p.1 (s ×ˢ v) ∂(μ ⊗ₘ past) := by
+      change (((μ ⊗ₘ past) ⊗ₘ forwardPast)
+        ((t ×ˢ u) ×ˢ (s ×ˢ v))) = _
       rw [Measure.compProd_apply_prod (ht.prod hu) (hs.prod hv)]
       rfl
     _ = ∫⁻ p in t ×ˢ (s ×ˢ v), past p.1 u ∂(μ ⊗ₘ forward) := by
@@ -204,9 +218,7 @@ theorem liftLocalBalance_past
         (swapEndpointsEquiv (Ω := Ω) (Λ := Λ)).measurable,
         hpreLocal]
       rfl
-    _ = ((μ ⊗ₘ (reverse ⊗ₖ
-          ProbabilityTheory.Kernel.prodMkLeft Ω
-            (ProbabilityTheory.Kernel.prodMkRight Λ past))).map flatten)
+    _ = ((μ ⊗ₘ reversePast).map flatten)
           (s ×ˢ t ×ˢ v ×ˢ u) := by
       rw [Measure.map_apply flatten.measurable
         (hs.prod (ht.prod (hv.prod hu))), hpreFlatten,
@@ -214,10 +226,8 @@ theorem liftLocalBalance_past
       apply setLIntegral_congr_fun hs
       intro y hy
       change (∫⁻ p in t ×ˢ v, past p.1 u ∂reverse y) =
-        ((reverse ⊗ₖ
-          ProbabilityTheory.Kernel.prodMkLeft Ω
-            (ProbabilityTheory.Kernel.prodMkRight Λ past)) y)
-          ((t ×ˢ v) ×ˢ u)
+        reversePast y ((t ×ˢ v) ×ˢ u)
+      dsimp [reversePast]
       rw [ProbabilityTheory.Kernel.compProd_apply_prod (ht.prod hv) hu]
       rfl
 
