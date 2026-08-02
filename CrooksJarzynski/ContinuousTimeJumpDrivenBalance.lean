@@ -10,7 +10,8 @@ import CrooksJarzynski.ContinuousTimeJumpDriven
 
 This module records the division-free finite-state detailed-balance hypothesis
 used by every driven window and proves the finite-path telescoping identity for
-its jump-rate factors.
+its jump-rate factors. It also exposes finite-sum partition functions for the
+counting-measure Gibbs specialization used by finite-state protocols.
 -/
 
 open MeasureTheory
@@ -106,6 +107,38 @@ theorem gibbsWeight_mul_jumpProduct_eq_reverse
           (G.jumpRate (states i.succ) (states i.castSucc) : ℝ≥0∞) := by
   exact G.weight_mul_jumpProduct_eq_reverse
     (fun x => ENNReal.ofReal (Real.exp (-β * energy x))) hbalance states
+
+section FiniteGibbs
+
+variable [MeasurableSpace Ω] [MeasurableSingletonClass Ω]
+
+/-- The finite-state partition function as an explicit finite sum. -/
+noncomputable def finitePartitionFunction
+    (β : ℝ) (energy : Ω → ℝ) : ℝ :=
+  ∑ x, Real.exp (-β * energy x)
+
+/-- The general counting-measure partition function is the explicit finite
+Boltzmann sum. -/
+theorem partitionFunction_count_eq
+    (β : ℝ) (energy : Ω → ℝ) :
+    Gibbs.partitionFunction (Measure.count : Measure Ω) β energy =
+      finitePartitionFunction β energy := by
+  simp [Gibbs.partitionFunction, finitePartitionFunction]
+
+/-- The finite-state Helmholtz free energy written using the explicit partition
+sum. -/
+noncomputable def finiteFreeEnergy
+    (β : ℝ) (energy : Ω → ℝ) : ℝ :=
+  -Real.log (finitePartitionFunction β energy) / β
+
+/-- The counting-measure Gibbs free energy agrees with the finite-sum form. -/
+theorem freeEnergy_count_eq
+    (β : ℝ) (energy : Ω → ℝ) :
+    Gibbs.freeEnergy (Measure.count : Measure Ω) β energy =
+      finiteFreeEnergy β energy := by
+  simp [Gibbs.freeEnergy, finiteFreeEnergy, partitionFunction_count_eq]
+
+end FiniteGibbs
 
 end FiniteJumpGenerator
 end ContinuousTimeJump
