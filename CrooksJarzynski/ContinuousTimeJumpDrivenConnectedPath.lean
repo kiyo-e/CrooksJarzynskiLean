@@ -27,7 +27,7 @@ driven path. -/
 def IsBoundaryConsistent :
     {M : ℕ} → Path Ω M → Prop
   | 0, _ => True
-  | M + 1, γ =>
+  | _ + 1, γ =>
       FullPath.initialState γ.2.1.2 = γ.2.1.1 ∧
       FullPath.terminalState γ.2.1.2 = γ.1 ∧
       IsBoundaryConsistent (γ.2.1.1, γ.2.2)
@@ -36,13 +36,11 @@ def IsBoundaryConsistent :
 abbrev ConnectedPath (Ω : Type u) [MeasurableSpace Ω] (M : ℕ) :=
   {γ : Path Ω M // IsBoundaryConsistent γ}
 
-omit [MeasurableSpace Ω] in
 @[simp]
 theorem isBoundaryConsistent_zero (γ : Path Ω 0) :
     IsBoundaryConsistent γ :=
   trivial
 
-omit [MeasurableSpace Ω] in
 @[simp]
 theorem isBoundaryConsistent_succ_iff
     {M : ℕ} (γ : Path Ω (M + 1)) :
@@ -52,7 +50,6 @@ theorem isBoundaryConsistent_succ_iff
       IsBoundaryConsistent (γ.2.1.1, γ.2.2) :=
   Iff.rfl
 
-omit [MeasurableSpace Ω] in
 /-- Add a complete window path to a connected prefix while discharging its two
 endpoint equations explicitly. -/
 def ConnectedPath.prepend
@@ -64,7 +61,6 @@ def ConnectedPath.prepend
   ⟨(endpoint, ((past.1.1, window), past.1.2)),
     hinitial, hterminal, past.2⟩
 
-omit [MeasurableSpace Ω] in
 @[simp]
 theorem ConnectedPath.prepend_current
     {M : ℕ} (past : ConnectedPath Ω M)
@@ -74,7 +70,6 @@ theorem ConnectedPath.prepend_current
     (past.prepend endpoint window hinitial hterminal).1.1 = endpoint :=
   rfl
 
-omit [MeasurableSpace Ω] in
 @[simp]
 theorem ConnectedPath.prepend_window
     {M : ℕ} (past : ConnectedPath Ω M)
