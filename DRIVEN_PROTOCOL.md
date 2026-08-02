@@ -32,17 +32,28 @@ MeasureProtocol.ContinuousTimeJump.Driven.forwardDrivenLaw
 MeasureProtocol.ContinuousTimeJump.Driven.reverseDrivenLaw
 ```
 
-The kernel support records the window-boundary matching explicitly:
+The raw kernel laws satisfy boundary matching almost surely:
 
 ```lean
 MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.forwardWindowKernel_ae_boundary
 MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.reverseWindowKernel_ae_boundary
 ```
 
-The forward theorem states almost surely that the stored path starts at the
-kernel input and terminates at the recorded next endpoint. The reverse theorem
-states that the forward-aligned reversed path starts at its recorded preceding
-endpoint and terminates at the reverse kernel input.
+The forward theorem states that the stored path starts at the kernel input and
+terminates at the recorded next endpoint. The reverse theorem states that the
+forward-aligned reversed path starts at its recorded preceding endpoint and
+terminates at the reverse kernel input.
+
+The same equations are also available structurally, rather than only almost
+surely. `Driven.IsBoundaryConsistent` checks every stored window, and
+`Driven.ConnectedPath` is the corresponding subtype. New windows can be added
+with their endpoint equations through:
+
+```lean
+MeasureProtocol.ContinuousTimeJump.Driven.IsBoundaryConsistent
+MeasureProtocol.ContinuousTimeJump.Driven.ConnectedPath
+MeasureProtocol.ContinuousTimeJump.Driven.ConnectedPath.prepend
+```
 
 ## Work convention
 
@@ -53,11 +64,30 @@ at the terminal state of each window:
 W = Σᵢ [Eᵢ₊₁(Xᵢ,end) - Eᵢ(Xᵢ,end)].
 ```
 
-This is the transition-then-quench convention. For one window, the formalized
-observable reduces exactly to the terminal quench:
+The carrier stores windows in reverse chronological order, so `endpointAt`
+reads the endpoint associated with a protocol index. The recursive definition
+is identified with the ordinary finite sum by:
+
+```lean
+MeasureProtocol.ContinuousTimeJump.Driven.endpointAt
+MeasureProtocol.ContinuousTimeJump.Driven.reversedEndpointSum_eq_sum
+MeasureProtocol.ContinuousTimeJump.Driven.work_eq_sum
+```
+
+For one window, the observable reduces exactly to the terminal quench:
 
 ```lean
 MeasureProtocol.ContinuousTimeJump.Driven.work_one
+```
+
+On a finite state space and over finitely many windows, work is uniformly
+bounded. Consequently, it is integrable under every constructed forward law
+whose initial measure is a probability measure:
+
+```lean
+MeasureProtocol.ContinuousTimeJump.Driven.workBound
+MeasureProtocol.ContinuousTimeJump.Driven.norm_work_le
+MeasureProtocol.ContinuousTimeJump.Driven.integrable_work
 ```
 
 The product of the endpoint Gibbs work factors is proved equal to
@@ -85,11 +115,13 @@ MeasureProtocol.ContinuousTimeJump.Driven.jarzynski_of_gibbsDetailedBalance
 MeasureProtocol.ContinuousTimeJump.Driven.second_law_of_gibbsDetailedBalance
 ```
 
-All of these theorems concern the recursively constructed `pathLawFrom`-driven
+All three theorems concern the recursively constructed `pathLawFrom`-driven
 measures, rather than an abstract sequence of endpoint kernels or a sector-mass
-surrogate.
+surrogate. The public second-law theorem has no separate work-integrability
+argument: `Driven.integrable_work` supplies it internally.
 
-The marked-path induction supporting them is exposed separately through:
+The marked-path induction supporting the headline statements is exposed
+separately through:
 
 ```lean
 MeasureProtocol.Marked.extendEndpoint_crooks
@@ -100,7 +132,7 @@ MeasureProtocol.Marked.multiStep_endpoint_jarzynski_integral
 MeasureProtocol.Marked.multiStep_endpoint_second_law
 ```
 
-## Detailed balance interface
+## Detailed-balance interface
 
 The generator-level hypothesis is division-free:
 
@@ -117,11 +149,11 @@ FiniteJumpGenerator.weight_mul_jumpProduct_eq_reverse
 FiniteJumpGenerator.gibbsWeight_mul_jumpProduct_eq_reverse
 ```
 
-The unsymmetrized finite-state counting chart is already invariant under path
-reversal. The weighted sum of the actual fixed-initial sector laws is identified
-with the common-reference weighted sector law, and the identity is summed over
-all jump counts. Normalizing the finite Gibbs weights then gives a reversible
-mixture of the actual `pathLawFrom` laws.
+The unsymmetrized finite-state counting chart is invariant under path reversal.
+The weighted sum of the actual fixed-initial sector laws is identified with the
+common-reference weighted sector law, and the identity is summed over all jump
+counts. Normalizing the finite Gibbs weights then gives a reversible mixture of
+the actual `pathLawFrom` laws.
 
 The endpoint-marked transport is summarized by:
 
@@ -137,13 +169,49 @@ energy are exposed in explicit finite-sum form through
 `FiniteJumpGenerator.finitePartitionFunction` and
 `FiniteJumpGenerator.finiteFreeEnergy`.
 
+## Asymmetric two-state one-window recovery
+
+The existing asymmetric chain with rates `q(0,1)=2` and `q(1,0)=1` is packaged
+as a `FiniteJumpGenerator`. Its derived generator is identified with the
+previous thermodynamic generator, and the original Gibbs detailed-balance
+calculation supplies the unique window hypothesis:
+
+```lean
+TwoState.AsymmetricExample.physicalFiniteGenerator
+TwoState.AsymmetricExample.physicalFiniteGenerator_generator_eq
+TwoState.AsymmetricExample.physicalFiniteGenerator_isGibbsDetailedBalance
+TwoState.AsymmetricExample.oneWindow_isGibbsDetailedBalance
+```
+
+The new endpoint work agrees with the earlier final-quench observable at three
+levels: directly on the recorded endpoint, pointwise on a `ConnectedPath`, and
+almost surely for the constructed forward window kernel. The general free
+energy also reduces to the earlier explicit `-log 2` change.
+
+```lean
+TwoState.AsymmetricExample.drivenWork_oneWindow_eq_thermodynamicStateWork
+TwoState.AsymmetricExample.connectedDrivenWork_oneWindow_eq_thermodynamicWork
+TwoState.AsymmetricExample.forwardWindowKernel_ae_thermodynamicWork
+TwoState.AsymmetricExample.drivenDeltaFreeEnergy_oneWindow_eq
+```
+
+The public generator-level theorems then yield the one-window physical
+statements in the variables of the existing example:
+
+```lean
+TwoState.AsymmetricExample.driven_oneWindow_crooks_physical
+TwoState.AsymmetricExample.driven_oneWindow_jarzynski_physical
+TwoState.AsymmetricExample.integrable_drivenOneWindowWork
+TwoState.AsymmetricExample.driven_oneWindow_second_law
+```
+
 ## Deferred extensions
 
-The present path carrier is a reverse-oriented tuple of complete window paths.
-Boundary continuity is proved almost surely for the constructed laws; a subtype
-or structure that stores the same equalities as fields can be added without
-changing the measure construction.
+The measure construction intentionally remains on the raw reverse-oriented
+marked carrier; `ConnectedPath` supplies a structural view when pointwise
+boundary equations are useful. A future extension may package the almost-sure
+support theorem as a probability law directly on that subtype.
 
-A later extension may also concatenate the window marks into one global
-real-time trajectory. General calendar-time-dependent rates and integrated
-hazards remain outside this stepwise protocol layer.
+Another extension may concatenate all window marks into one global real-time
+trajectory. General calendar-time-dependent rates and integrated hazards remain
+outside this stepwise protocol layer.
