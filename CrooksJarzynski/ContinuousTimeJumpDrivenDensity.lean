@@ -27,6 +27,7 @@ universe u
 variable {Ω : Type u} [Fintype Ω] [DecidableEq Ω]
 variable [MeasurableSpace Ω] [MeasurableSingletonClass Ω]
 
+omit [DecidableEq Ω] [MeasurableSpace Ω] [MeasurableSingletonClass Ω] in
 /-- Gibbs detailed balance identifies the forward and aligned reverse rate
 densities pointwise in every fixed jump-count sector. -/
 theorem rateDensity_gibbs_eq_alignedReverse
@@ -163,24 +164,23 @@ theorem gibbsFullPath_crooks
               (fun x => ENNReal.ofReal (Real.exp (-β * energy x)))
               (JumpPath.holdingWeightOfEscapeRate G.pathEscapeRate)
               (JumpPath.jumpWeightOfRate G.pathJumpRate))))
-      (fun _ => 1) 1 := by
-  simpa [FullPath.weight] using
-    (FullPath.crooks_of_sector_relations
-      (fun n =>
-        pathMeasure (G.rawCountingReference T n)
-          (JumpPath.rateDensity
+      (FullPath.weight (fun _ _ => 1)) 1 :=
+  FullPath.crooks_of_sector_relations
+    (fun n =>
+      pathMeasure (G.rawCountingReference T n)
+        (JumpPath.rateDensity
+          (fun x => ENNReal.ofReal (Real.exp (-β * energy x)))
+          G.pathEscapeRate G.pathJumpRate))
+    (fun n =>
+      JumpPath.timeReversedMeasure
+        (pathMeasure (G.rawCountingReference T n)
+          (JumpPath.reverseExperimentDensity
             (fun x => ENNReal.ofReal (Real.exp (-β * energy x)))
-            G.pathEscapeRate G.pathJumpRate))
-      (fun n =>
-        JumpPath.timeReversedMeasure
-          (pathMeasure (G.rawCountingReference T n)
-            (JumpPath.reverseExperimentDensity
-              (fun x => ENNReal.ofReal (Real.exp (-β * energy x)))
-              (JumpPath.holdingWeightOfEscapeRate G.pathEscapeRate)
-              (JumpPath.jumpWeightOfRate G.pathJumpRate))))
-      (fun _ _ => 1) 1
-      (fun _ => measurable_const)
-      (fun n => G.gibbsSector_crooks T n β energy hbalance))
+            (JumpPath.holdingWeightOfEscapeRate G.pathEscapeRate)
+            (JumpPath.jumpWeightOfRate G.pathJumpRate))))
+    (fun _ _ => 1) 1
+    (fun _ => measurable_const)
+    (fun n => G.gibbsSector_crooks T n β energy hbalance)
 
 end FiniteJumpGenerator
 end ContinuousTimeJump
