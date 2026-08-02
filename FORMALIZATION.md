@@ -166,6 +166,13 @@ change-of-variables lemmas above expose this as a reusable public API in
 | The fixed-initial asymmetric terminal marginal is the explicit matrix row | `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.asymmetricPathLawFrom_terminalState_real_singleton` |
 | The fixed-initial asymmetric terminal marginal equals `exp (TQ)` | `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.asymmetricPathLawFrom_terminalState_eq_exp_generator` |
 | The finite-generator counting reference carries the physical mass `T^n / n!` | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.simplexSectorMass_eq` |
+| The general fixed-initial path law is a probability measure (non-explosion) | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.tsum_sectorMassFrom`, `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.instIsProbabilityMeasurePathLawFrom` |
+| Entrywise first-jump renewal equation for `exp (TQ)` | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.exp_smul_apply_renewal` |
+| Continuous solutions of the renewal equation are unique | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.eq_exp_smul_apply_of_renewal` |
+| The general terminal marginal equals the row of `exp (TQ)` | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.pathLawFrom_terminalState_eq_exp_generator` |
+| The general terminal marginals form a Markov kernel | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.transitionKernel`, `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.instIsMarkovKernelTransitionKernel` |
+| Chapman--Kolmogorov for the general transition kernel | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.transitionKernel_chapman_kolmogorov` |
+| The identification specialized to the branching three-state Y chain | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.ThreeStateBranching.pathLawFrom_terminalState_eq_exp_generator` |
 | Original finite protocol satisfies measure Crooks | `Protocol.measure_crooks` |
 | Original finite protocol satisfies real-integral Jarzynski | `Protocol.measure_jarzynski_integral` |
 | General forward path singleton mass equals legacy `forwardWeight` | `Protocol.measure_forwardWeight_singleton` |
