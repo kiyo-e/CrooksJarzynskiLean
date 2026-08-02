@@ -39,12 +39,16 @@ theorem forwardWindowKernel_ae_boundary
           FullPath.terminalState p.2 = p.1} := by
     exact
       ((FullPath.measurable_initialState.comp measurable_snd).eq_const x).setOf.inter
-        ((FullPath.measurable_terminalState.comp measurable_snd).setOf_eq
-          measurable_fst)
-  rw [forwardWindowKernel_apply,
-    ae_map_iff
-      (FullPath.measurable_terminalState.prodMk measurable_id).aemeasurable
-      hset]
+        ((FullPath.measurable_terminalState.comp measurable_snd).eq
+          measurable_fst).setOf
+  change ∀ᵐ p ∂Measure.map
+      (fun γ : FullPath Ω => (FullPath.terminalState γ, γ))
+      (G.pathLawFrom T x),
+    FullPath.initialState p.2 = x ∧
+      FullPath.terminalState p.2 = p.1
+  rw [ae_map_iff
+    (FullPath.measurable_terminalState.prodMk measurable_id).aemeasurable
+    hset]
   filter_upwards [G.pathLawFrom_ae_initialState T x] with γ hγ
   exact ⟨hγ, rfl⟩
 
@@ -61,14 +65,19 @@ theorem reverseWindowKernel_ae_boundary
         FullPath.initialState p.2 = p.1 ∧
           FullPath.terminalState p.2 = y} := by
     exact
-      ((FullPath.measurable_initialState.comp measurable_snd).setOf_eq
-        measurable_fst).inter
+      ((FullPath.measurable_initialState.comp measurable_snd).eq
+        measurable_fst).setOf.inter
         ((FullPath.measurable_terminalState.comp measurable_snd).eq_const y).setOf
-  rw [reverseWindowKernel_apply,
-    ae_map_iff
-      (FullPath.measurable_terminalState.prodMk
-        FullPath.measurable_reverse).aemeasurable
-      hset]
+  change ∀ᵐ p ∂Measure.map
+      (fun γ : FullPath Ω =>
+        (FullPath.terminalState γ, FullPath.reverse γ))
+      (G.pathLawFrom T y),
+    FullPath.initialState p.2 = p.1 ∧
+      FullPath.terminalState p.2 = y
+  rw [ae_map_iff
+    (FullPath.measurable_terminalState.prodMk
+      FullPath.measurable_reverse).aemeasurable
+    hset]
   filter_upwards [G.pathLawFrom_ae_initialState T y] with γ hγ
   exact ⟨FullPath.initialState_reverse γ, by simpa using hγ⟩
 
