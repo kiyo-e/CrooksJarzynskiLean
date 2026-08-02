@@ -3,14 +3,14 @@ Copyright (c) 2026 kiyo-e. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: kiyo-e
 -/
-import CrooksJarzynski.ContinuousTimeJumpDriven
+import CrooksJarzynski.ContinuousTimeJumpDrivenDensity
 
 /-!
 # Boundary consistency of driven jump windows
 
-The marked window kernels retain complete fixed-horizon paths.  These lemmas
+The marked window kernels retain complete fixed-horizon paths. These lemmas
 record that their endpoint coordinates agree almost surely with the initial and
-terminal states stored by those paths.  Thus consecutive windows are connected
+terminal states stored by those paths. Thus consecutive windows are connected
 by the state passed through the recursive kernel construction.
 -/
 
