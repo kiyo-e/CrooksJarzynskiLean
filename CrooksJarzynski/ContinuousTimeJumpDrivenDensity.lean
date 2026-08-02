@@ -103,6 +103,7 @@ theorem rateDensity_gibbs_eq_alignedReverse
               (γ.2 (Fin.last n) : ℝ)))) := by
         ac_rfl
 
+omit [DecidableEq Ω] in
 /-- The equilibrium-weighted law in each fixed jump-count sector satisfies a
 unit-work, unit-free-energy Crooks relation. -/
 theorem gibbsSector_crooks
