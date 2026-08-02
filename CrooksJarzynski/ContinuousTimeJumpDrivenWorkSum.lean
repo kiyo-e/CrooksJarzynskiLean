@@ -89,6 +89,7 @@ space are finite. -/
 theorem norm_work_le
     {M : ℕ} (energy : Fin (M + 1) → Ω → ℝ) (γ : Path Ω M) :
     ‖work energy γ‖ ≤ workBound energy := by
+  classical
   rw [work_eq_sum]
   calc
     ‖∑ i : Fin M,
