@@ -9,7 +9,7 @@ import CrooksJarzynski.ContinuousTimeJumpDrivenBalance
 # Gibbs reversal of finite-generator window densities
 
 Instantaneous detailed balance makes the equilibrium-weighted density of every
-fixed jump-count sector equal to its time-reversal-aligned density.  The proof
+fixed jump-count sector equal to its time-reversal-aligned density. The proof
 separates the common holding factors and applies the pathwise jump-product
 identity from `ContinuousTimeJumpDrivenBalance`.
 -/
@@ -101,6 +101,48 @@ theorem rateDensity_gibbs_eq_alignedReverse
             (-((G.escapeRate (γ.1 (Fin.last n)) : ℝ) *
               (γ.2 (Fin.last n) : ℝ)))) := by
         ac_rfl
+
+/-- The equilibrium-weighted law in each fixed jump-count sector satisfies a
+unit-work, unit-free-energy Crooks relation. -/
+theorem gibbsSector_crooks
+    (G : FiniteJumpGenerator Ω) (T : NNReal) (n : ℕ)
+    (β : ℝ) (energy : Ω → ℝ)
+    (hbalance : G.IsGibbsDetailedBalance β energy) :
+    CrooksRelation
+      (pathMeasure (G.rawCountingReference T n)
+        (JumpPath.rateDensity
+          (fun x => ENNReal.ofReal (Real.exp (-β * energy x)))
+          G.pathEscapeRate G.pathJumpRate))
+      (JumpPath.timeReversedMeasure
+        (pathMeasure (G.rawCountingReference T n)
+          (JumpPath.reverseExperimentDensity
+            (fun x => ENNReal.ofReal (Real.exp (-β * energy x)))
+            (JumpPath.holdingWeightOfEscapeRate G.pathEscapeRate)
+            (JumpPath.jumpWeightOfRate G.pathJumpRate))))
+      (fun _ => 1) 1 := by
+  apply JumpPath.crooks_of_density_identity
+    (G.rawCountingReference T n)
+    (JumpPath.rateDensity
+      (fun x => ENNReal.ofReal (Real.exp (-β * energy x)))
+      G.pathEscapeRate G.pathJumpRate)
+    (JumpPath.reverseExperimentDensity
+      (fun x => ENNReal.ofReal (Real.exp (-β * energy x)))
+      (JumpPath.holdingWeightOfEscapeRate G.pathEscapeRate)
+      (JumpPath.jumpWeightOfRate G.pathJumpRate))
+    (fun _ => 1) 1
+  · exact G.map_rawCountingReference_reverse T n
+  · exact G.measurable_rateDensity
+      (fun x => ENNReal.ofReal (Real.exp (-β * energy x))) n
+  · unfold JumpPath.reverseExperimentDensity
+      JumpPath.alignedReverseDensity
+      JumpPath.holdingWeightOfEscapeRate JumpPath.jumpWeightOfRate
+      pathEscapeRate pathJumpRate
+    fun_prop
+  · exact measurable_const
+  · refine ae_of_all _ fun γ => ?_
+    simp only [mul_one, one_mul,
+      JumpPath.reverseExperimentDensity_reverse]
+    exact G.rateDensity_gibbs_eq_alignedReverse β energy hbalance γ
 
 end FiniteJumpGenerator
 end ContinuousTimeJump
