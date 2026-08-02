@@ -5,6 +5,7 @@ Authors: kiyo-e
 -/
 import CrooksJarzynski.MeasureProtocolMarkedMultiStep
 import CrooksJarzynski.MeasureProtocolPhysical
+import CrooksJarzynski.MeasureProtocolSecondLaw
 
 /-!
 # Physical Crooks relations for marked endpoint protocols
@@ -43,7 +44,6 @@ theorem measurable_endpointPathWork
   intro i
   exact (henergy i.succ).sub (henergy i.castSucc)
 
-omit [MeasurableSpace Ω] [MeasurableSpace Λ] in
 /-- The product of Gibbs quench factors is exactly `exp (-β W)` for the
 endpoint work sum. -/
 theorem endpointWorkWeight_eq_exp_pathWork
@@ -56,7 +56,7 @@ theorem endpointWorkWeight_eq_exp_pathWork
         (Real.exp (-β * endpointPathWork energy γ)) := by
   unfold Gibbs.workWeight endpointPathWork
   exact reversedEndpointWorkWeight_eq_exp_sum
-    (Λ := Λ) β
+    (Ω := Ω) (Λ := Λ) β
     (fun i x => energy i.succ x - energy i.castSucc x) γ
 
 /-- Physical Crooks relation for a finite marked protocol with endpoint work.
@@ -91,6 +91,7 @@ theorem multiStep_endpoint_crooks_physical
     fun i => Gibbs.isProbabilityMeasure_measure
       base β (energy i) (henergyInt i)
   have h := multiStep_endpoint_crooks
+    (Ω := Ω) (Λ := Λ)
     equilibrium forward reverse
     (fun i => Gibbs.workWeight β
       (energy i.castSucc) (energy i.succ))
@@ -110,7 +111,8 @@ theorem multiStep_endpoint_crooks_physical
         (fun γ => ENNReal.ofReal
           (Real.exp (-β * endpointPathWork energy γ))) := by
     funext γ
-    exact endpointWorkWeight_eq_exp_pathWork β energy γ
+    exact endpointWorkWeight_eq_exp_pathWork
+      (Ω := Ω) (Λ := Λ) β energy γ
   rw [hweight,
     Gibbs.accumulatedFreeEnergyWeight_eq_exp_delta
       base β energy] at h
@@ -144,7 +146,8 @@ theorem multiStep_endpoint_jarzynski_integral
     (Gibbs.deltaFreeEnergy base β energy)
     (endpointPathWork energy)
     (measurable_endpointPathWork energy henergyMeas)
-    (multiStep_endpoint_crooks_physical base β hβ energy
+    (multiStep_endpoint_crooks_physical
+      (Ω := Ω) (Λ := Λ) base β hβ energy
       forward reverse henergyMeas henergyInt hbalance)
 
 /-- Average-work second law for the constructed marked forward law. -/
@@ -186,10 +189,10 @@ theorem multiStep_endpoint_second_law
     (endpointPathWork energy) hβ
     (measurable_endpointPathWork energy henergyMeas)
     hworkInt
-    (multiStep_endpoint_crooks_physical base β hβ.ne' energy
+    (multiStep_endpoint_crooks_physical
+      (Ω := Ω) (Λ := Λ) base β hβ.ne' energy
       forward reverse henergyMeas henergyInt hbalance)
 
-omit [MeasurableSpace Ω] [MeasurableSpace Λ] in
 /-- For one window, the accumulated work is the terminal energy quench. -/
 theorem endpointPathWork_one
     (energy : Fin 2 → Ω → ℝ)
