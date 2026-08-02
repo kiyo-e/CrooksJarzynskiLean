@@ -41,16 +41,16 @@ theorem forwardWindowKernel_ae_boundary
       ((FullPath.measurable_initialState.comp measurable_snd).eq_const x).setOf.inter
         ((FullPath.measurable_terminalState.comp measurable_snd).eq
           measurable_fst).setOf
-  change ∀ᵐ p ∂Measure.map
-      (fun γ : FullPath Ω => (FullPath.terminalState γ, γ))
-      (G.pathLawFrom T x),
+  let record : FullPath Ω → Ω × FullPath Ω :=
+    fun γ => (FullPath.terminalState γ, γ)
+  change ∀ᵐ p ∂Measure.map record (G.pathLawFrom T x),
     FullPath.initialState p.2 = x ∧
       FullPath.terminalState p.2 = p.1
-  rw [ae_map_iff
-    (FullPath.measurable_terminalState.prodMk measurable_id).aemeasurable
-    hset]
-  filter_upwards [G.pathLawFrom_ae_initialState T x] with γ hγ
-  exact ⟨hγ, rfl⟩
+  refine (ae_map_iff (f := record) ?_ hset).2 ?_
+  · simpa [record] using
+      (FullPath.measurable_terminalState.prodMk measurable_id).aemeasurable
+  · filter_upwards [G.pathLawFrom_ae_initialState T x] with γ hγ
+    exact ⟨hγ, rfl⟩
 
 /-- A reverse-experiment window is stored in forward-aligned coordinates: its
 reversed mark starts at the recorded preceding endpoint and ends at the kernel
@@ -68,18 +68,17 @@ theorem reverseWindowKernel_ae_boundary
       ((FullPath.measurable_initialState.comp measurable_snd).eq
         measurable_fst).setOf.inter
         ((FullPath.measurable_terminalState.comp measurable_snd).eq_const y).setOf
-  change ∀ᵐ p ∂Measure.map
-      (fun γ : FullPath Ω =>
-        (FullPath.terminalState γ, FullPath.reverse γ))
-      (G.pathLawFrom T y),
+  let record : FullPath Ω → Ω × FullPath Ω :=
+    fun γ => (FullPath.terminalState γ, FullPath.reverse γ)
+  change ∀ᵐ p ∂Measure.map record (G.pathLawFrom T y),
     FullPath.initialState p.2 = p.1 ∧
       FullPath.terminalState p.2 = y
-  rw [ae_map_iff
-    (FullPath.measurable_terminalState.prodMk
-      FullPath.measurable_reverse).aemeasurable
-    hset]
-  filter_upwards [G.pathLawFrom_ae_initialState T y] with γ hγ
-  exact ⟨FullPath.initialState_reverse γ, by simpa using hγ⟩
+  refine (ae_map_iff (f := record) ?_ hset).2 ?_
+  · simpa [record] using
+      (FullPath.measurable_terminalState.prodMk
+        FullPath.measurable_reverse).aemeasurable
+  · filter_upwards [G.pathLawFrom_ae_initialState T y] with γ hγ
+    exact ⟨FullPath.initialState_reverse γ, by simpa using hγ⟩
 
 end FiniteJumpGenerator
 end ContinuousTimeJump
