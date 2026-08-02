@@ -47,6 +47,7 @@ theorem finitePartitionFunction_pos [Nonempty Ω]
   · let x : Ω := Classical.choice inferInstance
     exact ⟨x, Finset.mem_univ x, Real.exp_pos (-β * energy x)⟩
 
+omit [DecidableEq Ω] [MeasurableSpace Ω] [MeasurableSingletonClass Ω] in
 /-- The normalized Gibbs weights satisfy the same division-free detailed
 balance identity as the unnormalized Boltzmann weights. -/
 theorem finiteGibbsWeight_detailedBalance [Nonempty Ω]
@@ -86,11 +87,12 @@ theorem gibbsMeasure_count_eq_sum_smul_dirac
   rw [count_withDensity]
   congr 1
   funext x
-  congr 1
-  change
-    (∫ y, Real.exp (-β * energy y) ∂(Measure.count : Measure Ω)) =
-      finitePartitionFunction β energy
-  exact partitionFunction_count_eq β energy
+  have hZ :
+      (∫ y, Real.exp (-β * energy y) ∂(Measure.count : Measure Ω)) =
+        finitePartitionFunction β energy := by
+    simpa [Gibbs.partitionFunction] using
+      (partitionFunction_count_eq (Ω := Ω) β energy)
+  rw [hZ]
 
 /-- Normalized equilibrium full-path law constructed as a mixture of the actual
 fixed-initial path laws. -/
