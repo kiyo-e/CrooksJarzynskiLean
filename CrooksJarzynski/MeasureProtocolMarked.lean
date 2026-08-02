@@ -55,8 +55,14 @@ noncomputable def prependEquiv (n : ℕ) :
         intro p
         rcases p with ⟨y, ⟨x, mark⟩, past⟩
         rfl }
-  measurable_toFun := by fun_prop
-  measurable_invFun := by fun_prop
+  measurable_toFun := by
+    show Measurable (fun p : MarkedPath Ω Λ n × (Ω × Λ) =>
+      (p.2.1, ((p.1.1, p.2.2), p.1.2)))
+    fun_prop
+  measurable_invFun := by
+    show Measurable (fun p : MarkedPath Ω Λ (n + 1) =>
+      ((p.2.1.1, p.2.2), (p.1, p.2.1.2)))
+    fun_prop
 
 /-- Swap the two endpoint coordinates of a marked transition while leaving the
 already aligned mark unchanged. -/
@@ -67,8 +73,12 @@ noncomputable def swapEndpointsEquiv :
       invFun := fun p => (p.2.1, (p.1, p.2.2))
       left_inv := by intro p; rcases p with ⟨x, y, mark⟩; rfl
       right_inv := by intro p; rcases p with ⟨x, y, mark⟩; rfl }
-  measurable_toFun := by fun_prop
-  measurable_invFun := by fun_prop
+  measurable_toFun := by
+    show Measurable (fun p : Ω × (Ω × Λ) => (p.2.1, (p.1, p.2.2)))
+    fun_prop
+  measurable_invFun := by
+    show Measurable (fun p : Ω × (Ω × Λ) => (p.2.1, (p.1, p.2.2)))
+    fun_prop
 
 /-- Read the current endpoint of a marked prefix before applying a marked
 transition kernel. -/
@@ -94,8 +104,9 @@ noncomputable def reverseContinuationKernel :
         (fun _ => (PUnit.unit : MarkedContinuation Ω Λ 0)) measurable_const
   | n + 1, K =>
       K (Fin.last n) ⊗ₖ
-        ProbabilityTheory.Kernel.prodMkRight Λ
-          (reverseContinuationKernel (fun i => K i.castSucc))
+        ProbabilityTheory.Kernel.prodMkLeft Ω
+          (ProbabilityTheory.Kernel.prodMkRight Λ
+            (reverseContinuationKernel (fun i => K i.castSucc)))
 
 noncomputable instance instIsMarkovKernelReverseContinuationKernel
     {n : ℕ} (K : Fin n → ProbabilityTheory.Kernel Ω (Ω × Λ))
@@ -114,8 +125,9 @@ noncomputable instance instIsMarkovKernelReverseContinuationKernel
       letI : IsMarkovKernel (K (Fin.last n)) := hK (Fin.last n)
       change IsMarkovKernel
         (K (Fin.last n) ⊗ₖ
-          ProbabilityTheory.Kernel.prodMkRight Λ
-            (reverseContinuationKernel (fun i => K i.castSucc)))
+          ProbabilityTheory.Kernel.prodMkLeft Ω
+            (ProbabilityTheory.Kernel.prodMkRight Λ
+              (reverseContinuationKernel (fun i => K i.castSucc))))
       infer_instance
 
 /-- The reverse-experiment marked path law in aligned reverse chronological
@@ -228,7 +240,6 @@ theorem measurable_reversedEndpointSum
           (fun i => hwork i.castSucc)).comp hpast).add
           ((hwork (Fin.last n)).comp measurable_fst)
 
-omit [MeasurableSpace Ω] [MeasurableSpace Λ] in
 /-- Endpoint exponential factors multiply to the exponential of the recursive
 endpoint sum. -/
 theorem reversedEndpointWorkWeight_eq_exp_sum
