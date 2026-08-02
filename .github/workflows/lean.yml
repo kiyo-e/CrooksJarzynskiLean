@@ -44,6 +44,10 @@ jobs:
         run: |
           set +e
           status=0
+          audit_files=(
+            CrooksJarzynski/AxiomAudit.lean
+            CrooksJarzynski/AxiomAuditDriven.lean
+          )
           : > axiom-audit.log
           {
             echo "Lean toolchain: $(cat lean-toolchain)"
@@ -64,14 +68,19 @@ jobs:
             if [ "$status" -eq 0 ]; then
               echo
               echo "Printing axioms of the headline theorems..."
-              lake env lean CrooksJarzynski/AxiomAudit.lean > axiom-audit.log 2>&1 || status=1
+              for audit_file in "${audit_files[@]}"; do
+                echo "== $audit_file ==" >> axiom-audit.log
+                lake env lean "$audit_file" >> axiom-audit.log 2>&1 || status=1
+              done
               cat axiom-audit.log
               axiom_reports="$(grep -Ec \
                 'depends on axioms:|does not depend on any axioms' \
                 axiom-audit.log)"
-              expected_axiom_reports="$(grep -Ec \
-                '^[[:space:]]*#print axioms ' \
-                CrooksJarzynski/AxiomAudit.lean)"
+              expected_axiom_reports="$(
+                grep -hE '^[[:space:]]*#print axioms ' "${audit_files[@]}" \
+                  | wc -l \
+                  | tr -d '[:space:]'
+              )"
               if [ "$axiom_reports" -ne "$expected_axiom_reports" ]; then
                 echo "Kernel axiom audit did not report every headline theorem."
                 status=1
@@ -109,7 +118,7 @@ jobs:
           exit 0
       - name: Upload compiler diagnostics and dependency lock
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@ea165f8d65b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: lean-build-log
           path: |
