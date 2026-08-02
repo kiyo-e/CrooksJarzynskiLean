@@ -16,6 +16,8 @@ headline list while subjecting both files to the same CI allowlist.
 #print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.Driven.work_eq_sum
 #print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.Driven.norm_work_le
 #print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.Driven.integrable_work
+#print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.Driven.forwardDrivenLaw_ae_isBoundaryConsistent
+#print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.Driven.reverseDrivenLaw_ae_isBoundaryConsistent
 #print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.windowBalance_of_gibbsDetailedBalance
 #print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.Driven.crooks_of_gibbsDetailedBalance
 #print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.Driven.jarzynski_of_gibbsDetailedBalance
