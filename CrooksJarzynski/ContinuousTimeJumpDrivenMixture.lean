@@ -85,6 +85,48 @@ theorem sum_smul_sectorLawFrom
         simpa [densityFrom, Pi.smul_apply, smul_eq_mul] using
           G.tsum_weight_mul_fixedInitial_rateDensity weight γ
 
+/-- The weighted sum of the normalized fixed-initial full path laws is the
+all-jump-count law obtained from the same initial endpoint density. -/
+theorem sum_smul_pathLawFrom
+    (G : FiniteJumpGenerator Ω) (T : NNReal)
+    (weight : Ω → ℝ≥0∞) :
+    Measure.sum (fun x : Ω => weight x • G.pathLawFrom T x) =
+      FullPath.measure (fun n =>
+        pathMeasure (G.rawCountingReference T n)
+          (JumpPath.rateDensity weight
+            G.pathEscapeRate G.pathJumpRate)) := by
+  ext s hs
+  unfold pathLawFrom FullPath.measure
+  rw [Measure.sum_apply _ hs, Measure.sum_apply _ hs]
+  simp only [Measure.smul_apply, smul_eq_mul]
+  simp_rw [Measure.sum_apply _ hs]
+  calc
+    (∑' x : Ω, weight x *
+        ∑' n : ℕ, FullPath.liftMeasure n (G.sectorLawFrom T x n) s) =
+      ∑' x : Ω, ∑' n : ℕ,
+        weight x * FullPath.liftMeasure n (G.sectorLawFrom T x n) s := by
+          apply tsum_congr
+          intro x
+          exact (ENNReal.tsum_mul_left
+            (α := ℕ) (a := weight x)
+            (f := fun n =>
+              FullPath.liftMeasure n (G.sectorLawFrom T x n) s)).symm
+    _ = ∑' n : ℕ, ∑' x : Ω,
+        weight x * FullPath.liftMeasure n (G.sectorLawFrom T x n) s :=
+      ENNReal.tsum_comm
+    _ = ∑' n : ℕ,
+        FullPath.liftMeasure n
+          (pathMeasure (G.rawCountingReference T n)
+            (JumpPath.rateDensity weight
+              G.pathEscapeRate G.pathJumpRate)) s := by
+      apply tsum_congr
+      intro n
+      rw [← G.sum_smul_sectorLawFrom T n weight]
+      simp_rw [FullPath.liftMeasure,
+        Measure.map_apply (FullPath.measurable_mk n) hs]
+      rw [Measure.sum_apply _ ((FullPath.measurable_mk n) hs)]
+      simp only [Measure.smul_apply, smul_eq_mul]
+
 end FiniteJumpGenerator
 end ContinuousTimeJump
 end MeasureProtocol
