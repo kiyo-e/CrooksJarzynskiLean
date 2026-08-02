@@ -27,6 +27,7 @@ universe u
 variable {Ω : Type u} [Fintype Ω] [DecidableEq Ω]
 variable [MeasurableSpace Ω] [MeasurableSingletonClass Ω]
 
+omit [MeasurableSpace Ω] [MeasurableSingletonClass Ω] in
 /-- Summing the fixed-initial rate densities against a state weight recovers
 that state weight as the initial endpoint density. -/
 theorem tsum_weight_mul_fixedInitial_rateDensity
@@ -61,8 +62,8 @@ theorem sum_smul_sectorLawFrom
   have hweighted : ∀ x,
       Measurable (weight x • densityFrom x) := by
     intro x
-    simpa [Pi.smul_apply, smul_eq_mul] using
-      measurable_const.mul (hdensityFrom x)
+    change Measurable (fun γ => weight x * densityFrom x γ)
+    exact measurable_const.mul (hdensityFrom x)
   calc
     Measure.sum (fun x : Ω =>
         weight x •
