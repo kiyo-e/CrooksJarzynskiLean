@@ -289,6 +289,10 @@ theorem extendEndpoint_crooks
   have hOutputStep : Measurable outputStep := by
     dsimp [outputStep]
     fun_prop
+  change
+    (((prefixForward ⊗ₘ forwardPast).map prepend).withDensity
+        (outputPrefix * outputStep) =
+      (prefixFactor * stepFactor) • (next ⊗ₘ reversePast))
   rw [withDensity_mul _ hOutputPrefix hOutputStep]
   rw [map_withDensity
     (prefixForward ⊗ₘ forwardPast) prepend outputPrefix
