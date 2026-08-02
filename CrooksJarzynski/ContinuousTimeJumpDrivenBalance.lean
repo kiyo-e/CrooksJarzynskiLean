@@ -127,6 +127,7 @@ private def reverseStatesEquiv (n : ℕ) :
     funext i
     simp
 
+omit [Fintype Ω] [MeasurableSingletonClass Ω] in
 private theorem reverse_assemblePath_zero
     (T : NNReal) (states : Fin 1 → Ω) (u : Fin 0 → I) :
     JumpPath.reverse (Simplex.assemblePath T (states, u)) =
@@ -139,6 +140,7 @@ private theorem reverse_assemblePath_zero
     fin_cases i
     rfl
 
+omit [Fintype Ω] [MeasurableSingletonClass Ω] in
 private theorem reverse_assemblePath_succ {n : ℕ}
     (T : NNReal) (states : Fin (n + 2) → Ω)
     (u : Fin (n + 1) → I)
@@ -150,6 +152,7 @@ private theorem reverse_assemblePath_succ {n : ℕ}
   · rfl
   · exact (Simplex.holdingTimesOfFree_reverseFree T u hu).symm
 
+omit [Fintype Ω] [MeasurableSingletonClass Ω] in
 private theorem lintegral_reverse_assemblePath_succ {n : ℕ}
     (H : JumpPath Ω (n + 1) → ℝ≥0∞) (hH : Measurable H)
     (T : NNReal) (states : Fin (n + 2) → Ω) :
@@ -175,7 +178,8 @@ private theorem lintegral_reverse_assemblePath_succ {n : ℕ}
       apply setLIntegral_congr_fun
         (Simplex.measurableSet_freeSimplexSet (n + 1))
       intro u hu
-      rw [reverse_assemblePath_succ T states u hu]
+      simpa only using
+        congrArg H (reverse_assemblePath_succ T states u hu)
     _ = ∫⁻ u in Simplex.freeSimplexSet (n + 1),
           H (Simplex.assemblePath T ((fun i => states i.rev), u)) := by
       exact Simplex.lintegral_freeSimplex_reverseFree
@@ -279,7 +283,7 @@ theorem countingReference_eq_rawCountingReference
     (G : FiniteJumpGenerator Ω) (T : NNReal) (n : ℕ) :
     G.countingReference T n = G.rawCountingReference T n := by
   unfold countingReference Simplex.reference Simplex.pathProbability
-    Simplex.symmetrizePathMeasure rawCountingReference
+    Simplex.symmetrizePathMeasure
   calc
     simplexSectorMass T n •
         ((2 : ℝ≥0∞)⁻¹ •
@@ -288,10 +292,18 @@ theorem countingReference_eq_rawCountingReference
             (Simplex.rawPathProbability T
               (G.stateSequenceCountingReference n)).map JumpPath.reverse)) =
         (2 : ℝ≥0∞)⁻¹ •
-          (G.rawCountingReference T n +
-            (G.rawCountingReference T n).map JumpPath.reverse) := by
+          ((simplexSectorMass T n •
+              Simplex.rawPathProbability T
+                (G.stateSequenceCountingReference n)) +
+            (simplexSectorMass T n •
+              Simplex.rawPathProbability T
+                (G.stateSequenceCountingReference n)).map JumpPath.reverse) := by
       rw [Measure.map_smul]
       module
+    _ = (2 : ℝ≥0∞)⁻¹ •
+          (G.rawCountingReference T n +
+            (G.rawCountingReference T n).map JumpPath.reverse) := by
+      rfl
     _ = G.rawCountingReference T n := by
       rw [G.map_rawCountingReference_reverse T n]
       ext s hs
