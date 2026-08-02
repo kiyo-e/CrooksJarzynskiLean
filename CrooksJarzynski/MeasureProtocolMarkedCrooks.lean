@@ -45,18 +45,17 @@ lemma ext_prod₄
   let C := Set.image2 (· ×ˢ ·)
     {s : Set α | MeasurableSet s} C₂
   refine MeasurableSpace.induction_on_inter (s := C) ?_ ?_ (by simp) ?_ ?_ ?_ s hs
-  · refine (MeasurableSpace.generateFrom_eq_prod
+  · refine (generateFrom_eq_prod
       (C := {s : Set α | MeasurableSet s}) (D := C₂) (by simp) ?_
-      MeasurableSpace.isCountablySpanning_measurableSet ?_).symm
-    · refine MeasurableSpace.generateFrom_eq_prod
+      isCountablySpanning_measurableSet ?_).symm
+    · refine generateFrom_eq_prod
         (C := {t : Set β | MeasurableSet t}) (D := C₃) (by simp)
-        MeasurableSpace.generateFrom_prod
-        MeasurableSpace.isCountablySpanning_measurableSet ?_
-      exact MeasurableSpace.isCountablySpanning_measurableSet.prod
-        MeasurableSpace.isCountablySpanning_measurableSet
-    · exact MeasurableSpace.isCountablySpanning_measurableSet.prod
-        (MeasurableSpace.isCountablySpanning_measurableSet.prod
-          MeasurableSpace.isCountablySpanning_measurableSet)
+        generateFrom_prod isCountablySpanning_measurableSet ?_
+      exact isCountablySpanning_measurableSet.prod
+        isCountablySpanning_measurableSet
+    · exact isCountablySpanning_measurableSet.prod
+        (isCountablySpanning_measurableSet.prod
+          isCountablySpanning_measurableSet)
   · exact MeasurableSpace.isPiSystem_measurableSet.prod
       (MeasurableSpace.isPiSystem_measurableSet.prod
         (MeasurableSpace.isPiSystem_measurableSet.prod
@@ -130,20 +129,20 @@ theorem liftLocalBalance_past
     (hbalance :
       μ ⊗ₘ forward =
         (μ ⊗ₘ reverse).map (swapEndpointsEquiv (Ω := Ω) (Λ := Λ))) :
-    ((((μ ⊗ₘ past) ⊗ₘ
+    (((μ ⊗ₘ past) ⊗ₘ
         forward.comap (fun p : Ω × A => p.1)
           (measurable_fst : Measurable (fun p : Ω × A => p.1))).map
-          (prependPastEquiv (Ω := Ω) (Λ := Λ) (A := A))) =
+          (prependPastEquiv (Ω := Ω) (Λ := Λ) (A := A)) =
       μ ⊗ₘ (reverse ⊗ₖ
         ProbabilityTheory.Kernel.prodMkLeft Ω
-          (ProbabilityTheory.Kernel.prodMkRight Λ past))) := by
+          (ProbabilityTheory.Kernel.prodMkRight Λ past)) := by
   let flatten := flattenMarkedPastEquiv (Ω := Ω) (Λ := Λ) (A := A)
   apply flatten.map_measurableEquiv_injective
   haveI : IsProbabilityMeasure
-      (((((μ ⊗ₘ past) ⊗ₘ
-        forward.comap (fun p : Ω × A => p.1)
-          (measurable_fst : Measurable (fun p : Ω × A => p.1))).map
-          (prependPastEquiv (Ω := Ω) (Λ := Λ) (A := A))).map flatten) :=
+      ((((μ ⊗ₘ past) ⊗ₘ
+          forward.comap (fun p : Ω × A => p.1)
+            (measurable_fst : Measurable (fun p : Ω × A => p.1))).map
+            (prependPastEquiv (Ω := Ω) (Λ := Λ) (A := A))).map flatten) :=
     Measure.isProbabilityMeasure_map flatten.measurable.aemeasurable
   apply Measure.ext_prod₄
   intro s t v u hs ht hv hu
@@ -155,11 +154,6 @@ theorem liftLocalBalance_past
   have hg : Measurable g :=
     (past.measurable_coe hu).comp
       (measurable_fst : Measurable (fun p : Ω × (Ω × Λ) => p.1))
-  let gswap : Ω × (Ω × Λ) → ℝ≥0∞ := fun p => past p.2.1 u
-  have hgswap : Measurable gswap :=
-    (past.measurable_coe hu).comp
-      ((measurable_fst : Measurable (fun p : Ω × Λ => p.1)).comp
-        (measurable_snd : Measurable (fun p : Ω × (Ω × Λ) => p.2)))
   have hpre :
       (prependPastEquiv (Ω := Ω) (Λ := Λ) (A := A)) ⁻¹'
           (flatten ⁻¹' (s ×ˢ t ×ˢ v ×ˢ u)) =
