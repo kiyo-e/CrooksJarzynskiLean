@@ -22,6 +22,9 @@ namespace ContinuousTimeJump
 namespace TwoState
 namespace AsymmetricExample
 
+open Simplex (cubeExpWeight measurable_cubeExpWeight residualAt measurable_residualAt
+  freeSimplexSetAt measurableSet_freeSimplexSetAt)
+
 /-- The renewal remainder after exposing the first `N` jump sectors. -/
 private noncomputable def renewalRemainder
     (T : NNReal) (x y : State) (N : ℕ) (ρ : ℝ) : ℝ≥0∞ :=

@@ -19,6 +19,9 @@ namespace ContinuousTimeJump
 namespace TwoState
 namespace AsymmetricExample
 
+open Simplex (cubeExpWeight measurable_cubeExpWeight residualAt measurable_residualAt
+  freeSimplexSetAt measurableSet_freeSimplexSetAt)
+
 /-- Fubini decomposition after appending one final free holding-time
 coordinate. -/
 theorem lintegral_cubeExpWeight_succ_transition
@@ -212,7 +215,7 @@ theorem lintegral_cubeExpWeight_succ_transition
       ∫⁻ u,
         (freeSimplexSetAt (n + 1) ρ).indicator
           (fun u => cubeExpWeight r T u * q (residualAt ρ u)) u := by
-        rw [lintegral_indicator (measurableSet_freeSimplexSetAt (n + 1) ρ)]
+        rw [lintegral_indicator (Simplex.measurableSet_freeSimplexSetAt (n + 1) ρ)]
     _ = ∫⁻ u, F (e u) := by
       exact lintegral_congr fun u => (hFe u).symm
     _ = ∫⁻ p, F p := by
@@ -231,7 +234,7 @@ theorem lintegral_cubeExpWeight_succ_transition
                   q (residualAt ρ v - (a : ℝ))) v :=
       lintegral_congr hsection
     _ = _ := by
-      rw [lintegral_indicator (measurableSet_freeSimplexSetAt n ρ)]
+      rw [lintegral_indicator (Simplex.measurableSet_freeSimplexSetAt n ρ)]
 
 end AsymmetricExample
 end TwoState

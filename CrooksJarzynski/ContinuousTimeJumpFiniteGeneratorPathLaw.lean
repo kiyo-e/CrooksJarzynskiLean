@@ -34,7 +34,8 @@ namespace ContinuousTimeJump
 
 -- `residual` is deliberately left qualified: `_root_.residual` is Mathlib's
 -- topological residual filter, so opening the name here would be ambiguous.
-open TwoState.AsymmetricExample (cubeExpWeight ratePrefixProduct)
+open Simplex (cubeExpWeight)
+open TwoState.AsymmetricExample (ratePrefixProduct)
 
 universe u
 
@@ -58,7 +59,7 @@ noncomputable def sectorOn {n : ℕ} (r : Fin n → NNReal) (c T : NNReal) : ℝ
     cubeExpWeight r T u *
       ENNReal.ofReal
         (Real.exp
-          (-((c : ℝ) * (T : ℝ) * TwoState.AsymmetricExample.residual u)))
+          (-((c : ℝ) * (T : ℝ) * Simplex.residual u)))
 
 /-- One renewal slice without prefactors: either the path stops in the final
 segment, or it jumps once more. -/
@@ -74,23 +75,23 @@ theorem sectorOn_add_arrivalOn_succ
   intro v hv
   dsimp only
   have hsum : (∑ i, ((v i : ℝ))) ≤ 1 := hv
-  have hres0 : 0 ≤ TwoState.AsymmetricExample.residual v := by
-    unfold TwoState.AsymmetricExample.residual
+  have hres0 : 0 ≤ Simplex.residual v := by
+    unfold Simplex.residual
     linarith
   have hx : 0 ≤ (r (Fin.last n) : ℝ) * (T : ℝ) *
-      TwoState.AsymmetricExample.residual v := by positivity
+      Simplex.residual v := by positivity
   have hexp1 :
       Real.exp
           (-((r (Fin.last n) : ℝ) * (T : ℝ) *
-            TwoState.AsymmetricExample.residual v)) ≤ 1 :=
+            Simplex.residual v)) ≤ 1 :=
     Real.exp_le_one_iff.2 (neg_nonpos.mpr hx)
   rw [← mul_add, ← ENNReal.ofReal_add (Real.exp_nonneg _) (by linarith)]
   rw [show Real.exp
         (-((r (Fin.last n) : ℝ) * (T : ℝ) *
-          TwoState.AsymmetricExample.residual v)) +
+          Simplex.residual v)) +
       (1 - Real.exp
         (-((r (Fin.last n) : ℝ) * (T : ℝ) *
-          TwoState.AsymmetricExample.residual v))) = 1 from by ring]
+          Simplex.residual v))) = 1 from by ring]
   simp
 
 namespace FiniteJumpGenerator
@@ -204,7 +205,7 @@ theorem rateDensity_assemblePath
           ENNReal.ofReal
             (Real.exp
               (-((G.escapeRate (states (Fin.last n)) : ℝ) *
-                (T : ℝ) * TwoState.AsymmetricExample.residual u))) := by
+                (T : ℝ) * Simplex.residual u))) := by
   have hsum : (∑ i, Simplex.unitNNReal (u i)) ≤ (1 : NNReal) := by
     change (∑ i, (Simplex.unitNNReal (u i) : ℝ)) ≤ 1 at hu
     exact_mod_cast hu
@@ -213,9 +214,9 @@ theorem rateDensity_assemblePath
     simpa using mul_le_mul_right hsum T
   have hlast :
       ((T - ∑ i, T * Simplex.unitNNReal (u i) : NNReal) : ℝ) =
-        (T : ℝ) * TwoState.AsymmetricExample.residual u := by
+        (T : ℝ) * Simplex.residual u := by
     rw [NNReal.coe_sub hscaled, NNReal.coe_sum]
-    simp only [TwoState.AsymmetricExample.residual, NNReal.coe_mul,
+    simp only [Simplex.residual, NNReal.coe_mul,
       Simplex.coe_unitNNReal]
     rw [← Finset.mul_sum]
     ring
@@ -246,7 +247,7 @@ noncomputable def holdingIntegral
       ENNReal.ofReal
         (Real.exp
           (-((G.escapeRate (states (Fin.last n)) : ℝ) *
-            (T : ℝ) * TwoState.AsymmetricExample.residual u)))
+            (T : ℝ) * Simplex.residual u)))
 
 /-- The unnormalized mass a single state sequence contributes to its jump-count
 sector. -/
@@ -276,13 +277,13 @@ theorem lintegral_rateDensity_assemblePath
             ENNReal.ofReal
               (Real.exp
                 (-((G.escapeRate (states (Fin.last n)) : ℝ) *
-                  (T : ℝ) * TwoState.AsymmetricExample.residual u))) =
+                  (T : ℝ) * Simplex.residual u))) =
         (w (states 0) * G.jumpProduct states) *
           (cubeExpWeight (G.stateEscapeRates states) T u *
             ENNReal.ofReal
               (Real.exp
                 (-((G.escapeRate (states (Fin.last n)) : ℝ) *
-                  (T : ℝ) * TwoState.AsymmetricExample.residual u)))) := by
+                  (T : ℝ) * Simplex.residual u)))) := by
     intro u
     ac_rfl
   simp_rw [hreorder]

@@ -34,20 +34,10 @@ namespace ContinuousTimeJump
 namespace TwoState
 namespace AsymmetricExample
 
+open Simplex (cubeExpWeight measurable_cubeExpWeight residualAt measurable_residualAt
+  freeSimplexSetAt measurableSet_freeSimplexSetAt)
+
 /-! ### Weighted simplex integrals -/
-
-/-- Product of per-coordinate exponential survival weights in free cube
-coordinates.  Coordinate `i` carries rate `r i` over the scaled holding time
-`T * u i`. -/
-noncomputable def cubeExpWeight {n : ℕ} (r : Fin n → NNReal) (T : NNReal)
-    (u : Fin n → I) : ℝ≥0∞ :=
-  ∏ i, ENNReal.ofReal (Real.exp (-((r i : ℝ) * (T : ℝ) * (u i : ℝ))))
-
-@[fun_prop]
-theorem measurable_cubeExpWeight {n : ℕ} (r : Fin n → NNReal) (T : NNReal) :
-    Measurable (cubeExpWeight r T) := by
-  unfold cubeExpWeight
-  fun_prop
 
 /-- The product of the jump-intensity prefactors `r i * T`. -/
 noncomputable def ratePrefixProduct {n : ℕ} (r : Fin n → NNReal)
@@ -62,16 +52,6 @@ noncomputable def arrivalIntegral {n : ℕ} (r : Fin n → NNReal)
   ratePrefixProduct r T *
     ∫⁻ u in Simplex.freeSimplexSet n, cubeExpWeight r T u
 
-/-- Residual fraction of the horizon left after the `n` free coordinates. -/
-def residual {n : ℕ} (u : Fin n → I) : ℝ :=
-  1 - ∑ i, ((u i : ℝ))
-
-@[fun_prop]
-theorem measurable_residual {n : ℕ} :
-    Measurable (residual (n := n)) := by
-  unfold residual
-  fun_prop
-
 /-- Probability of exactly `n` jumps: the first `n` holding intervals fit and
 the terminal interval survives the residual time at rate `c`. -/
 noncomputable def sectorIntegral {n : ℕ} (r : Fin n → NNReal) (c : NNReal)
@@ -79,7 +59,7 @@ noncomputable def sectorIntegral {n : ℕ} (r : Fin n → NNReal) (c : NNReal)
   ratePrefixProduct r T *
     ∫⁻ u in Simplex.freeSimplexSet n,
       cubeExpWeight r T u *
-        ENNReal.ofReal (Real.exp (-((c : ℝ) * (T : ℝ) * residual u)))
+        ENNReal.ofReal (Real.exp (-((c : ℝ) * (T : ℝ) * Simplex.residual u)))
 
 /-- With no jump yet to place, the arrival integral is total. -/
 theorem arrivalIntegral_zero (r : Fin 0 → NNReal) (T : NNReal) :
@@ -170,7 +150,7 @@ theorem lintegral_cubeExpWeight_succ
         cubeExpWeight (fun i : Fin n => r i.castSucc) T v *
           ENNReal.ofReal
             (1 - Real.exp
-              (-((r (Fin.last n) : ℝ) * (T : ℝ) * residual v))) := by
+              (-((r (Fin.last n) : ℝ) * (T : ℝ) * Simplex.residual v))) := by
   classical
   set c : NNReal := r (Fin.last n) with hc
   set F : I × (Fin n → I) → ℝ≥0∞ := fun p =>
@@ -237,61 +217,61 @@ theorem lintegral_cubeExpWeight_succ
             cubeExpWeight (fun i : Fin n => r i.castSucc) T v *
               ENNReal.ofReal
                 (1 - Real.exp
-                  (-((c : ℝ) * (T : ℝ) * residual v)))) v := by
+                  (-((c : ℝ) * (T : ℝ) * Simplex.residual v)))) v := by
     intro v
     by_cases hv : v ∈ Simplex.freeSimplexSet n
     · have hsum : (∑ i, ((v i : ℝ))) ≤ 1 :=
         (mem_freeSimplexSet_iff v).1 hv
       have hsum0 : 0 ≤ ∑ i, ((v i : ℝ)) :=
         Finset.sum_nonneg fun i _ => (v i).2.1
-      have hres0 : 0 ≤ residual v := by
-        unfold residual
+      have hres0 : 0 ≤ Simplex.residual v := by
+        unfold Simplex.residual
         linarith
-      have hres1 : residual v ≤ 1 := by
-        unfold residual
+      have hres1 : Simplex.residual v ≤ 1 := by
+        unfold Simplex.residual
         linarith
       have hFav : ∀ a : I,
           F (a, v) =
-            ({a : I | (a : ℝ) ≤ residual v}).indicator
+            ({a : I | (a : ℝ) ≤ Simplex.residual v}).indicator
               (fun a : I =>
                 cubeExpWeight (fun i : Fin n => r i.castSucc) T v *
                   ENNReal.ofReal
                     (Real.exp (-((c : ℝ) * (T : ℝ) * (a : ℝ))))) a := by
         intro a
         simp only [hFdef]
-        by_cases ha : (a : ℝ) ≤ residual v
+        by_cases ha : (a : ℝ) ≤ Simplex.residual v
         · have hmem' : ((a, v) : I × (Fin n → I)) ∈
               {q : I × (Fin n → I) |
                 (q.1 : ℝ) + ∑ i, ((q.2 i : ℝ)) ≤ 1} := by
             change (a : ℝ) + ∑ i, ((v i : ℝ)) ≤ 1
-            unfold residual at ha
+            unfold Simplex.residual at ha
             linarith
           rw [Set.indicator_of_mem hmem',
             Set.indicator_of_mem
-              (show a ∈ {a : I | (a : ℝ) ≤ residual v} from ha)]
+              (show a ∈ {a : I | (a : ℝ) ≤ Simplex.residual v} from ha)]
         · have hnotmem' : ((a, v) : I × (Fin n → I)) ∉
               {q : I × (Fin n → I) |
                 (q.1 : ℝ) + ∑ i, ((q.2 i : ℝ)) ≤ 1} := by
             intro hmem'
             apply ha
             have : (a : ℝ) + ∑ i, ((v i : ℝ)) ≤ 1 := hmem'
-            unfold residual
+            unfold Simplex.residual
             linarith
           rw [Set.indicator_of_notMem hnotmem',
             Set.indicator_of_notMem
-              (show a ∉ {a : I | (a : ℝ) ≤ residual v} from ha)]
-      have hmeasSec : MeasurableSet {a : I | (a : ℝ) ≤ residual v} :=
+              (show a ∉ {a : I | (a : ℝ) ≤ Simplex.residual v} from ha)]
+      have hmeasSec : MeasurableSet {a : I | (a : ℝ) ≤ Simplex.residual v} :=
         measurableSet_le (by fun_prop) measurable_const
       calc ((c : ℝ≥0∞) * (T : ℝ≥0∞)) * ∫⁻ a : I, F (a, v)
           = ((c : ℝ≥0∞) * (T : ℝ≥0∞)) *
-              ∫⁻ a : I in {a : I | (a : ℝ) ≤ residual v},
+              ∫⁻ a : I in {a : I | (a : ℝ) ≤ Simplex.residual v},
                 cubeExpWeight (fun i : Fin n => r i.castSucc) T v *
                   ENNReal.ofReal
                     (Real.exp (-((c : ℝ) * (T : ℝ) * (a : ℝ)))) := by
             rw [lintegral_congr hFav, lintegral_indicator hmeasSec]
         _ = cubeExpWeight (fun i : Fin n => r i.castSucc) T v *
               (((c : ℝ≥0∞) * (T : ℝ≥0∞)) *
-                ∫⁻ a : I in {a : I | (a : ℝ) ≤ residual v},
+                ∫⁻ a : I in {a : I | (a : ℝ) ≤ Simplex.residual v},
                   ENNReal.ofReal
                     (Real.exp (-((c : ℝ) * (T : ℝ) * (a : ℝ))))) := by
             rw [lintegral_const_mul _ (by fun_prop)]
@@ -299,7 +279,7 @@ theorem lintegral_cubeExpWeight_succ
         _ = cubeExpWeight (fun i : Fin n => r i.castSucc) T v *
               ENNReal.ofReal
                 (1 - Real.exp
-                  (-((c : ℝ) * (T : ℝ) * residual v))) := by
+                  (-((c : ℝ) * (T : ℝ) * Simplex.residual v))) := by
             congr 1
             have hcast :
                 ((c : ℝ≥0∞) * (T : ℝ≥0∞)) =
@@ -308,13 +288,13 @@ theorem lintegral_cubeExpWeight_succ
                 NNReal.coe_mul]
             rw [hcast]
             exact ofReal_mul_lintegral_exp_le ((c : ℝ) * (T : ℝ))
-              (residual v) (by positivity) hres0 hres1
+              (Simplex.residual v) (by positivity) hres0 hres1
         _ = (Simplex.freeSimplexSet n).indicator
               (fun v : Fin n → I =>
                 cubeExpWeight (fun i : Fin n => r i.castSucc) T v *
                   ENNReal.ofReal
                     (1 - Real.exp
-                      (-((c : ℝ) * (T : ℝ) * residual v)))) v := by
+                      (-((c : ℝ) * (T : ℝ) * Simplex.residual v)))) v := by
             rw [Set.indicator_of_mem hv]
     · have h0 : ∀ a : I, F (a, v) = 0 := by
         intro a
@@ -354,13 +334,13 @@ theorem lintegral_cubeExpWeight_succ
               cubeExpWeight (fun i : Fin n => r i.castSucc) T v *
                 ENNReal.ofReal
                   (1 - Real.exp
-                    (-((c : ℝ) * (T : ℝ) * residual v)))) v :=
+                    (-((c : ℝ) * (T : ℝ) * Simplex.residual v)))) v :=
         lintegral_congr hsection
     _ = ∫⁻ v in Simplex.freeSimplexSet n,
           cubeExpWeight (fun i : Fin n => r i.castSucc) T v *
             ENNReal.ofReal
               (1 - Real.exp
-                (-((r (Fin.last n) : ℝ) * (T : ℝ) * residual v))) := by
+                (-((r (Fin.last n) : ℝ) * (T : ℝ) * Simplex.residual v))) := by
         rw [lintegral_indicator (Simplex.measurableSet_freeSimplexSet n)]
 
 /-- Consecutive arrival integrals differ by exactly one sector integral. -/
@@ -382,18 +362,18 @@ theorem sectorIntegral_add_arrivalIntegral_succ
   intro v hv
   dsimp only
   have hsum : (∑ i, ((v i : ℝ))) ≤ 1 := (mem_freeSimplexSet_iff v).1 hv
-  have hres0 : 0 ≤ residual v := by
-    unfold residual
+  have hres0 : 0 ≤ Simplex.residual v := by
+    unfold Simplex.residual
     linarith
-  have hx : 0 ≤ (r (Fin.last n) : ℝ) * (T : ℝ) * residual v := by
+  have hx : 0 ≤ (r (Fin.last n) : ℝ) * (T : ℝ) * Simplex.residual v := by
     positivity
   have hexp1 :
-      Real.exp (-((r (Fin.last n) : ℝ) * (T : ℝ) * residual v)) ≤ 1 :=
+      Real.exp (-((r (Fin.last n) : ℝ) * (T : ℝ) * Simplex.residual v)) ≤ 1 :=
     Real.exp_le_one_iff.2 (neg_nonpos.mpr hx)
   rw [← mul_add,
     ← ENNReal.ofReal_add (Real.exp_nonneg _) (by linarith)]
-  rw [show Real.exp (-((r (Fin.last n) : ℝ) * (T : ℝ) * residual v)) +
-      (1 - Real.exp (-((r (Fin.last n) : ℝ) * (T : ℝ) * residual v))) =
+  rw [show Real.exp (-((r (Fin.last n) : ℝ) * (T : ℝ) * Simplex.residual v)) +
+      (1 - Real.exp (-((r (Fin.last n) : ℝ) * (T : ℝ) * Simplex.residual v))) =
         1 from by ring]
   simp
 
