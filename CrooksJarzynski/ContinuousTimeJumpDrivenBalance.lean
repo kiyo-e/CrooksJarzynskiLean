@@ -4,18 +4,21 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: kiyo-e
 -/
 import CrooksJarzynski.ContinuousTimeJumpDriven
+import CrooksJarzynski.ContinuousTimeJumpSimplexReversal
 
 /-!
 # Rate detailed balance for driven jump windows
 
 This module records the division-free finite-state detailed-balance hypothesis
 used by every driven window and proves the finite-path telescoping identity for
-its jump-rate factors. It also exposes finite-sum partition functions for the
-counting-measure Gibbs specialization used by finite-state protocols.
+its jump-rate factors. It also proves that the unsymmetrized finite-state
+counting chart is already invariant under path reversal, and exposes finite-sum
+partition functions for the counting-measure Gibbs specialization used by
+finite-state protocols.
 -/
 
 open MeasureTheory
-open scoped ENNReal BigOperators
+open scoped ENNReal BigOperators unitInterval
 
 namespace CrooksJarzynski
 namespace MeasureProtocol
@@ -107,6 +110,199 @@ theorem gibbsWeight_mul_jumpProduct_eq_reverse
           (G.jumpRate (states i.succ) (states i.castSucc) : ℝ≥0∞) := by
   exact G.weight_mul_jumpProduct_eq_reverse
     (fun x => ENNReal.ofReal (Real.exp (-β * energy x))) hbalance states
+
+section RawReferenceReversal
+
+variable [MeasurableSpace Ω] [MeasurableSingletonClass Ω]
+
+/-- Reverse a finite state sequence. -/
+private def reverseStatesEquiv (n : ℕ) :
+    (Fin (n + 1) → Ω) ≃ (Fin (n + 1) → Ω) where
+  toFun states := fun i => states i.rev
+  invFun states := fun i => states i.rev
+  left_inv states := by
+    funext i
+    simp
+  right_inv states := by
+    funext i
+    simp
+
+private theorem reverse_assemblePath_zero
+    (T : NNReal) (states : Fin 1 → Ω) (u : Fin 0 → I) :
+    JumpPath.reverse (Simplex.assemblePath T (states, u)) =
+      Simplex.assemblePath T (states, u) := by
+  apply Prod.ext
+  · funext i
+    fin_cases i
+    rfl
+  · funext i
+    fin_cases i
+    rfl
+
+private theorem reverse_assemblePath_succ {n : ℕ}
+    (T : NNReal) (states : Fin (n + 2) → Ω)
+    (u : Fin (n + 1) → I)
+    (hu : u ∈ Simplex.freeSimplexSet (n + 1)) :
+    JumpPath.reverse (Simplex.assemblePath T (states, u)) =
+      Simplex.assemblePath T
+        ((fun i => states i.rev), Simplex.reverseFree u) := by
+  apply Prod.ext
+  · rfl
+  · exact (Simplex.holdingTimesOfFree_reverseFree T u hu).symm
+
+private theorem lintegral_reverse_assemblePath_succ {n : ℕ}
+    (H : JumpPath Ω (n + 1) → ℝ≥0∞) (hH : Measurable H)
+    (T : NNReal) (states : Fin (n + 2) → Ω) :
+    (∫⁻ u, H (JumpPath.reverse
+          (Simplex.assemblePath T (states, u)))
+        ∂((T : ℝ≥0∞) ^ (n + 1) •
+          (volume : Measure (Fin (n + 1) → I)).restrict
+            (Simplex.freeSimplexSet (n + 1)))) =
+      ∫⁻ u, H
+          (Simplex.assemblePath T ((fun i => states i.rev), u))
+        ∂((T : ℝ≥0∞) ^ (n + 1) •
+          (volume : Measure (Fin (n + 1) → I)).restrict
+            (Simplex.freeSimplexSet (n + 1))) := by
+  rw [lintegral_smul_measure, lintegral_smul_measure]
+  congr 1
+  calc
+    (∫⁻ u in Simplex.freeSimplexSet (n + 1),
+        H (JumpPath.reverse
+          (Simplex.assemblePath T (states, u)))) =
+        ∫⁻ u in Simplex.freeSimplexSet (n + 1),
+          H (Simplex.assemblePath T
+            ((fun i => states i.rev), Simplex.reverseFree u)) := by
+      apply setLIntegral_congr_fun
+        (Simplex.measurableSet_freeSimplexSet (n + 1))
+      intro u hu
+      rw [reverse_assemblePath_succ T states u hu]
+    _ = ∫⁻ u in Simplex.freeSimplexSet (n + 1),
+          H (Simplex.assemblePath T ((fun i => states i.rev), u)) := by
+      exact Simplex.lintegral_freeSimplex_reverseFree
+        (fun u => H (Simplex.assemblePath T
+          ((fun i => states i.rev), u)))
+        (hH.comp
+          ((Simplex.measurable_assemblePath T).comp
+            (Measurable.prodMk measurable_const measurable_id)))
+
+/-- The unsymmetrized counting reference is already reversal invariant at the
+level of all measurable nonnegative integrals. -/
+theorem lintegral_rawCountingReference_reverse
+    (G : FiniteJumpGenerator Ω) (T : NNReal) (n : ℕ)
+    (H : JumpPath Ω n → ℝ≥0∞) (hH : Measurable H) :
+    (∫⁻ γ, H (JumpPath.reverse γ) ∂G.rawCountingReference T n) =
+      ∫⁻ γ, H γ ∂G.rawCountingReference T n := by
+  rw [G.rawCountingReference_eq T n]
+  have hassemble := Simplex.measurable_assemblePath
+    (Ω := Ω) (n := n) T
+  have hleft : Measurable (fun p :
+      (Fin (n + 1) → Ω) × (Fin n → I) =>
+        H (JumpPath.reverse (Simplex.assemblePath T p))) :=
+    (hH.comp JumpPath.measurable_reverse).comp hassemble
+  have hright : Measurable (fun p :
+      (Fin (n + 1) → Ω) × (Fin n → I) =>
+        H (Simplex.assemblePath T p)) :=
+    hH.comp hassemble
+  change (∫⁻ γ, (H ∘ JumpPath.reverse) γ
+      ∂Measure.map (Simplex.assemblePath T)
+        ((G.stateSequenceCountingReference n).prod
+          ((T : ℝ≥0∞) ^ n •
+            (volume : Measure (Fin n → I)).restrict
+              (Simplex.freeSimplexSet n)))) =
+    ∫⁻ γ, H γ
+      ∂Measure.map (Simplex.assemblePath T)
+        ((G.stateSequenceCountingReference n).prod
+          ((T : ℝ≥0∞) ^ n •
+            (volume : Measure (Fin n → I)).restrict
+              (Simplex.freeSimplexSet n)))
+  rw [lintegral_map' (hH.comp JumpPath.measurable_reverse).aemeasurable
+      hassemble.aemeasurable,
+    lintegral_map' hH.aemeasurable hassemble.aemeasurable]
+  change (∫⁻ p, H (JumpPath.reverse (Simplex.assemblePath T p))
+      ∂(G.stateSequenceCountingReference n).prod
+        ((T : ℝ≥0∞) ^ n •
+          (volume : Measure (Fin n → I)).restrict
+            (Simplex.freeSimplexSet n))) =
+    ∫⁻ p, H (Simplex.assemblePath T p)
+      ∂(G.stateSequenceCountingReference n).prod
+        ((T : ℝ≥0∞) ^ n •
+          (volume : Measure (Fin n → I)).restrict
+            (Simplex.freeSimplexSet n))
+  rw [lintegral_prod _ hleft.aemeasurable,
+    lintegral_prod _ hright.aemeasurable]
+  unfold stateSequenceCountingReference
+  rw [lintegral_fintype, lintegral_fintype]
+  simp only [Measure.count_singleton, mul_one]
+  cases n with
+  | zero =>
+      apply Finset.sum_congr rfl
+      intro states _
+      apply lintegral_congr
+      intro u
+      rw [reverse_assemblePath_zero T states u]
+  | succ n =>
+      simp_rw [lintegral_reverse_assemblePath_succ H hH T]
+      exact Fintype.sum_equiv (reverseStatesEquiv (Ω := Ω) (n + 1))
+        _ _ (fun _ => rfl)
+
+/-- The raw counting reference itself is invariant under path reversal. -/
+theorem map_rawCountingReference_reverse
+    (G : FiniteJumpGenerator Ω) (T : NNReal) (n : ℕ) :
+    (G.rawCountingReference T n).map JumpPath.reverse =
+      G.rawCountingReference T n := by
+  ext s hs
+  rw [Measure.map_apply JumpPath.measurable_reverse hs]
+  have h := G.lintegral_rawCountingReference_reverse T n
+    (s.indicator fun _ => (1 : ℝ≥0∞))
+    (measurable_const.indicator hs)
+  have hcomp :
+      (fun γ => s.indicator (fun _ => (1 : ℝ≥0∞))
+        (JumpPath.reverse γ)) =
+        (JumpPath.reverse ⁻¹' s).indicator
+          (fun _ => (1 : ℝ≥0∞)) := by
+    funext γ
+    by_cases hγ : JumpPath.reverse γ ∈ s
+    · rw [Set.indicator_of_mem hγ]
+      rw [Set.indicator_of_mem
+        (show γ ∈ JumpPath.reverse ⁻¹' s from hγ)]
+    · rw [Set.indicator_of_notMem hγ]
+      rw [Set.indicator_of_notMem
+        (show γ ∉ JumpPath.reverse ⁻¹' s from hγ)]
+  rw [hcomp, lintegral_indicator
+      (hs.preimage JumpPath.measurable_reverse),
+    lintegral_indicator hs, setLIntegral_one, setLIntegral_one] at h
+  exact h
+
+/-- Since the raw counting chart is reversal invariant, the canonical
+symmetrized counting reference coincides with it. -/
+theorem countingReference_eq_rawCountingReference
+    (G : FiniteJumpGenerator Ω) (T : NNReal) (n : ℕ) :
+    G.countingReference T n = G.rawCountingReference T n := by
+  unfold countingReference Simplex.reference Simplex.pathProbability
+    Simplex.symmetrizePathMeasure rawCountingReference
+  calc
+    simplexSectorMass T n •
+        ((2 : ℝ≥0∞)⁻¹ •
+          (Simplex.rawPathProbability T
+              (G.stateSequenceCountingReference n) +
+            (Simplex.rawPathProbability T
+              (G.stateSequenceCountingReference n)).map JumpPath.reverse)) =
+        (2 : ℝ≥0∞)⁻¹ •
+          (G.rawCountingReference T n +
+            (G.rawCountingReference T n).map JumpPath.reverse) := by
+      rw [Measure.map_smul]
+      module
+    _ = G.rawCountingReference T n := by
+      rw [G.map_rawCountingReference_reverse T n]
+      ext s hs
+      simp only [Measure.smul_apply, Measure.add_apply, smul_eq_mul]
+      rw [← two_mul, ← mul_assoc,
+        ENNReal.inv_mul_cancel
+          (show (2 : ℝ≥0∞) ≠ 0 by norm_num)
+          (show (2 : ℝ≥0∞) ≠ ∞ by norm_num),
+        one_mul]
+
+end RawReferenceReversal
 
 section FiniteGibbs
 
