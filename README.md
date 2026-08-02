@@ -8,6 +8,8 @@ library contains:
   spaces;
 - a finite-jump continuous-time path-space theory with fixed-horizon Crooks and
   Jarzynski statements for segmentwise jump rates;
+- a finite-state stepwise driven continuous-time protocol whose window laws are
+  built from normalized fixed-initial jump-path laws;
 - a fixed-horizon simplex reference with derived free-coordinate Lebesgue
   volume `1 / n!`;
 - a normalized, non-explosive two-state continuous-time Markov chain whose
@@ -58,6 +60,10 @@ The library proves:
   of aligned waiting-time factors, and local jump balance;
 - fixed-sector, all-sector, and fixed-horizon Crooks and Jarzynski theorems for
   segmentwise constant escape and jump rates;
+- a stepwise driven protocol with a complete normalized jump path in every
+  window, recursive boundary matching, reverse protocol order, endpoint work,
+  and physical Crooks, Jarzynski, and second-law statements derived from
+  instantaneous finite-state Gibbs detailed balance;
 - a symmetric unit-rate two-state CTMC whose `n`-jump sector has Poisson mass,
   whose complete finite-jump path law is normalized and non-explosive, and
   which satisfies full-path Crooks and Jarzynski theorems;
@@ -280,6 +286,39 @@ MeasureProtocol.ContinuousTimeJump.FullPath.crooks_restrict_horizon_of_rate_loca
 MeasureProtocol.ContinuousTimeJump.FullPath.jarzynski_restrict_horizon_of_rate_local_balance
 ```
 
+### Stepwise driven finite-state protocols
+
+A protocol with `M` windows supplies an energy landscape and a
+`FiniteJumpGenerator` in each window. The complete path in a window is sampled
+from the existing normalized law `pathLawFrom`; the next window is bound at the
+recorded terminal state. The reverse law begins in the final Gibbs state,
+visits the windows in reverse order, and applies the existing complete-path
+reversal to every stored mark.
+
+The work is evaluated at the switching endpoints:
+
+```text
+W(γ) = Σₖ [Eₖ₊₁(xₖ,end) - Eₖ(xₖ,end)].
+```
+
+Instantaneous division-free Gibbs detailed balance in every window is lifted
+through the fixed-sector path densities, the countable jump-sector sum, the
+Gibbs mixture of actual fixed-initial laws, and the endpoint-marked window
+kernels. The principal declarations are:
+
+```lean
+MeasureProtocol.ContinuousTimeJump.Driven.forwardDrivenLaw
+MeasureProtocol.ContinuousTimeJump.Driven.reverseDrivenLaw
+MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.windowBalance_of_gibbsDetailedBalance
+MeasureProtocol.ContinuousTimeJump.Driven.crooks_of_gibbsDetailedBalance
+MeasureProtocol.ContinuousTimeJump.Driven.jarzynski_of_gibbsDetailedBalance
+MeasureProtocol.ContinuousTimeJump.Driven.second_law_of_gibbsDetailedBalance
+MeasureProtocol.ContinuousTimeJump.Driven.work_one
+```
+
+For one window, `Driven.work_one` identifies the accumulated work with the
+terminal energy quench.
+
 ### Normalized symmetric two-state CTMC
 
 `ContinuousTimeJumpTwoStateNormalization` instantiates the construction for the
@@ -420,6 +459,11 @@ path-density Crooks and Jarzynski theorems for segmentwise constant escape and
 jump rates. The library constructs a nonzero reversal-invariant simplex
 reference on the fixed horizon with derived volume `1 / n!`.
 
+The stepwise driving layer covers a fixed finite family of piecewise-constant
+finite-state windows. It retains one complete path mark per window and proves
+boundary matching almost surely under the constructed laws. Concatenating the
+marks into one global real-time trajectory is deferred.
+
 For the symmetric unit-rate two-state CTMC, the library constructs normalized
 full and fixed-initial path laws, proves their Poisson jump-count law and
 non-explosion, identifies the actual fixed-initial terminal-state marginal with
@@ -433,9 +477,8 @@ difference, real work, physical Crooks and Jarzynski relations,
 work-distribution Crooks, the average-work second law, and the entropy-production
 integral fluctuation theorem.
 
-A generator-to-path-law construction and a general non-explosion theorem for an
-arbitrary CTMC remain outside this PR. General calendar-time-dependent
-integrated hazards and Langevin/SDE path laws are not formalized.
+General calendar-time-dependent integrated hazards and Langevin/SDE path laws
+are not formalized.
 
 ## Build
 
