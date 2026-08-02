@@ -231,6 +231,89 @@ theorem liftLocalBalance_past
       rw [ProbabilityTheory.Kernel.compProd_apply_prod (ht.prod hv) hu]
       rfl
 
+/-- Extend a marked Crooks relation by one reversible transition and then an
+endpoint quench.  The new work increment is evaluated at the state reached by
+the transition, matching stepwise driving. -/
+theorem extendEndpoint_crooks
+    {A : Type w} [MeasurableSpace A]
+    (prefixForward : Measure (Ω × A))
+    (current next : Measure Ω)
+    (past : ProbabilityTheory.Kernel Ω A)
+    (forward reverse : ProbabilityTheory.Kernel Ω (Ω × Λ))
+    [IsProbabilityMeasure prefixForward]
+    [IsProbabilityMeasure current] [IsProbabilityMeasure next]
+    [IsMarkovKernel past] [IsMarkovKernel forward] [IsMarkovKernel reverse]
+    (prefixWork : Ω × A → ℝ≥0∞) (stepWork : Ω → ℝ≥0∞)
+    (prefixFactor stepFactor : ℝ≥0∞)
+    (hprefixWork : Measurable prefixWork)
+    (hstepWork : Measurable stepWork)
+    (hprefix : CrooksRelation prefixForward (current ⊗ₘ past)
+      prefixWork prefixFactor)
+    (hreweight : current.withDensity stepWork = stepFactor • next)
+    (hbalance :
+      current ⊗ₘ forward =
+        (current ⊗ₘ reverse).map
+          (swapEndpointsEquiv (Ω := Ω) (Λ := Λ))) :
+    CrooksRelation
+      ((prefixForward ⊗ₘ
+        forward.comap (fun p : Ω × A => p.1)
+          (measurable_fst : Measurable (fun p : Ω × A => p.1))).map
+          (prependPastEquiv (Ω := Ω) (Λ := Λ) (A := A)))
+      (next ⊗ₘ (reverse ⊗ₖ
+        ProbabilityTheory.Kernel.prodMkLeft Ω
+          (ProbabilityTheory.Kernel.prodMkRight Λ past)))
+      (fun z => prefixWork (z.2.1.1, z.2.2) * stepWork z.1)
+      (prefixFactor * stepFactor) := by
+  unfold CrooksRelation at hprefix ⊢
+  let forwardPast : ProbabilityTheory.Kernel (Ω × A) (Ω × Λ) :=
+    forward.comap (fun p : Ω × A => p.1)
+      (measurable_fst : Measurable (fun p : Ω × A => p.1))
+  let reversePast : ProbabilityTheory.Kernel Ω ((Ω × Λ) × A) :=
+    reverse ⊗ₖ
+      ProbabilityTheory.Kernel.prodMkLeft Ω
+        (ProbabilityTheory.Kernel.prodMkRight Λ past)
+  let prepend := prependPastEquiv (Ω := Ω) (Λ := Λ) (A := A)
+  let outputPrefix : Ω × ((Ω × Λ) × A) → ℝ≥0∞ :=
+    fun z => prefixWork (z.2.1.1, z.2.2)
+  let outputStep : Ω × ((Ω × Λ) × A) → ℝ≥0∞ :=
+    fun z => stepWork z.1
+  have hOutputPrefix : Measurable outputPrefix := by
+    exact hprefixWork.comp (by fun_prop)
+  have hOutputStep : Measurable outputStep :=
+    hstepWork.comp measurable_fst
+  have hInputPrefix : Measurable
+      (fun p : (Ω × A) × (Ω × Λ) => prefixWork p.1) :=
+    hprefixWork.comp measurable_fst
+  have hLift := liftLocalBalance_past current past forward reverse hbalance
+  change
+    (((prefixForward ⊗ₘ forwardPast).map prepend).withDensity
+        (outputPrefix * outputStep)) =
+      (prefixFactor * stepFactor) • (next ⊗ₘ reversePast)
+  rw [withDensity_mul _ hOutputPrefix hOutputStep]
+  rw [map_withDensity (prefixForward ⊗ₘ forwardPast) prepend outputPrefix
+    prepend.measurable hOutputPrefix]
+  change
+    ((((prefixForward ⊗ₘ forwardPast).withDensity
+        (fun p : (Ω × A) × (Ω × Λ) => prefixWork p.1)).map prepend).withDensity
+      outputStep) =
+      (prefixFactor * stepFactor) • (next ⊗ₘ reversePast)
+  rw [compProd_withDensity_fst prefixForward forwardPast
+    prefixWork hprefixWork, hprefix, Measure.compProd_smul_left,
+    Measure.map_smul, withDensity_smul_measure]
+  change
+    prefixFactor •
+        (((((current ⊗ₘ past) ⊗ₘ forwardPast).map prepend).withDensity
+          outputStep)) =
+      (prefixFactor * stepFactor) • (next ⊗ₘ reversePast)
+  rw [show ((current ⊗ₘ past) ⊗ₘ forwardPast).map prepend =
+      current ⊗ₘ reversePast by simpa [forwardPast, reversePast, prepend] using hLift]
+  change prefixFactor •
+      ((current ⊗ₘ reversePast).withDensity (fun z => stepWork z.1)) =
+    (prefixFactor * stepFactor) • (next ⊗ₘ reversePast)
+  rw [compProd_withDensity_fst current reversePast stepWork hstepWork,
+    hreweight, Measure.compProd_smul_left]
+  simp [smul_smul]
+
 end Marked
 end MeasureProtocol
 end CrooksJarzynski
