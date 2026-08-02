@@ -29,7 +29,7 @@ the front of the reverse-oriented carrier, while earlier endpoints are read
 recursively from its continuation. -/
 def endpointAt : {M : ℕ} → Path Ω M → Fin M → Ω
   | 0, _, i => Fin.elim0 i
-  | M + 1, γ, i =>
+  | _ + 1, γ, i =>
       Fin.lastCases γ.1
         (fun j => endpointAt (γ.2.1.1, γ.2.2) j) i
 
@@ -49,7 +49,7 @@ theorem reversedEndpointSum_eq_sum
     {M : ℕ} (q : Fin M → Ω → ℝ) (γ : Path Ω M) :
     Marked.reversedEndpointSum q γ =
       ∑ i : Fin M, q i (endpointAt γ i) := by
-  induction M generalizing q γ with
+  induction M with
   | zero =>
       simp [Marked.reversedEndpointSum]
   | succ M ih =>
