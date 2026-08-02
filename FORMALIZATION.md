@@ -104,6 +104,38 @@ with the residual coordinate, followed by a coordinate permutation. The
 change-of-variables lemmas above expose this as a reusable public API in
 `ContinuousTimeJumpSimplexReversal.lean`.
 
+## Stepwise driven finite-state protocols
+
+| Informal statement | Lean declaration |
+| --- | --- |
+| Complete-path reversal on the all-jump-count path space | `MeasureProtocol.ContinuousTimeJump.FullPath.reverse` |
+| One forward window built from the actual fixed-initial path law | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.forwardWindowKernel` |
+| Forward-aligned reverse window | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.reverseWindowKernel` |
+| Forward law obtained by recursively binding window endpoints | `MeasureProtocol.ContinuousTimeJump.Driven.forwardDrivenLaw` |
+| Reverse-order driven law starting from the final Gibbs state | `MeasureProtocol.ContinuousTimeJump.Driven.reverseDrivenLaw` |
+| Almost-sure forward-window boundary matching | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.forwardWindowKernel_ae_boundary` |
+| Almost-sure reverse-window boundary matching | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.reverseWindowKernel_ae_boundary` |
+| Division-free finite-generator detailed balance | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.IsDetailedBalanceWeight` |
+| Instantaneous Gibbs detailed balance | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.IsGibbsDetailedBalance` |
+| Gibbs-weighted jump products telescope under reversal | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.gibbsWeight_mul_jumpProduct_eq_reverse` |
+| Weighted mixture of actual fixed-initial full path laws | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.sum_smul_pathLawFrom` |
+| Reversal invariance of the weighted full path law | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.map_weightedFullPathLaw_reverse` |
+| Path-level window balance from instantaneous Gibbs detailed balance | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.windowBalance_of_gibbsDetailedBalance` |
+| Endpoint-switch work `Σₖ(Eₖ₊₁-Eₖ)(xₖ,end)` | `MeasureProtocol.ContinuousTimeJump.Driven.work` |
+| Explicit finite-state partition function | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.finitePartitionFunction` |
+| Explicit finite-state free energy | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.finiteFreeEnergy` |
+| Crooks relation on the constructed driven path laws | `MeasureProtocol.ContinuousTimeJump.Driven.crooks_of_gibbsDetailedBalance` |
+| Jarzynski equality on the constructed forward driven law | `MeasureProtocol.ContinuousTimeJump.Driven.jarzynski_of_gibbsDetailedBalance` |
+| Average-work second law for the constructed driven law | `MeasureProtocol.ContinuousTimeJump.Driven.second_law_of_gibbsDetailedBalance` |
+| One-window work is the terminal energy quench | `MeasureProtocol.ContinuousTimeJump.Driven.work_one` |
+
+The path carrier stores one complete `FullPath` mark per window. The recursive
+kernel construction passes each recorded terminal state to the next window, and
+the boundary theorems record the resulting continuity almost surely. The
+headline Crooks and Jarzynski statements are about these constructed measures,
+not about an intermediate sector sum. Concatenation into one global real-time
+trajectory is deferred.
+
 ## Concrete specializations
 
 | Informal statement | Lean declaration |
@@ -229,6 +261,12 @@ reversed paths is itself a theorem.
   holding time; no construction here depends on absolute calendar time.
 - A nonzero reversal-invariant fixed-horizon simplex reference is constructed,
   rather than assumed.
+- A normalized fixed-initial path law and a non-explosion theorem are proved for
+  every `FiniteJumpGenerator` on a finite state space.
+- The stepwise driving layer covers a fixed finite family of piecewise-constant
+  finite-state windows, with one complete path mark per window. Boundary
+  matching is proved almost surely; concatenation into a single global
+  real-time trajectory is deferred.
 - A normalized, non-explosive path law is constructed for the symmetric
   unit-rate two-state CTMC. Its normalized fixed-initial terminal laws form a
   Markov kernel with matrix-exponential entries and Chapman--Kolmogorov.
@@ -237,8 +275,6 @@ reversed paths is itself a theorem.
   energies, partition functions, free-energy difference, real work, physical
   Crooks and Jarzynski relations, work-distribution Crooks, the average-work
   second law, and the entropy-production integral fluctuation theorem.
-- A generator-to-path-law construction and a non-explosion theorem for an
-  arbitrary CTMC are not formalized in this PR.
 - General calendar-time-dependent integrated escape rates and Langevin/SDE path
   laws are not formalized.
 - Reverse discrete-time kernels and local balance are supplied; reverse-kernel
