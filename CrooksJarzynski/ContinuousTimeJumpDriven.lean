@@ -55,7 +55,8 @@ omit [MeasurableSpace Ω] in
 theorem initialState_reverse (γ : FullPath Ω) :
     initialState (reverse γ) = terminalState γ := by
   rcases γ with ⟨n, γ⟩
-  simp [reverse, initialState, terminalState, JumpPath.reverse]
+  change γ.1 ((0 : Fin (n + 1)).rev) = γ.1 (Fin.last n)
+  rw [Fin.rev_zero]
 
 omit [MeasurableSpace Ω] in
 @[simp]
@@ -210,6 +211,7 @@ noncomputable def deltaFreeEnergy
     (energy : Fin (M + 1) → Ω → ℝ) : ℝ :=
   Gibbs.deltaFreeEnergy base β energy
 
+omit [Fintype Ω] [DecidableEq Ω] [MeasurableSingletonClass Ω] in
 /-- The driven work observable is measurable. -/
 theorem measurable_work
     {M : ℕ} (energy : Fin (M + 1) → Ω → ℝ)
@@ -299,6 +301,7 @@ theorem second_law
       (fun i => (generator i).reverseWindowKernel (duration i))
       henergyMeas henergyInt hbalance hworkInt)
 
+omit [Fintype Ω] [DecidableEq Ω] [MeasurableSingletonClass Ω] in
 /-- For one window, driven work is exactly the terminal energy quench. -/
 theorem work_one
     (energy : Fin 2 → Ω → ℝ) (γ : Path Ω 1) :
