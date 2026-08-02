@@ -142,6 +142,7 @@ noncomputable def equilibriumSectorLaw
   G.weightedSectorLaw T
     (fun x => ENNReal.ofReal (Real.exp (-β * energy x))) n
 
+omit [DecidableEq Ω] in
 /-- The equilibrium-weighted fixed-sector measure is invariant under path
 reversal. -/
 theorem map_equilibriumSectorLaw_reverse
@@ -159,6 +160,7 @@ noncomputable def weightedFullPathLaw
     (weight : Ω → ℝ≥0∞) : Measure (FullPath Ω) :=
   FullPath.measure (fun n => G.weightedSectorLaw T weight n)
 
+omit [DecidableEq Ω] in
 /-- The constructed weighted full path law is invariant under complete-path
 reversal. -/
 theorem map_weightedFullPathLaw_reverse
@@ -196,6 +198,7 @@ noncomputable def equilibriumFullPathLaw
   G.weightedFullPathLaw T
     (fun x => ENNReal.ofReal (Real.exp (-β * energy x)))
 
+omit [DecidableEq Ω] in
 /-- Gibbs detailed balance makes the equilibrium-weighted full path law
 invariant under complete-path reversal. -/
 theorem map_equilibriumFullPathLaw_reverse
