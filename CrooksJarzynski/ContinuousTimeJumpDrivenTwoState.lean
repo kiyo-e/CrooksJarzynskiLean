@@ -69,9 +69,15 @@ physical matrix used by the earlier asymmetric example. -/
 theorem physicalFiniteGenerator_generator_eq :
     physicalFiniteGenerator.generator = physicalGenerator := by
   funext x y
-  cases x <;> cases y <;>
-    simp [FiniteJumpGenerator.generator, physicalGenerator,
-      physicalFiniteGenerator, physicalEscapeRate, physicalJumpRate]
+  cases x <;> cases y
+  · simp [FiniteJumpGenerator.generator, physicalGenerator,
+      physicalEscapeRate]
+  · norm_num [FiniteJumpGenerator.generator, physicalGenerator,
+      physicalFiniteGenerator, physicalJumpRate]
+  · norm_num [FiniteJumpGenerator.generator, physicalGenerator,
+      physicalFiniteGenerator, physicalJumpRate]
+  · simp [FiniteJumpGenerator.generator, physicalGenerator,
+      physicalEscapeRate]
 
 /-- The explicit asymmetric generator satisfies the Gibbs detailed-balance
 hypothesis used by the driven-window theorem. -/
