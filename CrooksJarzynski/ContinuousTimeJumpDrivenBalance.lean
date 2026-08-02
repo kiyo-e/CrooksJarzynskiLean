@@ -92,6 +92,21 @@ theorem weight_mul_jumpProduct_eq_reverse
               ((G.jumpRate (states 1) (states 0) : ℝ≥0∞) *
                 reverseTail) := by ac_rfl
 
+/-- Gibbs detailed balance gives the pathwise jump-product identity in the
+exact Boltzmann-weight form used by driven windows. -/
+theorem gibbsWeight_mul_jumpProduct_eq_reverse
+    (G : FiniteJumpGenerator Ω) (β : ℝ) (energy : Ω → ℝ)
+    (hbalance : G.IsGibbsDetailedBalance β energy)
+    {n : ℕ} (states : Fin (n + 1) → Ω) :
+    ENNReal.ofReal (Real.exp (-β * energy (states 0))) *
+        G.jumpProduct states =
+      ENNReal.ofReal
+          (Real.exp (-β * energy (states (Fin.last n)))) *
+        ∏ i : Fin n,
+          (G.jumpRate (states i.succ) (states i.castSucc) : ℝ≥0∞) := by
+  exact G.weight_mul_jumpProduct_eq_reverse
+    (fun x => ENNReal.ofReal (Real.exp (-β * energy x))) hbalance states
+
 end FiniteJumpGenerator
 end ContinuousTimeJump
 end MeasureProtocol
