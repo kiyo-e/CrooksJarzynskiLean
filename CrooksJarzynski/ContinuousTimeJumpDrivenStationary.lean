@@ -115,6 +115,7 @@ noncomputable def weightedSectorLaw
   pathMeasure (G.rawCountingReference T n)
     (JumpPath.rateDensity weight G.pathEscapeRate G.pathJumpRate)
 
+omit [DecidableEq Ω] in
 /-- The actual weighted fixed-sector measure is invariant under path reversal
 whenever its endpoint weight satisfies detailed balance. -/
 theorem map_weightedSectorLaw_reverse
