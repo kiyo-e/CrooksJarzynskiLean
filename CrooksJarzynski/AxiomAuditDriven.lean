@@ -1,0 +1,30 @@
+/-
+Copyright (c) 2026 kiyo-e. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: kiyo-e
+-/
+import CrooksJarzynski.ContinuousTimeJumpDrivenPhysical
+import CrooksJarzynski.ContinuousTimeJumpDrivenTwoState
+
+/-!
+# Axiom audit for stepwise driven jump protocols
+
+This module keeps the driven-protocol audit separate from the historical
+headline list while subjecting both files to the same CI allowlist.
+-/
+
+#print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.Driven.work_eq_sum
+#print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.Driven.norm_work_le
+#print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.Driven.integrable_work
+#print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.windowBalance_of_gibbsDetailedBalance
+#print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.Driven.crooks_of_gibbsDetailedBalance
+#print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.Driven.jarzynski_of_gibbsDetailedBalance
+#print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.Driven.second_law_of_gibbsDetailedBalance
+#print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.physicalFiniteGenerator_generator_eq
+#print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.physicalFiniteGenerator_isGibbsDetailedBalance
+#print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.connectedDrivenWork_oneWindow_eq_thermodynamicWork
+#print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.forwardWindowKernel_ae_thermodynamicWork
+#print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.driven_oneWindow_crooks_physical
+#print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.driven_oneWindow_jarzynski_physical
+#print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.integrable_drivenOneWindowWork
+#print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.driven_oneWindow_second_law
