@@ -146,6 +146,7 @@ theorem gibbsSector_crooks
       JumpPath.reverseExperimentDensity_reverse]
     exact G.rateDensity_gibbs_eq_alignedReverse β energy hbalance γ
 
+omit [DecidableEq Ω] in
 /-- Summing the equilibrium sector relations yields a Crooks relation on the
 complete finite-jump path space. -/
 theorem gibbsFullPath_crooks
