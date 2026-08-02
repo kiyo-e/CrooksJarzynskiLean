@@ -71,6 +71,10 @@ The library proves:
   kernel satisfying Chapman--Kolmogorov, and the result specializes to a
   genuinely branching three-state Y chain that no two-state parity argument
   reaches;
+- a real-time reading of the chart representation: jump times, a
+  right-continuous step trajectory, and proofs that almost every path under the
+  constructed law is a valid trajectory that starts at the prescribed state and
+  ends at its recorded terminal state;
 - an asymmetric two-state generator with rates `q(0,1)=2` and `q(1,0)=1`, whose
   Gibbs distribution is explicitly normalized, reversible, and stationary;
 - a normalized final-quench experiment with partition functions `Z₀=3` and
