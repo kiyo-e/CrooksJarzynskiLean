@@ -27,8 +27,8 @@ namespace Driven
 
 universe u
 
-variable {Ω : Type u} [Fintype Ω] [DecidableEq Ω]
-variable [MeasurableSpace Ω] [MeasurableSingletonClass Ω] [Nonempty Ω]
+variable {Ω : Type u} [Fintype Ω]
+variable [MeasurableSpace Ω] [MeasurableSingletonClass Ω]
 
 /-- Every real-valued function on a finite counting space is integrable. -/
 private theorem integrable_count_fintype (f : Ω → ℝ) :
@@ -50,6 +50,8 @@ theorem deltaFreeEnergy_count_eq_finite
         FiniteJumpGenerator.finiteFreeEnergy β (energy 0) := by
   simp [deltaFreeEnergy, Gibbs.deltaFreeEnergy,
     FiniteJumpGenerator.freeEnergy_count_eq]
+
+variable [DecidableEq Ω] [Nonempty Ω]
 
 /-- **Crooks relation for the constructed stepwise driven laws, derived only
 from instantaneous Gibbs detailed balance in every window.** -/
