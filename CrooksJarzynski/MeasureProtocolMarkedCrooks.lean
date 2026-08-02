@@ -184,13 +184,12 @@ theorem liftLocalBalance_past
           (t ×ˢ s ×ˢ v) =
         s ×ˢ t ×ˢ v := by
     ext p
-    simp [swapEndpointsEquiv, and_assoc, and_left_comm, and_comm]
+    simp [swapEndpointsEquiv, and_left_comm]
   have hpreFlatten :
       flatten ⁻¹' (s ×ˢ t ×ˢ v ×ˢ u) =
         s ×ˢ ((t ×ˢ v) ×ˢ u) := by
     ext p
-    simp [flatten, flattenMarkedPastEquiv,
-      and_assoc, and_left_comm, and_comm]
+    simp [flatten, flattenMarkedPastEquiv, and_assoc]
   calc
     ((source.map prepend).map flatten) (s ×ˢ t ×ˢ v ×ˢ u) =
         source ((t ×ˢ u) ×ˢ (s ×ˢ v)) := by
@@ -222,7 +221,8 @@ theorem liftLocalBalance_past
           (s ×ˢ t ×ˢ v ×ˢ u) := by
       rw [Measure.map_apply flatten.measurable
         (hs.prod (ht.prod (hv.prod hu))), hpreFlatten,
-        Measure.compProd_apply_prod hs ((ht.prod hv).prod hu)]
+        Measure.compProd_apply_prod hs ((ht.prod hv).prod hu),
+        Measure.setLIntegral_compProd hg hs (ht.prod hv)]
       apply setLIntegral_congr_fun hs
       intro y hy
       change (∫⁻ p in t ×ˢ v, past p.1 u ∂reverse y) =
