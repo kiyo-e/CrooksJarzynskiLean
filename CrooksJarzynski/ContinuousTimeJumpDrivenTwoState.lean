@@ -3,9 +3,8 @@ Copyright (c) 2026 kiyo-e. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: kiyo-e
 -/
-import CrooksJarzynski.ContinuousTimeJumpDrivenWindowBalance
 import CrooksJarzynski.ContinuousTimeJumpDrivenConnectedPath
-import CrooksJarzynski.ContinuousTimeJumpDrivenWorkSum
+import CrooksJarzynski.ContinuousTimeJumpDrivenPhysical
 import CrooksJarzynski.ContinuousTimeJumpTwoStatePhysicalWork
 
 /-!
@@ -72,10 +71,12 @@ theorem physicalFiniteGenerator_generator_eq :
   cases x <;> cases y
   · simp [FiniteJumpGenerator.generator, physicalGenerator,
       physicalEscapeRate]
-  · norm_num [FiniteJumpGenerator.generator, physicalGenerator,
-      physicalFiniteGenerator, physicalJumpRate]
-  · norm_num [FiniteJumpGenerator.generator, physicalGenerator,
-      physicalFiniteGenerator, physicalJumpRate]
+  · rw [physicalFiniteGenerator.generator_apply_of_ne
+      (x := State.zero) (y := State.one) (by decide)]
+    norm_num [physicalGenerator, physicalFiniteGenerator, physicalJumpRate]
+  · rw [physicalFiniteGenerator.generator_apply_of_ne
+      (x := State.one) (y := State.zero) (by decide)]
+    norm_num [physicalGenerator, physicalFiniteGenerator, physicalJumpRate]
   · simp [FiniteJumpGenerator.generator, physicalGenerator,
       physicalEscapeRate]
 
@@ -208,18 +209,10 @@ theorem driven_oneWindow_crooks_physical (T : NNReal) :
         (Real.exp (-thermodynamicBeta * thermodynamicStateWork γ.1)))
       (ENNReal.ofReal
         (Real.exp (-thermodynamicBeta * physicalDeltaFreeEnergy))) := by
-  have h := Driven.crooks
-    (Measure.count : Measure State) thermodynamicBeta
-    (by norm_num [thermodynamicBeta])
+  have h := Driven.crooks_of_gibbsDetailedBalance
+    thermodynamicBeta (by norm_num [thermodynamicBeta])
     oneWindowEnergy oneWindowGenerator (oneWindowDuration T)
-    (fun _ => Measurable.of_discrete)
-    (fun i => integrable_count_state
-      (fun x => Real.exp (-thermodynamicBeta * oneWindowEnergy i x)))
-    (fun i =>
-      (oneWindowGenerator i).windowBalance_of_gibbsDetailedBalance
-        (oneWindowDuration T i) thermodynamicBeta
-        (oneWindowEnergy i.castSucc)
-        (oneWindow_isGibbsDetailedBalance i))
+    oneWindow_isGibbsDetailedBalance
   simpa [drivenForwardLaw, drivenReverseLaw] using h
 
 /-- The corresponding one-window Jarzynski equality in the existing
@@ -229,22 +222,14 @@ theorem driven_oneWindow_jarzynski_physical (T : NNReal) :
           (-thermodynamicBeta * thermodynamicStateWork γ.1)
         ∂drivenForwardLaw T =
       Real.exp (-thermodynamicBeta * physicalDeltaFreeEnergy) := by
-  have h := Driven.jarzynski
-    (Measure.count : Measure State) thermodynamicBeta
-    (by norm_num [thermodynamicBeta])
+  have h := Driven.jarzynski_of_gibbsDetailedBalance
+    thermodynamicBeta (by norm_num [thermodynamicBeta])
     oneWindowEnergy oneWindowGenerator (oneWindowDuration T)
-    (fun _ => Measurable.of_discrete)
-    (fun i => integrable_count_state
-      (fun x => Real.exp (-thermodynamicBeta * oneWindowEnergy i x)))
-    (fun i =>
-      (oneWindowGenerator i).windowBalance_of_gibbsDetailedBalance
-        (oneWindowDuration T i) thermodynamicBeta
-        (oneWindowEnergy i.castSucc)
-        (oneWindow_isGibbsDetailedBalance i))
+    oneWindow_isGibbsDetailedBalance
   simpa [drivenForwardLaw] using h
 
-/-- The one-window work is integrable because it depends only on the finite
-terminal endpoint. -/
+/-- The one-window work is integrable as an instance of the general finite-state
+work bound. -/
 theorem integrable_drivenOneWindowWork (T : NNReal) :
     Integrable (fun γ : Driven.Path State 1 => thermodynamicStateWork γ.1)
       (drivenForwardLaw T) := by
@@ -255,43 +240,26 @@ theorem integrable_drivenOneWindowWork (T : NNReal) :
       (Measure.count : Measure State) thermodynamicBeta initialEnergy
       (integrable_count_state
         (fun x => Real.exp (-thermodynamicBeta * initialEnergy x)))
-  letI : IsProbabilityMeasure (drivenForwardLaw T) := by
-    unfold drivenForwardLaw
-    infer_instance
-  apply Integrable.of_bound
-    (((Measurable.of_discrete : Measurable thermodynamicStateWork).comp
-      measurable_fst).aestronglyMeasurable)
-    (max ‖thermodynamicStateWork State.zero‖
-      ‖thermodynamicStateWork State.one‖)
-  filter_upwards [] with γ
-  rcases γ with ⟨s, rest⟩
-  cases s
-  · exact le_max_left _ _
-  · exact le_max_right _ _
+  have hwork : Integrable (Driven.work oneWindowEnergy)
+      (drivenForwardLaw T) := by
+    simpa [drivenForwardLaw] using
+      (Driven.integrable_work
+        (Gibbs.measure (Measure.count : Measure State)
+          thermodynamicBeta initialEnergy)
+        oneWindowEnergy oneWindowGenerator (oneWindowDuration T))
+  exact hwork.congr
+    (ae_of_all _ fun γ =>
+      drivenWork_oneWindow_eq_thermodynamicStateWork γ)
 
 /-- The second law obtained from the general driven theorem specializes to the
 existing asymmetric final-quench work and free-energy difference. -/
 theorem driven_oneWindow_second_law (T : NNReal) :
     physicalDeltaFreeEnergy ≤
       ∫ γ, thermodynamicStateWork γ.1 ∂drivenForwardLaw T := by
-  have hwork : Integrable (Driven.work oneWindowEnergy)
-      (drivenForwardLaw T) := by
-    exact (integrable_drivenOneWindowWork T).congr
-      (ae_of_all _ fun γ =>
-        (drivenWork_oneWindow_eq_thermodynamicStateWork γ).symm)
-  have h := Driven.second_law
-    (Measure.count : Measure State) thermodynamicBeta
-    (by norm_num [thermodynamicBeta])
+  have h := Driven.second_law_of_gibbsDetailedBalance
+    thermodynamicBeta (by norm_num [thermodynamicBeta])
     oneWindowEnergy oneWindowGenerator (oneWindowDuration T)
-    (fun _ => Measurable.of_discrete)
-    (fun i => integrable_count_state
-      (fun x => Real.exp (-thermodynamicBeta * oneWindowEnergy i x)))
-    (fun i =>
-      (oneWindowGenerator i).windowBalance_of_gibbsDetailedBalance
-        (oneWindowDuration T i) thermodynamicBeta
-        (oneWindowEnergy i.castSucc)
-        (oneWindow_isGibbsDetailedBalance i))
-    hwork
+    oneWindow_isGibbsDetailedBalance
   simpa [drivenForwardLaw] using h
 
 end AsymmetricExample
