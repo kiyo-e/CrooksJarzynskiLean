@@ -13,6 +13,7 @@ import CrooksJarzynski.MeasureProtocolFiniteCrooks
 import CrooksJarzynski.MeasureProtocolGibbs
 import CrooksJarzynski.MeasureProtocolPaths
 import CrooksJarzynski.MeasureProtocolMarked
+import CrooksJarzynski.MeasureProtocolMarkedCrooks
 import CrooksJarzynski.MeasureProtocolMarginals
 import CrooksJarzynski.MeasureProtocolPhysical
 import CrooksJarzynski.MeasureProtocolSecondLaw
