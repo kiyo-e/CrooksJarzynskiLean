@@ -32,6 +32,18 @@ MeasureProtocol.ContinuousTimeJump.Driven.forwardDrivenLaw
 MeasureProtocol.ContinuousTimeJump.Driven.reverseDrivenLaw
 ```
 
+The kernel support records the window-boundary matching explicitly:
+
+```lean
+MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.forwardWindowKernel_ae_boundary
+MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.reverseWindowKernel_ae_boundary
+```
+
+The forward theorem states almost surely that the stored path starts at the
+kernel input and terminates at the recorded next endpoint. The reverse theorem
+states that the forward-aligned reversed path starts at its recorded preceding
+endpoint and terminates at the reverse kernel input.
+
 ## Work convention
 
 The work observable is the sum of the instantaneous energy switches evaluated
@@ -94,6 +106,14 @@ FiniteJumpGenerator.weight_mul_jumpProduct_eq_reverse
 FiniteJumpGenerator.gibbsWeight_mul_jumpProduct_eq_reverse
 ```
 
+The same module proves that the unsymmetrized finite-state counting chart is
+already invariant under path reversal, and that the canonical symmetrized
+reference therefore agrees with the raw reference used by `pathLawFrom`.
+
+For the counting-measure Gibbs specialization, the partition function and free
+energy are also exposed in explicit finite-sum form through
+`finitePartitionFunction` and `finiteFreeEnergy`.
+
 This pathwise identity is the algebraic core required to derive the remaining
 measure-level `WindowBalance` theorem from generator detailed balance.
 
@@ -105,8 +125,9 @@ to combine:
 
 1. reversal invariance of the fixed-jump-count simplex reference;
 2. the Gibbs jump-product identity above;
-3. equality of forward and aligned reverse holding factors; and
-4. the countable sum over all jump-count sectors.
+3. equality of forward and aligned reverse holding factors;
+4. the Gibbs mixture of fixed-initial sector laws; and
+5. the countable sum over all jump-count sectors.
 
 Once that bridge is complete, the headline results can expose only the
 instantaneous generator detailed-balance assumptions.
