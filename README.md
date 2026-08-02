@@ -64,6 +64,13 @@ The library proves:
 - normalized fixed-initial versions of that path law whose actual terminal-state
   pushforwards form a Mathlib Markov kernel, equal the rows of `exp (TQ)`, and
   satisfy Chapman--Kolmogorov;
+- the same identification for an arbitrary finite-state jump generator: the
+  fixed-initial path law is a probability measure (non-explosion), its actual
+  terminal marginal is the corresponding row of `exp (TQ)` via a renewal
+  equation and its uniqueness, the terminal marginals form a Mathlib Markov
+  kernel satisfying Chapman--Kolmogorov, and the result specializes to a
+  genuinely branching three-state Y chain that no two-state parity argument
+  reaches;
 - an asymmetric two-state generator with rates `q(0,1)=2` and `q(1,0)=1`, whose
   Gibbs distribution is explicitly normalized, reversible, and stationary;
 - a normalized final-quench experiment with partition functions `Z₀=3` and

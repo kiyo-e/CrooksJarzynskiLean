@@ -57,10 +57,18 @@ theorem measurableSet_freeSimplexSet (n : ℕ) :
   unfold freeSimplexSet
   exact measurableSet_le (by fun_prop) measurable_const
 
-private def freeSimplexSetAt (n : ℕ) (t : I) : Set (Fin n → I) :=
+/-- The free-coordinate simplex cut down to a sub-horizon `t`.  The chart scale
+is unchanged, so this expresses a shorter horizon without rescaling the
+coordinates; `freeSimplexSet n` is the case `t = 1`.
+
+This is the shape the horizon-direction renewal argument needs: splitting off
+the first coordinate leaves the remaining ones in `freeSimplexSetAt n (t - u 0)`
+at the same scale. -/
+def freeSimplexSetAt (n : ℕ) (t : I) : Set (Fin n → I) :=
   {u | ∑ i, (unitNNReal (u i) : ℝ) ≤ (t : ℝ)}
 
-private theorem measurableSet_freeSimplexSetAt (n : ℕ) (t : I) :
+/-- The sub-horizon simplex is measurable. -/
+theorem measurableSet_freeSimplexSetAt (n : ℕ) (t : I) :
     MeasurableSet (freeSimplexSetAt n t) := by
   unfold freeSimplexSetAt
   exact measurableSet_le (by fun_prop) measurable_const
@@ -146,14 +154,14 @@ private theorem lintegral_freeSimplexSection (n : ℕ) (t : I) :
   field_simp
   ring
 
-/-- The standard free-coordinate `n`-simplex has volume `1 / n!`. -/
-theorem volume_freeSimplexSet (n : ℕ) :
-    (volume : Measure (Fin n → I)) (freeSimplexSet n) =
-      ENNReal.ofReal (1 / (n.factorial : ℝ)) := by
-  have volume_freeSimplexSetAt (n : ℕ) (t : I) :
-      (volume : Measure (Fin n → I)) (freeSimplexSetAt n t) =
-        ENNReal.ofReal ((t : ℝ) ^ n / (n.factorial : ℝ)) := by
-    induction n generalizing t with
+/-- **The sub-horizon simplex has volume `t^n / n!`.**  The induction splits off
+the first coordinate with `piFinSuccAbove` and recurses on the remaining
+sub-horizon `t - u 0`, which is the same peeling the horizon-direction renewal
+argument needs; the `t^n` here is the Jacobian such a rescaling would carry. -/
+theorem volume_freeSimplexSetAt (n : ℕ) (t : I) :
+    (volume : Measure (Fin n → I)) (freeSimplexSetAt n t) =
+      ENNReal.ofReal ((t : ℝ) ^ n / (n.factorial : ℝ)) := by
+  induction n generalizing t with
     | zero =>
         have hset : freeSimplexSetAt 0 t = Set.univ := by
           ext u
@@ -214,8 +222,75 @@ theorem volume_freeSimplexSet (n : ℕ) :
           split_ifs <;> rfl
         rw [hind, MeasureTheory.lintegral_indicator measurableSet_Iic,
           lintegral_freeSimplexSection]
+
+/-- The standard free-coordinate `n`-simplex has volume `1 / n!`.  It is the
+sub-horizon simplex at full horizon. -/
+theorem volume_freeSimplexSet (n : ℕ) :
+    (volume : Measure (Fin n → I)) (freeSimplexSet n) =
+      ENNReal.ofReal (1 / (n.factorial : ℝ)) := by
   simpa [freeSimplexSet, freeSimplexSetAt] using
     volume_freeSimplexSetAt n (1 : I)
+
+/-- A bounded measurable function is integrable on a bounded interval.  The
+transfer below wants integrability, and a renewal argument supplies exactly
+this: its solution is known to be bounded and measurable long before it is
+known to be continuous. -/
+theorem integrableOn_Icc_of_bound {f : ℝ → ℝ} {a b : ℝ}
+    (hm : Measurable f) {M : ℝ} (hM : ∀ w ∈ Set.Icc a b, |f w| ≤ M) :
+    IntegrableOn f (Set.Icc a b) := by
+  refine Measure.integrableOn_of_bounded (M := M)
+    (by rw [Real.volume_Icc]; exact ENNReal.ofReal_ne_top)
+    hm.aestronglyMeasurable ?_
+  filter_upwards [self_mem_ae_restrict measurableSet_Icc] with w hw
+  rw [Real.norm_eq_abs]
+  exact hM w hw
+
+/-- Convert a nonnegative Lebesgue integral over an initial segment of the unit
+interval into an ordinary interval integral.
+
+This is the one-dimensional transfer between the unit-interval chart and the
+real line.  Renewal arguments in the horizon direction peel a single holding
+coordinate, which lands in the chart, while the analytic side works with
+interval integrals; this is the only place the two have to be reconciled. -/
+theorem lintegral_unitInterval_Iic_of_integrableOn
+    (f : ℝ → ℝ) (ρ : ℝ) (hρ0 : 0 ≤ ρ) (hρ1 : ρ ≤ 1)
+    (hf : IntegrableOn f (Set.Icc (0 : ℝ) ρ))
+    (hfnn : ∀ z ∈ Set.Icc (0 : ℝ) ρ, 0 ≤ f z) :
+    ∫⁻ a : I in {a : I | (a : ℝ) ≤ ρ}, ENNReal.ofReal (f (a : ℝ)) =
+      ENNReal.ofReal (∫ z : ℝ in (0 : ℝ)..ρ, f z) := by
+  have hpre :
+      ((fun a : I => (a : ℝ)) ⁻¹' Set.Icc (0 : ℝ) ρ) =
+        {a : I | (a : ℝ) ≤ ρ} := by
+    ext a
+    simp only [Set.mem_preimage, Set.mem_Icc, Set.mem_setOf_eq]
+    exact ⟨fun h => h.2, fun h => ⟨a.2.1, h⟩⟩
+  rw [← hpre]
+  rw [unitInterval.measurePreserving_coe.setLIntegral_comp_preimage_emb
+    unitInterval.measurableEmbedding_coe
+    (fun z : ℝ => ENNReal.ofReal (f z)) (Set.Icc 0 ρ)]
+  change (∫⁻ z : ℝ, ENNReal.ofReal (f z)
+      ∂((volume.restrict (Set.Icc (0 : ℝ) 1)).restrict
+        (Set.Icc 0 ρ))) = _
+  rw [Measure.restrict_restrict measurableSet_Icc,
+    Set.inter_eq_left.mpr (Set.Icc_subset_Icc le_rfl hρ1)]
+  have hnn : 0 ≤ᵐ[volume.restrict (Set.Icc (0 : ℝ) ρ)] f := by
+    filter_upwards [self_mem_ae_restrict measurableSet_Icc] with z hz
+    exact hfnn z hz
+  rw [← ofReal_integral_eq_lintegral_ofReal hf hnn,
+    integral_Icc_eq_integral_Ioc,
+    ← intervalIntegral.integral_of_le hρ0]
+
+/-- The transfer for a continuous integrand.  Continuity is only used to get
+integrability, which is why the general form above asks for that directly: a
+renewal argument produces a bounded measurable integrand before it knows the
+solution is continuous. -/
+theorem lintegral_unitInterval_Iic_of_continuous_nonneg
+    (f : ℝ → ℝ) (ρ : ℝ) (hρ0 : 0 ≤ ρ) (hρ1 : ρ ≤ 1)
+    (hf : Continuous f)
+    (hfnn : ∀ z ∈ Set.Icc (0 : ℝ) ρ, 0 ≤ f z) :
+    ∫⁻ a : I in {a : I | (a : ℝ) ≤ ρ}, ENNReal.ofReal (f (a : ℝ)) =
+      ENNReal.ofReal (∫ z : ℝ in (0 : ℝ)..ρ, f z) :=
+  lintegral_unitInterval_Iic_of_integrableOn f ρ hρ0 hρ1 hf.integrableOn_Icc hfnn
 
 /-- The simplex event has strictly positive product volume, so conditioning on
 it is nondegenerate for every jump count, including `n = 0`. -/

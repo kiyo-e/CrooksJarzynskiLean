@@ -32,6 +32,11 @@ import CrooksJarzynski.ContinuousTimeJumpTwoStateAsymmetricFixedInitial
 import CrooksJarzynski.ContinuousTimeJumpTwoStateAsymmetricParity
 import CrooksJarzynski.ContinuousTimeJumpTwoStatePhysicalWork
 import CrooksJarzynski.ContinuousTimeJumpTwoStateSemigroup
+import CrooksJarzynski.ContinuousTimeJumpFiniteGeneratorPathLaw
+import CrooksJarzynski.ContinuousTimeJumpFiniteGeneratorFullPath
+import CrooksJarzynski.ContinuousTimeJumpFiniteGeneratorRenewal
+import CrooksJarzynski.ContinuousTimeJumpFiniteGeneratorExp
+import CrooksJarzynski.ContinuousTimeJumpFiniteGeneratorBridge
 import CrooksJarzynski.MathlibBridge
 import CrooksJarzynski.MeasureProtocolFiniteBridge
 import CrooksJarzynski.PhyslibBridge
@@ -66,7 +71,29 @@ waiting-time cancellation, and local jump balance, and proves fixed-sector,
 full-path, and fixed-horizon Crooks and Jarzynski statements. A general
 `FiniteJumpGenerator` packages nonnegative finite-state jump rates, derives a
 conservative real generator, and supplies a fixed-horizon counting reference;
-a three-state Y-shaped chain demonstrates genuine branching.
+a three-state Y-shaped chain demonstrates genuine branching. Its fixed-initial
+sector laws are proved non-explosive and assembled into a probability measure
+on the disjoint union of all jump-count sectors, whose actual terminal
+coordinate pushes forward to the transition mass. On the real side the
+exponential of the generator is shown to satisfy the entrywise first-jump
+renewal equation and to be its unique bounded continuous solution.
+
+The two halves are matched in a residual fraction of a fixed horizon, so no
+rescaling of the simplex chart is ever needed. Peeling the first holding
+coordinate turns an `(n+1)`-jump sector into the `n`-jump sector of the shifted
+state sequence on the remaining fraction; folding the branching sum over the
+state reached by that jump, and then summing over the jump count, produces a
+genuine renewal equation for the transition mass. Its solution is bounded by
+the normalization already proved at full horizon, and continuity comes out of
+the renewal equation itself rather than being assumed. Since scaling every jump
+rate scales the generator, the fraction form is the real-time form of a
+rescaled chain, which feeds the uniqueness hook directly and identifies the
+terminal marginal of the general fixed-initial path law with the rows of
+`exp (TQ)`. The terminal marginals are packaged as a Mathlib Markov kernel and
+shown to satisfy Chapman--Kolmogorov and the semigroup law under kernel
+composition, and the identification is specialized to the branching three-state
+Y chain, which no parity argument reaches, and to the normalized two-state
+chain.
 
 A normalized unit-rate two-state CTMC identifies every jump-count sector with
 its Poisson probability and proves non-explosion by constructing a probability
@@ -129,6 +156,13 @@ canonical-ensemble API. The main results include `Protocol.crooks`,
 `MeasureProtocol.ContinuousTimeJump.Simplex.lintegral_freeSimplex_reverseFree`,
 `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.generator_row_sum`,
 `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.map_countingReference_reverse`,
+`MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.transitionMassAt_renewal`,
+`MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.eq_exp_smul_apply_of_renewal_fraction`,
+`MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.pathLawFrom_terminalState_eq_exp_generator`,
+`MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.transitionKernel_chapman_kolmogorov`,
+`MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.transitionKernel_add`,
+`MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.ThreeStateBranching.pathLawFrom_terminalState_eq_exp_generator`,
+`MeasureProtocol.ContinuousTimeJump.TwoState.finiteGenerator_pathLawFrom_terminalState_eq_exp_generator`,
 `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.ThreeStateBranching.has_two_distinct_successors`,
 `MeasureProtocol.ContinuousTimeJump.TwoState.finiteGenerator_generator_eq`,
 `MeasureProtocol.ContinuousTimeJump.TwoState.pathLawFrom_terminalState_eq_exp_generator`,

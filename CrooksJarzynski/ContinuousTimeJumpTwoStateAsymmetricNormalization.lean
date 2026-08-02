@@ -158,8 +158,11 @@ private theorem mem_freeSimplexSet_iff {m : ℕ} (u : Fin m → I) :
 
 /-- Integrating out the last free coordinate of the `(n + 1)`-jump arrival
 integrand yields the failure probability of the terminal survival factor on
-the `n`-jump simplex. -/
-private theorem lintegral_cubeExpWeight_succ
+the `n`-jump simplex.
+
+The statement is at the level of a bare rate vector, with no sector prefactor,
+so the general finite-generator layer can use it directly. -/
+theorem lintegral_cubeExpWeight_succ
     {n : ℕ} (r : Fin (n + 1) → NNReal) (T : NNReal) :
     ((r (Fin.last n) : ℝ≥0∞) * (T : ℝ≥0∞)) *
         ∫⁻ u in Simplex.freeSimplexSet (n + 1), cubeExpWeight r T u =
