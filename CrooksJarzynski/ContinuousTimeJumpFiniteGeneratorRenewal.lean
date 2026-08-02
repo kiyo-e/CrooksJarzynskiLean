@@ -27,7 +27,7 @@ namespace CrooksJarzynski
 namespace MeasureProtocol
 namespace ContinuousTimeJump
 
-open TwoState.AsymmetricExample (cubeExpWeight residualAt)
+open Simplex (cubeExpWeight residualAt)
 
 universe u
 
@@ -42,7 +42,7 @@ this is `holdingIntegral`. -/
 noncomputable def holdingIntegralAt
     (G : FiniteJumpGenerator Ω) (T : NNReal) {n : ℕ}
     (states : Fin (n + 1) → Ω) (ρ : ℝ) : ℝ≥0∞ :=
-  ∫⁻ u in TwoState.AsymmetricExample.freeSimplexSetAt n ρ,
+  ∫⁻ u in Simplex.freeSimplexSetAt n ρ,
     cubeExpWeight (G.stateEscapeRates states) T u *
       ENNReal.ofReal
         (Real.exp
@@ -55,8 +55,8 @@ theorem holdingIntegralAt_one
     (states : Fin (n + 1) → Ω) :
     G.holdingIntegralAt T states 1 = G.holdingIntegral T states := by
   unfold holdingIntegralAt holdingIntegral
-    TwoState.AsymmetricExample.freeSimplexSetAt Simplex.freeSimplexSet
-    residualAt TwoState.AsymmetricExample.residual
+    Simplex.freeSimplexSetAt Simplex.freeSimplexSet
+    residualAt Simplex.residual
   simp only [Simplex.coe_unitNNReal]
 
 omit [DecidableEq Ω] [MeasurableSpace Ω] [MeasurableSingletonClass Ω] in
@@ -113,13 +113,13 @@ theorem holdingIntegralAt_succ
       fun p : I × (Fin n → I) => head p.1 * tail (ρ - (p.1 : ℝ)) p.2 := by
     simp only [hhead, htail, residualAt]
     refine Measurable.mul (by fun_prop) (Measurable.mul ?_ (by fun_prop))
-    exact (TwoState.AsymmetricExample.measurable_cubeExpWeight
+    exact (Simplex.measurable_cubeExpWeight
       (fun j : Fin n => r j.succ) T).comp measurable_snd
   have hgmeas : Measurable g := hbody.indicator hcond
   -- The pulled-back integrand is the indicator of the full simplex.
   have hpull : ∀ u : Fin (n + 1) → I,
       g (MeasurableEquiv.piFinSuccAbove (fun _ : Fin (n + 1) => I) 0 u) =
-        (TwoState.AsymmetricExample.freeSimplexSetAt (n + 1) ρ).indicator
+        (Simplex.freeSimplexSetAt (n + 1) ρ).indicator
           (fun w => cubeExpWeight r T w *
             ENNReal.ofReal
               (Real.exp (-((c : ℝ) * (T : ℝ) * residualAt ρ w)))) u := by
@@ -132,7 +132,7 @@ theorem holdingIntegralAt_succ
       (Fin.sum_univ_succ (fun i : Fin (n + 1) => (u i : ℝ))).symm
     rw [hchart]
     simp only [hg, Set.indicator_apply,
-      TwoState.AsymmetricExample.freeSimplexSetAt, Set.mem_setOf_eq, hsum]
+      Simplex.freeSimplexSetAt, Set.mem_setOf_eq, hsum]
     split_ifs with hmem
     · have hres : residualAt (ρ - (u 0 : ℝ)) (fun j : Fin n => u j.succ) =
           residualAt ρ u := by
@@ -142,7 +142,7 @@ theorem holdingIntegralAt_succ
       have hprod : head (u 0) *
           cubeExpWeight (fun j : Fin n => r j.succ) T
             (fun j : Fin n => u j.succ) = cubeExpWeight r T u := by
-        simp only [hhead, TwoState.AsymmetricExample.cubeExpWeight]
+        simp only [hhead, Simplex.cubeExpWeight]
         rw [Fin.prod_univ_succ]
       rw [htail]
       dsimp only
@@ -155,9 +155,9 @@ theorem holdingIntegralAt_succ
     unfold holdingIntegralAt
     rw [← hr, ← hc,
       ← lintegral_indicator
-        (TwoState.AsymmetricExample.measurableSet_freeSimplexSetAt (n + 1) ρ)]
+        (Simplex.measurableSet_freeSimplexSetAt (n + 1) ρ)]
     rw [show (∫⁻ u : Fin (n + 1) → I,
-        (TwoState.AsymmetricExample.freeSimplexSetAt (n + 1) ρ).indicator
+        (Simplex.freeSimplexSetAt (n + 1) ρ).indicator
           (fun w => cubeExpWeight r T w *
             ENNReal.ofReal
               (Real.exp (-((c : ℝ) * (T : ℝ) * residualAt ρ w)))) u) =
@@ -171,17 +171,17 @@ theorem holdingIntegralAt_succ
   refine lintegral_congr fun a => ?_
   have hinner : ∀ w : Fin n → I,
       g (a, w) =
-        (TwoState.AsymmetricExample.freeSimplexSetAt n (ρ - (a : ℝ))).indicator
+        (Simplex.freeSimplexSetAt n (ρ - (a : ℝ))).indicator
           (fun w => head a * tail (ρ - (a : ℝ)) w) w := by
     intro w
     simp only [hg, Set.indicator_apply,
-      TwoState.AsymmetricExample.freeSimplexSetAt, Set.mem_setOf_eq]
+      Simplex.freeSimplexSetAt, Set.mem_setOf_eq]
     have hiff : ((a : ℝ) + ∑ j, (w j : ℝ) ≤ ρ) ↔ (∑ j, (w j : ℝ) ≤ ρ - (a : ℝ)) := by
       constructor <;> intro h <;> linarith
     simp only [hiff]
   simp_rw [hinner]
   rw [lintegral_indicator
-    (TwoState.AsymmetricExample.measurableSet_freeSimplexSetAt n (ρ - (a : ℝ)))]
+    (Simplex.measurableSet_freeSimplexSetAt n (ρ - (a : ℝ)))]
   rw [lintegral_const_mul' _ _ (by simp [hhead] : head a ≠ ∞)]
   congr 1
 
@@ -215,7 +215,7 @@ theorem measurable_holdingIntegralAt
               residualAt q.1 q.2))) := by
     simp only [residualAt]
     refine Measurable.mul ?_ (by fun_prop)
-    exact (TwoState.AsymmetricExample.measurable_cubeExpWeight
+    exact (Simplex.measurable_cubeExpWeight
       (G.stateEscapeRates states) T).comp measurable_snd
   have hFmeas : Measurable F := hbody.indicator hset
   have hrw : ∀ ρ : ℝ,
@@ -223,10 +223,10 @@ theorem measurable_holdingIntegralAt
     intro ρ
     rw [holdingIntegralAt,
       ← lintegral_indicator
-        (TwoState.AsymmetricExample.measurableSet_freeSimplexSetAt n ρ)]
+        (Simplex.measurableSet_freeSimplexSetAt n ρ)]
     refine lintegral_congr fun u => ?_
     simp only [hF, Set.indicator_apply,
-      TwoState.AsymmetricExample.freeSimplexSetAt, Set.mem_setOf_eq]
+      Simplex.freeSimplexSetAt, Set.mem_setOf_eq]
   simp_rw [hrw]
   exact hFmeas.lintegral_prod_right'
 
@@ -504,9 +504,9 @@ theorem holdingIntegralAt_zero
     G.holdingIntegralAt T states ρ =
       ENNReal.ofReal
         (Real.exp (-((G.escapeRate (states 0) : ℝ) * (T : ℝ) * ρ))) := by
-  have hset : TwoState.AsymmetricExample.freeSimplexSetAt 0 ρ = Set.univ := by
+  have hset : Simplex.freeSimplexSetAt 0 ρ = Set.univ := by
     ext u
-    simp [TwoState.AsymmetricExample.freeSimplexSetAt, hρ]
+    simp [Simplex.freeSimplexSetAt, hρ]
   have hpoint : (Fin.last 0 : Fin 1) = 0 := rfl
   have huniv : (volume : Measure (Fin 0 → I)) Set.univ = 1 := by simp
   rw [holdingIntegralAt, hset, Measure.restrict_univ]
@@ -625,9 +625,9 @@ theorem holdingIntegralAt_of_neg
     (G : FiniteJumpGenerator Ω) (T : NNReal) {n : ℕ}
     (states : Fin (n + 1) → Ω) {ρ : ℝ} (hρ : ρ < 0) :
     G.holdingIntegralAt T states ρ = 0 := by
-  have hempty : TwoState.AsymmetricExample.freeSimplexSetAt n ρ = ∅ := by
+  have hempty : Simplex.freeSimplexSetAt n ρ = ∅ := by
     ext u
-    simp only [TwoState.AsymmetricExample.freeSimplexSetAt, Set.mem_setOf_eq,
+    simp only [Simplex.freeSimplexSetAt, Set.mem_setOf_eq,
       Set.mem_empty_iff_false, iff_false, not_le]
     exact lt_of_lt_of_le hρ (Finset.sum_nonneg fun i _ => (u i).2.1)
   rw [holdingIntegralAt, hempty, Measure.restrict_empty, lintegral_zero_measure]
@@ -675,7 +675,7 @@ theorem holdingIntegralAt_le
   have hc0 : 0 ≤ c := (G.escapeRate _).coe_nonneg
   have hcb : c ≤ (G.rateBound : ℝ) := by
     exact_mod_cast G.escapeRate_le_rateBound (states (Fin.last n))
-  have hsub : TwoState.AsymmetricExample.freeSimplexSetAt n ρ ⊆
+  have hsub : Simplex.freeSimplexSetAt n ρ ⊆
       Simplex.freeSimplexSet n := by
     intro u hu
     exact le_trans hu h1
@@ -688,11 +688,11 @@ theorem holdingIntegralAt_le
             ENNReal.ofReal
               (Real.exp
                 (-(c * (T : ℝ) *
-                  TwoState.AsymmetricExample.residual u)))) := by
+                  Simplex.residual u)))) := by
     intro u
     have hexp : Real.exp (-(c * (T : ℝ) * residualAt ρ u)) ≤
         G.fractionBound T *
-          Real.exp (-(c * (T : ℝ) * TwoState.AsymmetricExample.residual u)) := by
+          Real.exp (-(c * (T : ℝ) * Simplex.residual u)) := by
       rw [fractionBound, ← Real.exp_add]
       refine Real.exp_le_exp.2 ?_
       have hT : (0 : ℝ) ≤ (T : ℝ) := T.coe_nonneg
@@ -702,7 +702,7 @@ theorem holdingIntegralAt_le
         have h2' : c * (T : ℝ) ≤ (G.rateBound : ℝ) * (T : ℝ) :=
           mul_le_mul_of_nonneg_right hcb hT
         linarith
-      simp only [residualAt, TwoState.AsymmetricExample.residual]
+      simp only [residualAt, Simplex.residual]
       nlinarith [hstep]
     calc cubeExpWeight (G.stateEscapeRates states) T u *
             ENNReal.ofReal (Real.exp (-(c * (T : ℝ) * residualAt ρ u)))
@@ -711,14 +711,14 @@ theorem holdingIntegralAt_le
               (G.fractionBound T *
                 Real.exp
                   (-(c * (T : ℝ) *
-                    TwoState.AsymmetricExample.residual u))) :=
+                    Simplex.residual u))) :=
           mul_le_mul_right (ENNReal.ofReal_le_ofReal hexp) _
       _ = ENNReal.ofReal (G.fractionBound T) *
             (cubeExpWeight (G.stateEscapeRates states) T u *
               ENNReal.ofReal
                 (Real.exp
                   (-(c * (T : ℝ) *
-                    TwoState.AsymmetricExample.residual u)))) := by
+                    Simplex.residual u)))) := by
           rw [ENNReal.ofReal_mul (le_trans zero_le_one (G.one_le_fractionBound T))]
           ring
   calc G.holdingIntegralAt T states ρ
@@ -733,7 +733,7 @@ theorem holdingIntegralAt_le
               ENNReal.ofReal
                 (Real.exp
                   (-(c * (T : ℝ) *
-                    TwoState.AsymmetricExample.residual u)))) :=
+                    Simplex.residual u)))) :=
         lintegral_mono hpt
     _ = ENNReal.ofReal (G.fractionBound T) * G.holdingIntegral T states := by
         rw [lintegral_const_mul' _ _ ENNReal.ofReal_ne_top, holdingIntegral]

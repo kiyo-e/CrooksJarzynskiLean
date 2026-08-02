@@ -22,6 +22,13 @@ interval with the residual time.
 The resulting probability measure is supported on the horizon by construction.
 Averaging it with its time reversal gives an explicitly reversal-invariant,
 nonzero reference measure on the fixed-horizon path space.
+
+The chart vocabulary shared by every user of this construction lives here too:
+the simplex cut down to an available fraction, the fraction left after the free
+coordinates, and the product of per-coordinate exponential survival weights.
+These are chart-level notions with no reference to any particular chain, so
+neither the general finite-generator development nor any concrete example owns
+them.
 -/
 
 open MeasureTheory
@@ -57,35 +64,69 @@ theorem measurableSet_freeSimplexSet (n : ℕ) :
   unfold freeSimplexSet
   exact measurableSet_le (by fun_prop) measurable_const
 
-/-- The free-coordinate simplex cut down to a sub-horizon `t`.  The chart scale
-is unchanged, so this expresses a shorter horizon without rescaling the
-coordinates; `freeSimplexSet n` is the case `t = 1`.
+/-- The free-coordinate simplex cut down to an available fraction `ρ` of the
+horizon.  The chart scale is unchanged, so this expresses a shorter horizon
+without rescaling the coordinates; `freeSimplexSet n` is the case `ρ = 1`.
 
-This is the shape the horizon-direction renewal argument needs: splitting off
-the first coordinate leaves the remaining ones in `freeSimplexSetAt n (t - u 0)`
-at the same scale. -/
-def freeSimplexSetAt (n : ℕ) (t : I) : Set (Fin n → I) :=
-  {u | ∑ i, (unitNNReal (u i) : ℝ) ≤ (t : ℝ)}
+The threshold is an arbitrary real rather than a point of `I` because the
+renewal recursion subtracts a coordinate from it: splitting off the first
+coordinate leaves the remaining ones in `freeSimplexSetAt n (ρ - u 0)` at the
+same scale, and nothing keeps that difference inside `[0, 1]` a priori.  A
+negative threshold simply gives the empty set. -/
+def freeSimplexSetAt (n : ℕ) (ρ : ℝ) : Set (Fin n → I) :=
+  {u | ∑ i, (u i : ℝ) ≤ ρ}
 
 /-- The sub-horizon simplex is measurable. -/
-theorem measurableSet_freeSimplexSetAt (n : ℕ) (t : I) :
-    MeasurableSet (freeSimplexSetAt n t) := by
+theorem measurableSet_freeSimplexSetAt (n : ℕ) (ρ : ℝ) :
+    MeasurableSet (freeSimplexSetAt n ρ) := by
   unfold freeSimplexSetAt
   exact measurableSet_le (by fun_prop) measurable_const
+
+/-- The fraction of the horizon left after the `n` free coordinates. -/
+def residualAt {n : ℕ} (ρ : ℝ) (u : Fin n → I) : ℝ :=
+  ρ - ∑ i, (u i : ℝ)
+
+@[fun_prop]
+theorem measurable_residualAt {n : ℕ} (ρ : ℝ) :
+    Measurable (residualAt (n := n) ρ) := by
+  unfold residualAt
+  fun_prop
+
+/-- The fraction of the full horizon left after the `n` free coordinates. -/
+def residual {n : ℕ} (u : Fin n → I) : ℝ :=
+  1 - ∑ i, (u i : ℝ)
+
+@[fun_prop]
+theorem measurable_residual {n : ℕ} : Measurable (residual (n := n)) := by
+  unfold residual
+  fun_prop
+
+theorem residualAt_one {n : ℕ} (u : Fin n → I) : residualAt 1 u = residual u :=
+  rfl
+
+/-- Product of per-coordinate exponential survival weights in free cube
+coordinates.  Coordinate `i` carries rate `r i` over the scaled holding time
+`T * u i`. -/
+noncomputable def cubeExpWeight {n : ℕ} (r : Fin n → NNReal) (T : NNReal)
+    (u : Fin n → I) : ℝ≥0∞ :=
+  ∏ i, ENNReal.ofReal (Real.exp (-((r i : ℝ) * (T : ℝ) * (u i : ℝ))))
+
+@[fun_prop]
+theorem measurable_cubeExpWeight {n : ℕ} (r : Fin n → NNReal) (T : NNReal) :
+    Measurable (cubeExpWeight r T) := by
+  unfold cubeExpWeight
+  fun_prop
 
 private theorem freeSimplexSection {n : ℕ} (t x : I) :
     (fun v : Fin n → I => (x, v)) ⁻¹'
         {p : I × (Fin n → I) |
           (p.1 : ℝ) + ∑ i, (p.2 i : ℝ) ≤ (t : ℝ)} =
-      if hx : x ≤ t then
-        freeSimplexSetAt n
-          ⟨(t : ℝ) - (x : ℝ), sub_nonneg.mpr hx,
-            by linarith [t.2.2, x.2.1]⟩
+      if _hx : x ≤ t then
+        freeSimplexSetAt n ((t : ℝ) - (x : ℝ))
       else ∅ := by
   split_ifs with hx
   · ext v
-    simp only [Set.mem_preimage, Set.mem_setOf_eq, freeSimplexSetAt,
-      coe_unitNNReal]
+    simp only [Set.mem_preimage, Set.mem_setOf_eq, freeSimplexSetAt]
     constructor <;> intro h <;> linarith
   · ext v
     simp only [Set.mem_preimage, Set.mem_setOf_eq, Set.mem_empty_iff_false,
@@ -200,12 +241,11 @@ theorem volume_freeSimplexSetAt (n : ℕ) (t : I) :
           rw [show {a : Fin n → I |
               (x : ℝ) + ∑ i, (a i : ℝ) ≤ (t : ℝ)} =
                 if hx : x ≤ t then
-                  freeSimplexSetAt n
-                    ⟨(t : ℝ) - (x : ℝ), sub_nonneg.mpr hx,
-                      by linarith [t.2.2, x.2.1]⟩
+                  freeSimplexSetAt n ((t : ℝ) - (x : ℝ))
                 else ∅ from freeSimplexSection t x]
           split_ifs with hx
-          · exact ih _
+          · exact ih ⟨(t : ℝ) - (x : ℝ), sub_nonneg.mpr hx,
+              by linarith [t.2.2, x.2.1]⟩
           · simp
         simp_rw [hsection]
         have hind :
