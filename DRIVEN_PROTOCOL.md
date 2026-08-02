@@ -44,10 +44,17 @@ terminates at the recorded next endpoint. The reverse theorem states that the
 forward-aligned reversed path starts at its recorded preceding endpoint and
 terminates at the reverse kernel input.
 
+The recursively constructed laws inherit all window equations simultaneously:
+
+```lean
+MeasureProtocol.ContinuousTimeJump.Driven.forwardDrivenLaw_ae_isBoundaryConsistent
+MeasureProtocol.ContinuousTimeJump.Driven.reverseDrivenLaw_ae_isBoundaryConsistent
+```
+
+Thus both laws are almost surely supported on `Driven.IsBoundaryConsistent`.
 The same equations are also available structurally, rather than only almost
-surely. `Driven.IsBoundaryConsistent` checks every stored window, and
-`Driven.ConnectedPath` is the corresponding subtype. New windows can be added
-with their endpoint equations through:
+surely. `Driven.ConnectedPath` is the corresponding subtype. New windows can
+be added with their endpoint equations through:
 
 ```lean
 MeasureProtocol.ContinuousTimeJump.Driven.IsBoundaryConsistent
