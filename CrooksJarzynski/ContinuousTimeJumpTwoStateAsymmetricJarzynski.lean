@@ -26,6 +26,9 @@ namespace ContinuousTimeJump
 namespace TwoState
 namespace AsymmetricExample
 
+open Simplex (cubeExpWeight measurable_cubeExpWeight residualAt measurable_residualAt
+  freeSimplexSetAt measurableSet_freeSimplexSetAt)
+
 /-- An alternating state sequence is completely determined by its initial
 state. -/
 theorem Alternates.apply_eq_iterateFlip {n : ℕ}
@@ -249,7 +252,7 @@ theorem rateDensity_assemblePath {n : ℕ} (w : State → ℝ≥0∞)
           ENNReal.ofReal
             (Real.exp
               (-((stateRate (iterateFlip n x) : ℝ) *
-                (T : ℝ) * residual u))) := by
+                (T : ℝ) * Simplex.residual u))) := by
   rw [rateDensity_eq_of_alternates w _
     (alternatingStates_alternates n x)]
   have hsum : (∑ i, Simplex.unitNNReal (u i)) ≤ (1 : NNReal) := by
@@ -261,10 +264,10 @@ theorem rateDensity_assemblePath {n : ℕ} (w : State → ℝ≥0∞)
     simpa using mul_le_mul_right hsum T
   have hlast :
       ((T - ∑ i, T * Simplex.unitNNReal (u i) : NNReal) : ℝ) =
-        (T : ℝ) * residual u := by
+        (T : ℝ) * Simplex.residual u := by
     rw [NNReal.coe_sub hscaled]
     rw [NNReal.coe_sum]
-    simp only [residual, NNReal.coe_mul, Simplex.coe_unitNNReal]
+    simp only [Simplex.residual, NNReal.coe_mul, Simplex.coe_unitNNReal]
     rw [← Finset.mul_sum]
     ring
   simp only [Simplex.assemblePath, alternatingStates,
@@ -323,7 +326,7 @@ theorem lintegral_rateDensity_assemblePath (w : State → ℝ≥0∞)
           ENNReal.ofReal
             (Real.exp
               (-((stateRate (iterateFlip n x) : ℝ) *
-                (T : ℝ) * residual u)))) := by
+                (T : ℝ) * Simplex.residual u)))) := by
     fun_prop
   have hreorder : Set.EqOn
       (fun u =>
@@ -332,14 +335,14 @@ theorem lintegral_rateDensity_assemblePath (w : State → ℝ≥0∞)
           ENNReal.ofReal
             (Real.exp
               (-((stateRate (iterateFlip n x) : ℝ) *
-                (T : ℝ) * residual u))))
+                (T : ℝ) * Simplex.residual u))))
       (fun u =>
         (w x * ∏ i, (chainRates x n i : ℝ≥0∞)) *
           (cubeExpWeight (chainRates x n) T u *
             ENNReal.ofReal
               (Real.exp
                 (-((stateRate (iterateFlip n x) : ℝ) *
-                  (T : ℝ) * residual u)))))
+                  (T : ℝ) * Simplex.residual u)))))
       (Simplex.freeSimplexSet n) := by
     intro u _
     ring
@@ -781,9 +784,9 @@ theorem sectorMass_zero_pos (T : NNReal) (x : State) :
   have hset : Simplex.freeSimplexSet 0 = Set.univ := by
     ext u
     simp [Simplex.freeSimplexSet]
-  have hres : ∀ u : Fin 0 → I, residual u = 1 := by
+  have hres : ∀ u : Fin 0 → I, Simplex.residual u = 1 := by
     intro u
-    unfold residual
+    unfold Simplex.residual
     simp
   simp only [Finset.univ_eq_empty, Finset.prod_empty, one_mul, hset,
     Measure.restrict_univ]

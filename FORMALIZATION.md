@@ -173,6 +173,8 @@ change-of-variables lemmas above expose this as a reusable public API in
 | The general terminal marginals form a Markov kernel | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.transitionKernel`, `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.instIsMarkovKernelTransitionKernel` |
 | Chapman--Kolmogorov for the general transition kernel | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.transitionKernel_chapman_kolmogorov` |
 | The identification specialized to the branching three-state Y chain | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.ThreeStateBranching.pathLawFrom_terminalState_eq_exp_generator` |
+| Almost every path is a valid real-time trajectory (positive waits, horizon) | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.pathLawFrom_ae_isValid` |
+| The real-time trajectory starts at the prescribed state and ends at the recorded terminal state | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.pathLawFrom_ae_trajectory_endpoints` |
 | Original finite protocol satisfies measure Crooks | `Protocol.measure_crooks` |
 | Original finite protocol satisfies real-integral Jarzynski | `Protocol.measure_jarzynski_integral` |
 | General forward path singleton mass equals legacy `forwardWeight` | `Protocol.measure_forwardWeight_singleton` |

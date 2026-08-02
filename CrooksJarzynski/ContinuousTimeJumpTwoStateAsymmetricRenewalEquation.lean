@@ -22,24 +22,8 @@ namespace ContinuousTimeJump
 namespace TwoState
 namespace AsymmetricExample
 
-/-- The free simplex with a variable residual horizon `ρ`. -/
-def freeSimplexSetAt (n : ℕ) (ρ : ℝ) : Set (Fin n → I) :=
-  {u | ∑ i, (u i : ℝ) ≤ ρ}
-
-theorem measurableSet_freeSimplexSetAt (n : ℕ) (ρ : ℝ) :
-    MeasurableSet (freeSimplexSetAt n ρ) := by
-  unfold freeSimplexSetAt
-  exact measurableSet_le (by fun_prop) measurable_const
-
-/-- The residual fraction after the free holding-time coordinates. -/
-def residualAt {n : ℕ} (ρ : ℝ) (u : Fin n → I) : ℝ :=
-  ρ - ∑ i, (u i : ℝ)
-
-@[fun_prop]
-theorem measurable_residualAt {n : ℕ} (ρ : ℝ) :
-    Measurable (residualAt (n := n) ρ) := by
-  unfold residualAt
-  fun_prop
+open Simplex (cubeExpWeight measurable_cubeExpWeight residualAt measurable_residualAt
+  freeSimplexSetAt measurableSet_freeSimplexSetAt)
 
 /-- The `n`-jump sector mass on a variable residual horizon `ρ`, with the
 physical horizon scale `T` kept fixed.  At `ρ = 1` this is `sectorMass T x n`. -/
@@ -56,7 +40,7 @@ noncomputable def sectorMassAt
 theorem sectorMassAt_one (T : NNReal) (x : State) (n : ℕ) :
     sectorMassAt T x n 1 = sectorMass T x n := by
   unfold sectorMassAt sectorMass sectorIntegral freeSimplexSetAt residualAt
-    Simplex.freeSimplexSet residual
+    Simplex.freeSimplexSet Simplex.residual
   simp only [Simplex.coe_unitNNReal]
 
 /-- The explicit transition probability, regarded as an `ENNReal` function of
