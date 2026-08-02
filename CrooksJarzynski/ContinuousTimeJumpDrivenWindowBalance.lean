@@ -76,6 +76,7 @@ theorem finiteGibbsWeight_detailedBalance [Nonempty Ω]
           ENNReal.ofReal (Real.exp (-β * energy y)) *
         (G.jumpRate y x : ℝ≥0∞) := by ac_rfl
 
+omit [DecidableEq Ω] in
 /-- The counting-measure Gibbs state is the finite sum of its normalized
 singleton masses. -/
 theorem gibbsMeasure_count_eq_sum_smul_dirac
