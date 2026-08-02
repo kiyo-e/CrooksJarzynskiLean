@@ -45,8 +45,11 @@ import CrooksJarzynski.ContinuousTimeJumpDrivenDensity
 import CrooksJarzynski.ContinuousTimeJumpDrivenMixture
 import CrooksJarzynski.ContinuousTimeJumpDrivenStationary
 import CrooksJarzynski.ContinuousTimeJumpDrivenBoundary
+import CrooksJarzynski.ContinuousTimeJumpDrivenConnectedPath
+import CrooksJarzynski.ContinuousTimeJumpDrivenWorkSum
 import CrooksJarzynski.ContinuousTimeJumpDrivenWindowBalance
 import CrooksJarzynski.ContinuousTimeJumpDrivenPhysical
+import CrooksJarzynski.ContinuousTimeJumpDrivenTwoState
 import CrooksJarzynski.ContinuousTimeJumpFiniteGeneratorRenewal
 import CrooksJarzynski.ContinuousTimeJumpFiniteGeneratorExp
 import CrooksJarzynski.ContinuousTimeJumpFiniteGeneratorBridge
@@ -107,6 +110,18 @@ shown to satisfy Chapman--Kolmogorov and the semigroup law under kernel
 composition, and the identification is specialized to the branching three-state
 Y chain, which no parity argument reaches, and to the normalized two-state
 chain.
+
+A finite-window driven protocol binds one complete normalized fixed-initial
+jump path at every switching endpoint. The reverse experiment traverses the
+windows in reverse order and stores reversed complete paths. Boundary matching
+is available both almost surely for the constructed laws and structurally in
+`Driven.ConnectedPath`. The recursive work is identified with its ordinary
+finite sum over window endpoints, is uniformly bounded on finite state spaces,
+and is therefore automatically integrable. Division-free instantaneous Gibbs
+detailed balance is lifted to the complete-path `WindowBalance`, yielding
+Crooks, Jarzynski, and the average-work second law without an external
+work-integrability hypothesis. The asymmetric reversible two-state final
+quench is also recovered as an explicit one-window specialization.
 
 A normalized unit-rate two-state CTMC identifies every jump-count sector with
 its Poisson probability and proves non-explosion by constructing a probability
@@ -178,6 +193,15 @@ canonical-ensemble API. The main results include `Protocol.crooks`,
 `MeasureProtocol.ContinuousTimeJump.TwoState.finiteGenerator_pathLawFrom_terminalState_eq_exp_generator`,
 `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.ThreeStateBranching.has_two_distinct_successors`,
 `MeasureProtocol.ContinuousTimeJump.TwoState.finiteGenerator_generator_eq`,
+`MeasureProtocol.ContinuousTimeJump.Driven.work_eq_sum`,
+`MeasureProtocol.ContinuousTimeJump.Driven.integrable_work`,
+`MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.windowBalance_of_gibbsDetailedBalance`,
+`MeasureProtocol.ContinuousTimeJump.Driven.crooks_of_gibbsDetailedBalance`,
+`MeasureProtocol.ContinuousTimeJump.Driven.jarzynski_of_gibbsDetailedBalance`,
+`MeasureProtocol.ContinuousTimeJump.Driven.second_law_of_gibbsDetailedBalance`,
+`MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.driven_oneWindow_crooks_physical`,
+`MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.driven_oneWindow_jarzynski_physical`,
+`MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.driven_oneWindow_second_law`,
 `MeasureProtocol.ContinuousTimeJump.TwoState.pathLawFrom_terminalState_eq_exp_generator`,
 `MeasureProtocol.ContinuousTimeJump.TwoState.transitionKernel_real_singleton_eq_exp_generator`,
 `MeasureProtocol.ContinuousTimeJump.TwoState.transitionKernel_chapman_kolmogorov`,
