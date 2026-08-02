@@ -33,6 +33,7 @@ noncomputable def finiteGibbsWeight
   ENNReal.ofReal
     (Real.exp (-β * energy x) / finitePartitionFunction β energy)
 
+omit [DecidableEq Ω] [MeasurableSpace Ω] [MeasurableSingletonClass Ω] in
 /-- The finite-state partition function is strictly positive on a nonempty
 state space. -/
 theorem finitePartitionFunction_pos [Nonempty Ω]
@@ -82,7 +83,7 @@ theorem gibbsMeasure_count_eq_sum_smul_dirac
       Measure.sum (fun x : Ω =>
         finiteGibbsWeight β energy x • Measure.dirac x) := by
   unfold Gibbs.measure Measure.tilted finiteGibbsWeight
-  rw [Measure.count_withDensity]
+  rw [count_withDensity]
   congr 1
   funext x
   congr 1
@@ -128,6 +129,7 @@ def forwardWindowRecord (γ : FullPath Ω) :
     Ω × (Ω × FullPath Ω) :=
   (FullPath.initialState γ, (FullPath.terminalState γ, γ))
 
+omit [Fintype Ω] [DecidableEq Ω] [MeasurableSingletonClass Ω] in
 @[fun_prop]
 theorem measurable_forwardWindowRecord :
     Measurable (forwardWindowRecord :
@@ -142,6 +144,7 @@ def preReverseWindowRecord (γ : FullPath Ω) :
   (FullPath.initialState γ,
     (FullPath.terminalState γ, FullPath.reverse γ))
 
+omit [Fintype Ω] [DecidableEq Ω] [MeasurableSingletonClass Ω] in
 @[fun_prop]
 theorem measurable_preReverseWindowRecord :
     Measurable (preReverseWindowRecord :
@@ -156,6 +159,7 @@ def reverseWindowRecord (γ : FullPath Ω) :
   (FullPath.terminalState γ,
     (FullPath.initialState γ, FullPath.reverse γ))
 
+omit [Fintype Ω] [DecidableEq Ω] [MeasurableSingletonClass Ω] in
 @[fun_prop]
 theorem measurable_reverseWindowRecord :
     Measurable (reverseWindowRecord :
@@ -184,11 +188,12 @@ theorem compProd_forwardWindowKernel_eq_map_gibbsPathLaw
   rw [Measure.compProd_smul_left]
   simp only [Measure.smul_apply, smul_eq_mul]
   congr 1
-  rw [Measure.dirac_compProd_apply hs,
-    forwardWindowKernel_apply,
-    Measure.map_apply
-      (FullPath.measurable_terminalState.prodMk measurable_id)
-      (measurable_prodMk_left hs)]
+  rw [Measure.dirac_compProd_apply hs, forwardWindowKernel_apply]
+  rw [Measure.map_apply
+    (μ := G.pathLawFrom T x)
+    (f := fun γ => (FullPath.terminalState γ, γ))
+    (FullPath.measurable_terminalState.prodMk measurable_id)
+    (measurable_prodMk_left hs)]
   apply measure_congr
   filter_upwards [G.pathLawFrom_ae_initialState T x] with γ hγ
   change
@@ -217,11 +222,13 @@ theorem compProd_reverseWindowKernel_eq_map_gibbsPathLaw
   rw [Measure.compProd_smul_left]
   simp only [Measure.smul_apply, smul_eq_mul]
   congr 1
-  rw [Measure.dirac_compProd_apply hs,
-    reverseWindowKernel_apply,
-    Measure.map_apply
-      (FullPath.measurable_terminalState.prodMk FullPath.measurable_reverse)
-      (measurable_prodMk_left hs)]
+  rw [Measure.dirac_compProd_apply hs, reverseWindowKernel_apply]
+  rw [Measure.map_apply
+    (μ := G.pathLawFrom T x)
+    (f := fun γ =>
+      (FullPath.terminalState γ, FullPath.reverse γ))
+    (FullPath.measurable_terminalState.prodMk FullPath.measurable_reverse)
+    (measurable_prodMk_left hs)]
   apply measure_congr
   filter_upwards [G.pathLawFrom_ae_initialState T x] with γ hγ
   change
@@ -259,7 +266,7 @@ theorem map_forwardWindowRecord_eq_map_reverseWindowRecord [Nonempty Ω]
       reverseWindowRecord (Ω := Ω) =
         forwardWindowRecord ∘ FullPath.reverse := by
     funext γ
-    simp [reverseWindowRecord, forwardWindowRecord, Function.comp_def]
+    simp [reverseWindowRecord, forwardWindowRecord]
   rw [hrecord]
   calc
     (G.gibbsPathLaw T β energy).map forwardWindowRecord =
