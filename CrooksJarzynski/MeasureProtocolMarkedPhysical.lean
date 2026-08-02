@@ -105,10 +105,10 @@ theorem multiStep_endpoint_crooks_physical
       (henergyMeas i.castSucc) (henergyMeas i.succ)
       (henergyInt i.castSucc) (henergyInt i.succ))
   have hweight :
-      reversedEndpointWorkWeight
+      reversedEndpointWorkWeight (Λ := Λ)
           (fun i => Gibbs.workWeight β
             (energy i.castSucc) (energy i.succ)) =
-        (fun γ => ENNReal.ofReal
+        (fun γ : MarkedPath Ω Λ n => ENNReal.ofReal
           (Real.exp (-β * endpointPathWork energy γ))) := by
     funext γ
     exact endpointWorkWeight_eq_exp_pathWork
