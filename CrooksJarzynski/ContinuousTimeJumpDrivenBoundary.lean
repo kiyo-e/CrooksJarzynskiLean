@@ -78,7 +78,10 @@ theorem reverseWindowKernel_ae_boundary
       (FullPath.measurable_terminalState.prodMk
         FullPath.measurable_reverse).aemeasurable
   · filter_upwards [G.pathLawFrom_ae_initialState T y] with γ hγ
-    exact ⟨FullPath.initialState_reverse γ, by simpa using hγ⟩
+    refine ⟨FullPath.initialState_reverse γ, ?_⟩
+    change FullPath.terminalState (FullPath.reverse γ) = y
+    rw [FullPath.terminalState_reverse]
+    exact hγ
 
 end FiniteJumpGenerator
 end ContinuousTimeJump
