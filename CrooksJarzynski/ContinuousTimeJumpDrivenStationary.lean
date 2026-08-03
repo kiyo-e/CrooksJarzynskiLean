@@ -138,8 +138,8 @@ theorem map_weightedSectorLaw_reverse
 
 /-- Equilibrium-weighted path law in a fixed jump-count sector.  The initial
 state carries the unnormalized Boltzmann weight `exp (-β E)`, so this is a
-finite measure, not a probability measure; the normalized counterpart is
-`gibbsPathLaw`. -/
+finite measure, not a probability measure; the normalized all-jump-count
+construction is `gibbsPathLaw`. -/
 noncomputable def equilibriumSectorLaw
     (G : FiniteJumpGenerator Ω) (T : NNReal)
     (β : ℝ) (energy : Ω → ℝ) (n : ℕ) : Measure (JumpPath Ω n) :=

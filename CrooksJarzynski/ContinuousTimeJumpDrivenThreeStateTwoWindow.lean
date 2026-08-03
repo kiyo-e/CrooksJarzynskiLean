@@ -19,7 +19,9 @@ The protocol raises the middle state's energy and then lowers it back.  The
 initial and final landscapes coincide, so the free-energy difference vanishes,
 while the endpoint work observable is genuinely nonconstant: it separates two
 boundary-consistent carrier points, one hopping through the raised state and
-one resting.  (This is a statement about the work observable on the carrier,
+one resting, and every window mark of both points is a valid real-time
+trajectory chart with positive pre-jump holding times.  (This is a statement
+about the work observable on the carrier,
 not about nondegeneracy of the pushforward work distribution — for zero window
 durations the constructed laws never leave the initial state.)  The example
 also pins the `Fin.castSucc` orientation of the window-indexed balance
@@ -151,9 +153,30 @@ theorem second_law (duration : Fin 2 → NNReal) :
 def restMark (x : Fin 3) : FullPath (Fin 3) :=
   ⟨0, (fun _ => x, fun _ => 0)⟩
 
-/-- The one-jump window path hopping from `x` to `y`. -/
-def hopMark (x y : Fin 3) : FullPath (Fin 3) :=
-  ⟨1, (![x, y], fun _ => 0)⟩
+/-- The one-jump window path hopping from `x` to `y` halfway through a unit
+window: it holds `x` for half a unit, jumps, and holds `y` for the remaining
+half. -/
+noncomputable def hopMark (x y : Fin 3) : FullPath (Fin 3) :=
+  ⟨1, (![x, y], fun _ => 2⁻¹)⟩
+
+/-- The rest mark is a valid real-time trajectory chart for every window
+length. -/
+theorem restMark_isValid (T : NNReal) (x : Fin 3) :
+    FullPath.IsValid T (restMark x) := by
+  refine ⟨fun i => i.elim0, ?_⟩
+  have h : (Fin.last 0) = (0 : Fin 1) := rfl
+  rw [h, JumpPath.jumpTimes_zero]
+  exact T.coe_nonneg
+
+/-- Each hop mark is a valid real-time trajectory chart for a unit window: its
+single pre-jump holding time is positive and its jump happens by time `1`. -/
+theorem hopMark_isValid (x y : Fin 3) :
+    FullPath.IsValid 1 (hopMark x y) := by
+  refine ⟨fun i => by norm_num, ?_⟩
+  have h : Finset.Iio (Fin.last 1) = {(0 : Fin 2)} := by decide
+  unfold JumpPath.jumpTimes
+  rw [h, Finset.sum_singleton]
+  norm_num
 
 /-- On this protocol the endpoint work only sees the raised landscape: on any
 two-window carrier it is the middle-state energy difference of the two stored
@@ -177,8 +200,9 @@ def restPath : ConnectedPath (Fin 3) 2 :=
     rfl, rfl, rfl, rfl, trivial⟩
 
 /-- A boundary-consistent carrier point that hops `0 → 1` in the first window
-and back `1 → 0` in the second. -/
-def hopPath : ConnectedPath (Fin 3) 2 :=
+and back `1 → 0` in the second, each window mark being a valid unit-window
+trajectory chart. -/
+noncomputable def hopPath : ConnectedPath (Fin 3) 2 :=
   ⟨(0, ((1, hopMark 1 0), ((0, hopMark 0 1), PUnit.unit))),
     rfl, rfl, rfl, rfl, trivial⟩
 

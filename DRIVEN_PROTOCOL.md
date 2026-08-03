@@ -150,7 +150,9 @@ multi-window example instantiates the headlines on three states with two
 distinct generators and three energy landscapes.  Its endpoint work observable
 provably separates two boundary-consistent carrier points (a `0 → 1 → 0` hop
 through the raised state versus resting), so the work function is genuinely
-nonconstant on structurally connected paths.  This does not by itself assert
+nonconstant on structurally connected paths.  Every window mark of both
+comparison points is a valid real-time trajectory chart — the hop marks hold
+each state for half a unit window (`hopMark_isValid`, `restMark_isValid`).  This does not by itself assert
 nondegeneracy of the pushforward work distribution — for zero window durations
 the constructed laws never leave the initial state — and no such distributional
 claim is made:
