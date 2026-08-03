@@ -211,3 +211,7 @@ the trusted base of the development.
 #print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.FullPath.measurable_trajectory
 #print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.pathLawFrom_ae_isValid
 #print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.pathLawFrom_ae_trajectory_endpoints
+#print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.Driven.crooks
+#print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.Driven.jarzynski
+#print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.Driven.second_law
+#print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.Driven.work_one
