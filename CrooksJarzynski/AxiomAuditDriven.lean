@@ -4,6 +4,8 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: kiyo-e
 -/
 import CrooksJarzynski.ContinuousTimeJumpDrivenPhysical
+import CrooksJarzynski.ContinuousTimeJumpDrivenWorkDistribution
+import CrooksJarzynski.ContinuousTimeJumpDrivenThreeStateTwoWindow
 import CrooksJarzynski.ContinuousTimeJumpDrivenTwoStateComparison
 
 /-!
@@ -14,14 +16,27 @@ headline list while subjecting both files to the same CI allowlist.
 -/
 
 #print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.Driven.work_eq_sum
+#print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.Driven.work_two_eq
+#print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.Driven.reverseDrivenLaw_two_eq
 #print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.Driven.norm_work_le
+#print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.Driven.integrable_work_of_isFiniteMeasure
 #print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.Driven.integrable_work
+#print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.Driven.integrable_work_reverse
+#print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.isProbabilityMeasure_gibbsPathLaw
 #print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.Driven.forwardDrivenLaw_ae_isBoundaryConsistent
 #print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.Driven.reverseDrivenLaw_ae_isBoundaryConsistent
 #print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.windowBalance_of_gibbsDetailedBalance
 #print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.Driven.crooks_of_gibbsDetailedBalance
 #print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.Driven.jarzynski_of_gibbsDetailedBalance
 #print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.Driven.second_law_of_gibbsDetailedBalance
+#print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.Driven.reverseWork_eq_neg
+#print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.Driven.work_distribution_crooks_of_gibbsDetailedBalance
+#print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.Driven.crooks_work_atom_of_gibbsDetailedBalance
+#print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.Driven.ThreeStateTwoWindow.generator_isGibbsDetailedBalance
+#print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.Driven.ThreeStateTwoWindow.crooks
+#print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.Driven.ThreeStateTwoWindow.jarzynski_eq_one
+#print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.Driven.ThreeStateTwoWindow.second_law
+#print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.Driven.ThreeStateTwoWindow.work_not_constant
 #print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.physicalFiniteGenerator_generator_eq
 #print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.physicalFiniteGenerator_isGibbsDetailedBalance
 #print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.connectedDrivenWork_oneWindow_eq_thermodynamicWork

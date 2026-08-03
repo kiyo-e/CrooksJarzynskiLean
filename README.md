@@ -64,6 +64,11 @@ The library proves:
   window, recursive boundary matching, reverse protocol order, endpoint work,
   and physical Crooks, Jarzynski, and second-law statements derived from
   instantaneous finite-state Gibbs detailed balance;
+- the work-distribution form of the driven Crooks relation, the intrinsic
+  reverse work observable with its sign convention `W_R = -W`, the
+  conventional atomwise ratio `P_F(W=w) = e^{β(w-ΔF)} P_R(W_R=-w)`, and a
+  two-window three-state protocol whose work observable is genuinely
+  nonconstant;
 - a symmetric unit-rate two-state CTMC whose `n`-jump sector has Poisson mass,
   whose complete finite-jump path law is normalized and non-explosive, and
   which satisfies full-path Crooks and Jarzynski theorems;

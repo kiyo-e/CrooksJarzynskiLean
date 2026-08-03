@@ -88,13 +88,16 @@ MeasureProtocol.ContinuousTimeJump.Driven.work_one
 ```
 
 On a finite state space and over finitely many windows, work is uniformly
-bounded. Consequently, it is integrable under every constructed forward law
-whose initial measure is a probability measure:
+bounded. Consequently, it is integrable under every finite measure on driven
+paths; the constructed forward and reverse laws with probability boundary
+measures are the two corollaries used downstream:
 
 ```lean
 MeasureProtocol.ContinuousTimeJump.Driven.workBound
 MeasureProtocol.ContinuousTimeJump.Driven.norm_work_le
+MeasureProtocol.ContinuousTimeJump.Driven.integrable_work_of_isFiniteMeasure
 MeasureProtocol.ContinuousTimeJump.Driven.integrable_work
+MeasureProtocol.ContinuousTimeJump.Driven.integrable_work_reverse
 ```
 
 The product of the endpoint Gibbs work factors is proved equal to
@@ -126,6 +129,34 @@ All three theorems concern the recursively constructed `pathLawFrom`-driven
 measures, rather than an abstract sequence of endpoint kernels or a sector-mass
 surrogate. The public second-law theorem has no separate work-integrability
 argument: `Driven.integrable_work` supplies it internally.
+
+The measure-level relation is also connected to the presentation standard in
+the physics literature. The reverse experiment's own work observable
+`reverseWork` is defined intrinsically in reverse chronology and proved equal
+to the negated forward work on the aligned carrier; pushing the measure-level
+relation forward along the work observable then yields the work-distribution
+Crooks relation, and evaluating it on singleton events yields the conventional
+atomwise ratio `P_F(W = w) = e^{β(w-ΔF)} P_R(W_R = -w)`:
+
+```lean
+MeasureProtocol.ContinuousTimeJump.Driven.reverseWork
+MeasureProtocol.ContinuousTimeJump.Driven.reverseWork_eq_neg
+MeasureProtocol.ContinuousTimeJump.Driven.work_distribution_crooks_of_gibbsDetailedBalance
+MeasureProtocol.ContinuousTimeJump.Driven.crooks_work_atom_of_gibbsDetailedBalance
+```
+
+Beyond the one-window recovery of the legacy quench model, a genuinely
+multi-window example instantiates the headlines on three states with two
+distinct generators and three energy landscapes; its work observable provably
+takes two distinct values, so the fluctuation relations concern a nonconstant
+work distribution:
+
+```lean
+MeasureProtocol.ContinuousTimeJump.Driven.ThreeStateTwoWindow.crooks
+MeasureProtocol.ContinuousTimeJump.Driven.ThreeStateTwoWindow.jarzynski_eq_one
+MeasureProtocol.ContinuousTimeJump.Driven.ThreeStateTwoWindow.second_law
+MeasureProtocol.ContinuousTimeJump.Driven.ThreeStateTwoWindow.work_not_constant
+```
 
 The marked-path induction supporting the headline statements is exposed
 separately through:
@@ -175,6 +206,30 @@ For the counting-measure Gibbs specialization, the partition function and free
 energy are exposed in explicit finite-sum form through
 `FiniteJumpGenerator.finitePartitionFunction` and
 `FiniteJumpGenerator.finiteFreeEnergy`.
+
+### Two independent formalization routes
+
+Detailed balance is lifted to the path level along two deliberately
+independent routes, and only one of them feeds the headline theorems.
+
+The *density route* (`ContinuousTimeJumpDrivenDensity`) proves that the Gibbs
+forward rate density and the aligned reverse rate density agree pointwise on
+the reversal-invariant counting chart, and derives fixed-sector and
+all-jump-count Gibbs reversal statements from that pointwise identity.  It is
+a pointwise-density formalization strategy in the style of the existing
+two-state Crooks development.
+
+The *mixture route* (`ContinuousTimeJumpDrivenMixture`,
+`ContinuousTimeJumpDrivenStationary`, `ContinuousTimeJumpDrivenWindowBalance`)
+never manipulates densities: it identifies the Gibbs mixture of the actual
+`pathLawFrom` laws with a weighted common-reference law, proves that law
+reversal-invariant, and extracts the measure-level `WindowBalance` used by the
+marked-path Crooks induction.
+
+The headline theorems depend only on the mixture route; the density route is
+an independent consistency check that the same physical hypothesis supports
+the pointwise strategy.  The two routes share only the balance vocabulary
+(`ContinuousTimeJumpDrivenBalance`) and are import-independent of each other.
 
 ## Asymmetric two-state one-window recovery
 

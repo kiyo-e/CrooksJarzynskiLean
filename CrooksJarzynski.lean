@@ -49,6 +49,8 @@ import CrooksJarzynski.ContinuousTimeJumpDrivenConnectedPath
 import CrooksJarzynski.ContinuousTimeJumpDrivenWorkSum
 import CrooksJarzynski.ContinuousTimeJumpDrivenWindowBalance
 import CrooksJarzynski.ContinuousTimeJumpDrivenPhysical
+import CrooksJarzynski.ContinuousTimeJumpDrivenWorkDistribution
+import CrooksJarzynski.ContinuousTimeJumpDrivenThreeStateTwoWindow
 import CrooksJarzynski.ContinuousTimeJumpDrivenTwoState
 import CrooksJarzynski.ContinuousTimeJumpDrivenTwoStateComparison
 import CrooksJarzynski.ContinuousTimeJumpFiniteGeneratorRenewal
@@ -202,6 +204,12 @@ canonical-ensemble API. The main results include `Protocol.crooks`,
 `MeasureProtocol.ContinuousTimeJump.Driven.crooks_of_gibbsDetailedBalance`,
 `MeasureProtocol.ContinuousTimeJump.Driven.jarzynski_of_gibbsDetailedBalance`,
 `MeasureProtocol.ContinuousTimeJump.Driven.second_law_of_gibbsDetailedBalance`,
+`MeasureProtocol.ContinuousTimeJump.Driven.reverseWork_eq_neg`,
+`MeasureProtocol.ContinuousTimeJump.Driven.work_distribution_crooks_of_gibbsDetailedBalance`,
+`MeasureProtocol.ContinuousTimeJump.Driven.crooks_work_atom_of_gibbsDetailedBalance`,
+`MeasureProtocol.ContinuousTimeJump.Driven.ThreeStateTwoWindow.crooks`,
+`MeasureProtocol.ContinuousTimeJump.Driven.ThreeStateTwoWindow.jarzynski_eq_one`,
+`MeasureProtocol.ContinuousTimeJump.Driven.ThreeStateTwoWindow.work_not_constant`,
 `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.driven_oneWindow_crooks_physical`,
 `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.driven_oneWindow_jarzynski_physical`,
 `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.driven_oneWindow_second_law`,
