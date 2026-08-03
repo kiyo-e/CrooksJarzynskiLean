@@ -86,6 +86,7 @@ section MeasureSupport
 
 variable [Fintype Ω] [DecidableEq Ω] [MeasurableSingletonClass Ω]
 
+omit [DecidableEq Ω] in
 /-- Boundary consistency is a measurable property of the raw marked carrier. -/
 theorem measurableSet_isBoundaryConsistent :
     ∀ M : ℕ, MeasurableSet {γ : Path Ω M | IsBoundaryConsistent γ}

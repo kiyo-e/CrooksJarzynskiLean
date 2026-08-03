@@ -15,10 +15,11 @@ finite sum over state sequences.
 
 The reference measure is the unsymmetrized counting reference
 `rawCountingReference`, the general-generator analogue of the two-state
-`rawSectorReference`.  The symmetrized `countingReference` is what the Crooks
-layer needs, since reversal invariance is definitional there; a fixed-initial
-law must not average a path with its time reversal, so the raw reference is the
-right base here.
+`rawSectorReference`.  A fixed-initial law must not average a path with its
+time reversal, so the fixed-initial construction uses the raw reference
+directly.  The driven-balance layer later proves that the raw reference is
+itself reversal invariant and agrees with the symmetrized `countingReference`,
+so nothing downstream depends on the symmetrization step.
 
 The rate factors are segment-indexed and constant along each segment, exactly as
 in `ContinuousTimeJump.density`; nothing in this module depends on absolute

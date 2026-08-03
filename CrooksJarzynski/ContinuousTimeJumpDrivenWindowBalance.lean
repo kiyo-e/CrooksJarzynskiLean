@@ -3,6 +3,7 @@ Copyright (c) 2026 kiyo-e. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: kiyo-e
 -/
+import CrooksJarzynski.ContinuousTimeJumpDrivenMixture
 import CrooksJarzynski.ContinuousTimeJumpDrivenStationary
 
 /-!
@@ -112,6 +113,37 @@ theorem gibbsPathLaw_eq_weightedFullPathLaw
       G.weightedFullPathLaw T (finiteGibbsWeight β energy) := by
   simpa [gibbsPathLaw, weightedFullPathLaw, weightedSectorLaw] using
     G.sum_smul_pathLawFrom T (finiteGibbsWeight β energy)
+
+/-- The Gibbs path mixture is an honest probability measure, so the
+"normalized" claim in its definition is certified rather than merely
+documented.  Stated as a named theorem to keep instance search unaffected. -/
+theorem isProbabilityMeasure_gibbsPathLaw [Nonempty Ω]
+    (G : FiniteJumpGenerator Ω) (T : NNReal)
+    (β : ℝ) (energy : Ω → ℝ) :
+    IsProbabilityMeasure (G.gibbsPathLaw T β energy) := by
+  classical
+  constructor
+  have hZ : 0 < finitePartitionFunction β energy :=
+    finitePartitionFunction_pos β energy
+  rw [gibbsPathLaw, Measure.sum_apply _ MeasurableSet.univ]
+  have hone : ∀ x : Ω,
+      (finiteGibbsWeight β energy x • G.pathLawFrom T x) Set.univ =
+        finiteGibbsWeight β energy x := by
+    intro x
+    simp [Measure.smul_apply, measure_univ]
+  calc
+    (∑' x : Ω,
+        (finiteGibbsWeight β energy x • G.pathLawFrom T x) Set.univ) =
+        ∑ x : Ω, finiteGibbsWeight β energy x := by
+      rw [tsum_congr hone, tsum_fintype]
+    _ = 1 := by
+      unfold finiteGibbsWeight
+      rw [← ENNReal.ofReal_sum_of_nonneg
+        (fun x _ => div_nonneg (Real.exp_pos _).le hZ.le)]
+      rw [← Finset.sum_div]
+      have hsum : (∑ x : Ω, Real.exp (-β * energy x)) =
+          finitePartitionFunction β energy := rfl
+      rw [hsum, div_self (ne_of_gt hZ), ENNReal.ofReal_one]
 
 /-- Instantaneous Gibbs detailed balance makes the normalized Gibbs path law
 invariant under complete-path reversal. -/
