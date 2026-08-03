@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: kiyo-e
 -/
 import CrooksJarzynski.ContinuousTimeJumpDriven
+import CrooksJarzynski.ContinuousTimeJumpDrivenBalance
 
 /-!
 # Boundary consistency of driven jump windows
@@ -82,6 +83,68 @@ theorem reverseWindowKernel_ae_boundary
     change FullPath.terminalState (FullPath.reverse γ) = y
     rw [FullPath.terminalState_reverse]
     exact hγ
+
+/-- A forward window retains an almost-surely valid fixed-horizon path chart. -/
+theorem forwardWindowKernel_ae_isValid
+    (G : FiniteJumpGenerator Ω) (T : NNReal) (x : Ω) :
+    ∀ᵐ p ∂G.forwardWindowKernel T x,
+      FullPath.IsValid T p.2 := by
+  let record : FullPath Ω → Ω × FullPath Ω :=
+    fun γ => (FullPath.terminalState γ, γ)
+  change ∀ᵐ p ∂Measure.map record (G.pathLawFrom T x),
+    FullPath.IsValid T p.2
+  refine (ae_map_iff
+    (FullPath.measurable_terminalState.prodMk measurable_id).aemeasurable
+    ((FullPath.measurableSet_isValid T).preimage measurable_snd)).2 ?_
+  simpa [record] using G.pathLawFrom_ae_isValid T x
+
+private theorem sectorLawFrom_ae_reverse_isValid
+    (G : FiniteJumpGenerator Ω) (T : NNReal) (x : Ω) (n : ℕ) :
+    ∀ᵐ γ ∂G.sectorLawFrom T x n,
+      JumpPath.IsValid T (JumpPath.reverse γ) := by
+  have hraw : ∀ᵐ γ ∂G.rawCountingReference T n,
+      JumpPath.IsValid T (JumpPath.reverse γ) := by
+    have hvalid := G.rawCountingReference_ae_isValid T n
+    have hmapped : ∀ᵐ γ ∂(G.rawCountingReference T n).map JumpPath.reverse,
+        JumpPath.IsValid T γ := by
+      rw [G.map_rawCountingReference_reverse T n]
+      exact hvalid
+    rw [ae_map_iff JumpPath.measurable_reverse.aemeasurable
+      (JumpPath.measurableSet_isValid T)] at hmapped
+    exact hmapped
+  unfold sectorLawFrom pathMeasure
+  exact (withDensity_absolutelyContinuous _ _).ae_le hraw
+
+private theorem pathLawFrom_ae_reverse_isValid
+    (G : FiniteJumpGenerator Ω) (T : NNReal) (x : Ω) :
+    ∀ᵐ γ ∂G.pathLawFrom T x,
+      FullPath.IsValid T (FullPath.reverse γ) := by
+  unfold pathLawFrom FullPath.measure
+  apply Measure.ae_sum_iff.2
+  intro n
+  unfold FullPath.liftMeasure
+  refine (ae_map_iff (FullPath.measurable_mk n).aemeasurable
+    ((FullPath.measurableSet_isValid T).preimage
+      FullPath.measurable_reverse)).2 ?_
+  simpa [FullPath.reverse, FullPath.IsValid] using
+    G.sectorLawFrom_ae_reverse_isValid T x n
+
+/-- A reverse window stores the sampled chart after reversal. Reversal
+invariance of the raw counting chart removes the zero-measure boundary on
+which the sampled terminal holding time would become a zero first interval. -/
+theorem reverseWindowKernel_ae_isValid
+    (G : FiniteJumpGenerator Ω) (T : NNReal) (y : Ω) :
+    ∀ᵐ p ∂G.reverseWindowKernel T y,
+      FullPath.IsValid T p.2 := by
+  let record : FullPath Ω → Ω × FullPath Ω :=
+    fun γ => (FullPath.terminalState γ, FullPath.reverse γ)
+  change ∀ᵐ p ∂Measure.map record (G.pathLawFrom T y),
+    FullPath.IsValid T p.2
+  refine (ae_map_iff
+    (FullPath.measurable_terminalState.prodMk
+      FullPath.measurable_reverse).aemeasurable
+    ((FullPath.measurableSet_isValid T).preimage measurable_snd)).2 ?_
+  simpa [record] using G.pathLawFrom_ae_reverse_isValid T y
 
 end FiniteJumpGenerator
 end ContinuousTimeJump
