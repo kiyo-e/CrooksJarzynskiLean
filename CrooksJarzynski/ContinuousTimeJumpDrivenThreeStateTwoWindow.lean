@@ -21,15 +21,15 @@ while the endpoint work observable is genuinely nonconstant: it separates two
 boundary-consistent carrier points, one hopping through the raised state and
 one resting, and every window mark of both points is a valid real-time
 trajectory chart with positive pre-jump holding times.  (This is a statement
-about the work observable on the carrier,
-not about nondegeneracy of the pushforward work distribution — for zero window
-durations the constructed laws never leave the initial state.)  The example
-also pins the `Fin.castSucc` orientation of the window-indexed balance
-hypothesis on a case where the two windows differ.
+about the work observable on the carrier.) For positive window widths, the
+forward law is additionally proved to give positive probability to the work
+values `0` and `log 2`, so its pushforward work distribution is nondegenerate.
+The example also pins the `Fin.castSucc` orientation of the window-indexed
+balance hypothesis on a case where the two windows differ.
 -/
 
 open MeasureTheory ProbabilityTheory
-open scoped ENNReal BigOperators ProbabilityTheory
+open scoped ENNReal BigOperators ProbabilityTheory unitInterval
 
 namespace CrooksJarzynski
 namespace MeasureProtocol
@@ -146,6 +146,349 @@ theorem second_law (duration : Fin 2 → NNReal) :
     duration generator_isGibbsDetailedBalance
   rw [deltaFreeEnergy_eq_zero] at h
   exact h
+
+/-! ### Positive-probability work atoms for positive windows -/
+
+private def endpointEvent (y : Fin 3) : Set (Fin 3 × FullPath (Fin 3)) :=
+  {p | p.1 = y}
+
+private theorem measurableSet_endpointEvent (y : Fin 3) :
+    MeasurableSet (endpointEvent y) :=
+  (measurable_fst.eq_const y).setOf
+
+private theorem forwardWindowKernel_endpointEvent
+    (G : FiniteJumpGenerator (Fin 3)) (T : NNReal) (x y : Fin 3) :
+    G.forwardWindowKernel T x (endpointEvent y) =
+      G.transitionMass T x y := by
+  rw [G.forwardWindowKernel_apply,
+    Measure.map_apply (by fun_prop) (measurableSet_endpointEvent y)]
+  change G.pathLawFrom T x {γ | FullPath.terminalState γ = y} = _
+  rw [← G.pathLawFrom_terminalState_singleton T x y,
+    Measure.map_apply FullPath.measurable_terminalState
+      (measurableSet_singleton y)]
+  rfl
+
+private def oneWindowEvent (x₀ x₁ : Fin 3) :
+    Set (Path (Fin 3) 1) :=
+  {γ | γ.2.1.1 = x₀ ∧ γ.1 = x₁}
+
+private theorem measurableSet_oneWindowEvent (x₀ x₁ : Fin 3) :
+    MeasurableSet (oneWindowEvent x₀ x₁) := by
+  exact
+    ((measurable_fst.comp (measurable_fst.comp measurable_snd)).eq_const x₀).setOf.inter
+      (measurable_fst.eq_const x₁).setOf
+
+private theorem forwardDrivenLaw_oneWindowEvent
+    (initial : Measure (Fin 3)) (G : FiniteJumpGenerator (Fin 3))
+    (T : NNReal) (x₀ x₁ : Fin 3) [SFinite initial] :
+    forwardDrivenLaw initial (fun _ : Fin 1 => G) (fun _ => T)
+        (oneWindowEvent x₀ x₁) =
+      initial {x₀} * G.transitionMass T x₀ x₁ := by
+  classical
+  haveI : SFinite
+      (Marked.reversePathMeasure initial
+        (fun _ : Fin 0 => G.forwardWindowKernel T)) := by
+    unfold Marked.reversePathMeasure
+    infer_instance
+  have hbase :
+      Marked.reversePathMeasure initial
+          (fun _ : Fin 0 => G.forwardWindowKernel T)
+          {p : Path (Fin 3) 0 | p.1 = x₀} = initial {x₀} := by
+    unfold Marked.reversePathMeasure
+    rw [show {p : Path (Fin 3) 0 | p.1 = x₀} =
+        ({x₀} ×ˢ (Set.univ : Set (Marked.MarkedContinuation
+          (Fin 3) (FullPath (Fin 3)) 0))) by ext; simp]
+    rw [Measure.compProd_apply_prod (measurableSet_singleton x₀)
+      MeasurableSet.univ]
+    simp
+  rw [forwardDrivenLaw]
+  simp only [Marked.reversedForwardPathMeasure]
+  rw [Measure.map_apply (Marked.prependEquiv 0).measurable
+    (measurableSet_oneWindowEvent x₀ x₁)]
+  have hpre : (Marked.prependEquiv (Ω := Fin 3)
+      (Λ := FullPath (Fin 3)) 0) ⁻¹' oneWindowEvent x₀ x₁ =
+      ({p : Path (Fin 3) 0 | p.1 = x₀} ×ˢ endpointEvent x₁) := by
+    ext p
+    simp [oneWindowEvent, endpointEvent, Marked.prependEquiv]
+  rw [hpre, Measure.compProd_apply_prod
+    ((measurable_fst.eq_const x₀).setOf)
+    (measurableSet_endpointEvent x₁)]
+  have hkernel : ∀ p : Path (Fin 3) 0,
+      p.1 = x₀ →
+      Marked.endpointKernel (G.forwardWindowKernel T) 0 p
+          (endpointEvent x₁) = G.transitionMass T x₀ x₁ := by
+    intro p hp
+    simp only [Marked.endpointKernel, Kernel.comap_apply]
+    rw [hp, forwardWindowKernel_endpointEvent]
+  rw [setLIntegral_congr_fun ((measurable_fst.eq_const x₀).setOf) hkernel,
+    setLIntegral_const, hbase]
+  ring
+
+private def twoWindowEvent (x₀ x₁ x₂ : Fin 3) :
+    Set (Path (Fin 3) 2) :=
+  (Marked.prependEquiv (Ω := Fin 3) (Λ := FullPath (Fin 3)) 1) ''
+    (oneWindowEvent x₀ x₁ ×ˢ endpointEvent x₂)
+
+private theorem measurableSet_twoWindowEvent (x₀ x₁ x₂ : Fin 3) :
+    MeasurableSet (twoWindowEvent x₀ x₁ x₂) := by
+  exact (Marked.prependEquiv (Ω := Fin 3) (Λ := FullPath (Fin 3)) 1)
+    |>.measurableEmbedding.measurableSet_image.mpr
+      ((measurableSet_oneWindowEvent x₀ x₁).prod
+        (measurableSet_endpointEvent x₂))
+
+private theorem reversedForwardPathMeasure_twoWindowEvent_step
+    (initial : Measure (Fin 3))
+    (K : Fin 2 → ProbabilityTheory.Kernel (Fin 3)
+      (Fin 3 × FullPath (Fin 3)))
+    [SFinite
+      (Marked.reversedForwardPathMeasure initial (fun i : Fin 1 => K i.castSucc))]
+    [IsSFiniteKernel (Marked.endpointKernel (K (Fin.last 1)) 1)]
+    (x₀ x₁ x₂ : Fin 3) (c : ℝ≥0∞)
+    (hkernel : ∀ p ∈ oneWindowEvent x₀ x₁,
+      Marked.endpointKernel (K (Fin.last 1)) 1 p (endpointEvent x₂) = c) :
+    Marked.reversedForwardPathMeasure initial K
+        (twoWindowEvent x₀ x₁ x₂) =
+      Marked.reversedForwardPathMeasure initial
+          (fun i : Fin 1 => K i.castSucc) (oneWindowEvent x₀ x₁) * c := by
+  calc
+    Marked.reversedForwardPathMeasure initial K
+        (twoWindowEvent x₀ x₁ x₂) =
+        c * Marked.reversedForwardPathMeasure initial
+          (fun i : Fin 1 => K i.castSucc) (oneWindowEvent x₀ x₁) := by
+      exact Marked.reversedForwardPathMeasure_succ_apply_image_prod
+        initial K
+        (measurableSet_oneWindowEvent x₀ x₁)
+        (measurableSet_endpointEvent x₂) c hkernel
+    _ = _ := mul_comm _ _
+
+private theorem reversedForwardPathMeasure_twoWindowEvent
+    (initial : Measure (Fin 3)) (duration : Fin 2 → NNReal)
+    (x₀ x₁ x₂ : Fin 3) [IsProbabilityMeasure initial] :
+    Marked.reversedForwardPathMeasure initial
+        (fun i => (generator i).forwardWindowKernel (duration i))
+        (twoWindowEvent x₀ x₁ x₂) =
+    initial {x₀} *
+        genFlat.transitionMass (duration 0) x₀ x₁ *
+        genTilted.transitionMass (duration 1) x₁ x₂ := by
+  have hkernel : ∀ p : Path (Fin 3) 1,
+      p ∈ oneWindowEvent x₀ x₁ →
+      Marked.endpointKernel
+          (genTilted.forwardWindowKernel (duration 1)) 1 p
+          (endpointEvent x₂) =
+        genTilted.transitionMass (duration 1) x₁ x₂ := by
+    intro p hp
+    simp only [Marked.endpointKernel, Kernel.comap_apply]
+    rw [show p.1 = x₁ from hp.2, forwardWindowKernel_endpointEvent]
+  rw [reversedForwardPathMeasure_twoWindowEvent_step initial
+    (fun i => (generator i).forwardWindowKernel (duration i)) x₀ x₁ x₂
+    (genTilted.transitionMass (duration 1) x₁ x₂) hkernel]
+  have hone :
+      Marked.reversedForwardPathMeasure initial
+          (fun _ : Fin 1 => genFlat.forwardWindowKernel (duration 0))
+          (oneWindowEvent x₀ x₁) =
+        initial {x₀} * genFlat.transitionMass (duration 0) x₀ x₁ := by
+    simpa [forwardDrivenLaw] using
+      (forwardDrivenLaw_oneWindowEvent initial genFlat (duration 0) x₀ x₁)
+  have hprefix :
+      (fun i : Fin 1 =>
+        (generator i.castSucc).forwardWindowKernel (duration i.castSucc)) =
+        (fun _ : Fin 1 => genFlat.forwardWindowKernel (duration 0)) := by
+    funext i
+    fin_cases i
+    rfl
+  rw [hprefix, hone]
+
+private theorem holdingIntegral_pos
+    (G : FiniteJumpGenerator (Fin 3)) (T : NNReal) {n : ℕ}
+    (states : Fin (n + 1) → Fin 3) :
+    0 < G.holdingIntegral T states := by
+  unfold FiniteJumpGenerator.holdingIntegral
+  let f : (Fin n → I) → ℝ≥0∞ := fun u =>
+    Simplex.cubeExpWeight (G.stateEscapeRates states) T u *
+      ENNReal.ofReal
+        (Real.exp
+          (-((G.escapeRate (states (Fin.last n)) : ℝ) *
+            (T : ℝ) * Simplex.residual u)))
+  have hf : Measurable f := by
+    dsimp [f]
+    fun_prop
+  rw [setLIntegral_pos_iff hf]
+  have hsupp : Function.support f = Set.univ := by
+    ext u
+    simp only [Function.mem_support, Set.mem_univ, iff_true]
+    dsimp [f, Simplex.cubeExpWeight]
+    exact (ENNReal.mul_pos
+      (by
+        apply Finset.prod_ne_zero_iff.2
+        intro i hi
+        exact ENNReal.ofReal_ne_zero_iff.2 (Real.exp_pos _))
+      (ENNReal.ofReal_ne_zero_iff.2 (Real.exp_pos _))).ne'
+  rw [hsupp, Set.univ_inter]
+  exact Simplex.volume_freeSimplexSet_pos n
+
+private theorem transitionMass_self_pos
+    (G : FiniteJumpGenerator (Fin 3)) (T : NNReal) (x : Fin 3) :
+    0 < G.transitionMass T x x := by
+  let states : Fin 1 → Fin 3 := fun _ => x
+  have hsequence : 0 < G.sequenceMass T states := by
+    unfold FiniteJumpGenerator.sequenceMass
+    simp only [pow_zero, one_mul]
+    have hjump : G.jumpProduct states = 1 := by
+      simp [FiniteJumpGenerator.jumpProduct]
+    rw [hjump, one_mul]
+    exact holdingIntegral_pos G T states
+  have hsector : 0 < G.sectorTerminalMassFrom T x x 0 := by
+    unfold FiniteJumpGenerator.sectorTerminalMassFrom
+    have hterm : 0 <
+        FiniteJumpGenerator.fixedInitialWeight x (states 0) *
+          (FiniteJumpGenerator.fixedInitialWeight x
+            (states (Fin.last 0)) * G.sequenceMass T states) := by
+      simpa [states] using hsequence
+    exact lt_of_lt_of_le hterm
+      (Finset.single_le_sum (f := fun s : Fin 1 → Fin 3 =>
+          FiniteJumpGenerator.fixedInitialWeight x (s 0) *
+            (FiniteJumpGenerator.fixedInitialWeight x (s (Fin.last 0)) *
+              G.sequenceMass T s))
+        (fun _ _ => zero_le) (Finset.mem_univ states))
+  unfold FiniteJumpGenerator.transitionMass
+  exact lt_of_lt_of_le hsector (ENNReal.le_tsum 0)
+
+private theorem transitionMass_pos_of_jumpRate_pos
+    (G : FiniteJumpGenerator (Fin 3)) (T : NNReal) (hT : 0 < T)
+    (x y : Fin 3) (hrate : 0 < G.jumpRate x y) :
+    0 < G.transitionMass T x y := by
+  let states : Fin 2 → Fin 3 := ![x, y]
+  have hsequence : 0 < G.sequenceMass T states := by
+    unfold FiniteJumpGenerator.sequenceMass
+    have hT' : 0 < (T : ℝ≥0∞) := by exact_mod_cast hT
+    have hjump : 0 < G.jumpProduct states := by
+      simpa [states, FiniteJumpGenerator.jumpProduct] using
+        (show 0 < (G.jumpRate x y : ℝ≥0∞) by exact_mod_cast hrate)
+    rw [pow_one]
+    exact ENNReal.mul_pos
+      (ENNReal.mul_pos hT'.ne' hjump.ne').ne'
+      (holdingIntegral_pos G T states).ne'
+  have hsector : 0 < G.sectorTerminalMassFrom T x y 1 := by
+    unfold FiniteJumpGenerator.sectorTerminalMassFrom
+    have hterm : 0 <
+        FiniteJumpGenerator.fixedInitialWeight x (states 0) *
+          (FiniteJumpGenerator.fixedInitialWeight y
+            (states (Fin.last 1)) * G.sequenceMass T states) := by
+      simpa [states] using hsequence
+    exact lt_of_lt_of_le hterm
+      (Finset.single_le_sum (f := fun s : Fin 2 → Fin 3 =>
+          FiniteJumpGenerator.fixedInitialWeight x (s 0) *
+            (FiniteJumpGenerator.fixedInitialWeight y (s (Fin.last 1)) *
+              G.sequenceMass T s))
+        (fun _ _ => zero_le) (Finset.mem_univ states))
+  unfold FiniteJumpGenerator.transitionMass
+  exact lt_of_lt_of_le hsector (ENNReal.le_tsum 1)
+
+private theorem gibbs_initial_atom_pos (x : Fin 3) :
+    0 < Gibbs.measure (Measure.count : Measure (Fin 3)) 1 (energy 0) {x} := by
+  rw [FiniteJumpGenerator.gibbsMeasure_count_eq_sum_smul_dirac]
+  rw [Measure.sum_apply _ (measurableSet_singleton x)]
+  have hweight : 0 < FiniteJumpGenerator.finiteGibbsWeight 1 (energy 0) x := by
+    unfold FiniteJumpGenerator.finiteGibbsWeight
+    apply ENNReal.ofReal_pos.2
+    exact div_pos (Real.exp_pos _)
+      (FiniteJumpGenerator.finitePartitionFunction_pos 1 (energy 0))
+  simp only [Measure.smul_apply, Measure.dirac_apply' _
+    (measurableSet_singleton x), smul_eq_mul]
+  calc
+    0 < FiniteJumpGenerator.finiteGibbsWeight 1 (energy 0) x := hweight
+    _ = FiniteJumpGenerator.finiteGibbsWeight 1 (energy 0) x *
+        (Set.indicator ({x} : Set (Fin 3))
+          (fun _ => (1 : ℝ≥0∞)) x) := by simp
+    _ ≤ ∑' i : Fin 3,
+        FiniteJumpGenerator.finiteGibbsWeight 1 (energy 0) i *
+          (Set.indicator ({x} : Set (Fin 3))
+            (fun _ => (1 : ℝ≥0∞)) i) := ENNReal.le_tsum x
+
+private theorem integrable_initial_boltzmann :
+    Integrable (fun x : Fin 3 => Real.exp (-(1 : ℝ) * energy 0 x))
+      (Measure.count : Measure (Fin 3)) := by
+  apply Integrable.of_bound
+    (Measurable.of_discrete : Measurable
+      (fun x : Fin 3 => Real.exp (-(1 : ℝ) * energy 0 x))).aestronglyMeasurable
+    (∑ x : Fin 3, ‖Real.exp (-(1 : ℝ) * energy 0 x)‖)
+  filter_upwards [] with x
+  exact Finset.single_le_sum
+    (f := fun y : Fin 3 => ‖Real.exp (-(1 : ℝ) * energy 0 y)‖)
+    (fun _ _ => norm_nonneg _) (Finset.mem_univ x)
+
+/-- For positive window widths, the realized forward work has a positive atom
+at zero. The witness event remains at state `0` in both windows. -/
+theorem work_zero_atom_pos (duration : Fin 2 → NNReal)
+    (_hduration : ∀ i, 0 < duration i) :
+    0 < (forwardDrivenLaw
+      (Gibbs.measure (Measure.count : Measure (Fin 3)) 1 (energy 0))
+      generator duration) {γ | work energy γ = 0} := by
+  letI : IsProbabilityMeasure
+      (Gibbs.measure (Measure.count : Measure (Fin 3)) 1 (energy 0)) :=
+    Gibbs.isProbabilityMeasure_measure
+      (Measure.count : Measure (Fin 3)) 1 (energy 0)
+      integrable_initial_boltzmann
+  have hevent : 0 < forwardDrivenLaw
+      (Gibbs.measure (Measure.count : Measure (Fin 3)) 1 (energy 0))
+      generator duration
+      (twoWindowEvent 0 0 0) := by
+    change 0 < Marked.reversedForwardPathMeasure
+      (Gibbs.measure (Measure.count : Measure (Fin 3)) 1 (energy 0))
+      (fun i => (generator i).forwardWindowKernel (duration i))
+      (twoWindowEvent 0 0 0)
+    rw [reversedForwardPathMeasure_twoWindowEvent]
+    exact ENNReal.mul_pos
+      (ENNReal.mul_pos (gibbs_initial_atom_pos 0).ne'
+        (transitionMass_self_pos genFlat (duration 0) 0).ne').ne'
+      (transitionMass_self_pos genTilted (duration 1) 0).ne'
+  refine lt_of_lt_of_le hevent (measure_mono ?_)
+  intro γ hγ
+  rcases hγ with ⟨p, hp, rfl⟩
+  change work energy
+    (p.2.1, ((p.1.1, p.2.2), p.1.2)) = 0
+  rw [work_two_eq]
+  rw [show p.1.1 = 0 from hp.1.2,
+    show p.2.1 = 0 from hp.2]
+  simp [energy]
+
+/-- For positive window widths, the realized forward work has a positive atom
+at `log 2`. The witness event stays at state `1` in the first window and makes
+the positive-rate jump `1 → 0` in the tilted second window. -/
+theorem work_log_two_atom_pos (duration : Fin 2 → NNReal)
+    (hduration : ∀ i, 0 < duration i) :
+    0 < (forwardDrivenLaw
+      (Gibbs.measure (Measure.count : Measure (Fin 3)) 1 (energy 0))
+      generator duration) {γ | work energy γ = Real.log 2} := by
+  letI : IsProbabilityMeasure
+      (Gibbs.measure (Measure.count : Measure (Fin 3)) 1 (energy 0)) :=
+    Gibbs.isProbabilityMeasure_measure
+      (Measure.count : Measure (Fin 3)) 1 (energy 0)
+      integrable_initial_boltzmann
+  have hjump : 0 < genTilted.jumpRate 1 0 := by norm_num [genTilted]
+  have hevent : 0 < forwardDrivenLaw
+      (Gibbs.measure (Measure.count : Measure (Fin 3)) 1 (energy 0))
+      generator duration
+      (twoWindowEvent 1 1 0) := by
+    change 0 < Marked.reversedForwardPathMeasure
+      (Gibbs.measure (Measure.count : Measure (Fin 3)) 1 (energy 0))
+      (fun i => (generator i).forwardWindowKernel (duration i))
+      (twoWindowEvent 1 1 0)
+    rw [reversedForwardPathMeasure_twoWindowEvent]
+    exact ENNReal.mul_pos
+      (ENNReal.mul_pos (gibbs_initial_atom_pos 1).ne'
+        (transitionMass_self_pos genFlat (duration 0) 1).ne').ne'
+      (transitionMass_pos_of_jumpRate_pos genTilted (duration 1)
+        (hduration 1) 1 0 hjump).ne'
+  refine lt_of_lt_of_le hevent (measure_mono ?_)
+  intro γ hγ
+  rcases hγ with ⟨p, hp, rfl⟩
+  change work energy
+    (p.2.1, ((p.1.1, p.2.2), p.1.2)) = Real.log 2
+  rw [work_two_eq]
+  rw [show p.1.1 = 1 from hp.1.2,
+    show p.2.1 = 0 from hp.2]
+  simp [energy]
 
 /-! ### The work observable is nonconstant on boundary-consistent paths -/
 

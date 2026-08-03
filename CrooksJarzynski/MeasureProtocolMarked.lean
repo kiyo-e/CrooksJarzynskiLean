@@ -156,6 +156,30 @@ noncomputable def reversedForwardPathMeasure :
       ((reversedForwardPathMeasure initial (fun i => K i.castSucc)) ⊗ₘ
         endpointKernel (K (Fin.last n)) n).map (prependEquiv n)
 
+/-- A measurable cylinder added at the final marked transition has the
+expected product mass when the final kernel mass is constant on the earlier
+cylinder. -/
+theorem reversedForwardPathMeasure_succ_apply_image_prod
+    {n : ℕ} (initial : Measure Ω)
+    (K : Fin (n + 1) → ProbabilityTheory.Kernel Ω (Ω × Λ))
+    [SFinite (reversedForwardPathMeasure initial (fun i => K i.castSucc))]
+    [IsSFiniteKernel (endpointKernel (K (Fin.last n)) n)]
+    {s : Set (MarkedPath Ω Λ n)} (hs : MeasurableSet s)
+    {t : Set (Ω × Λ)} (ht : MeasurableSet t) (c : ℝ≥0∞)
+    (hc : ∀ p ∈ s, endpointKernel (K (Fin.last n)) n p t = c) :
+    reversedForwardPathMeasure initial K
+        ((prependEquiv n) '' (s ×ˢ t)) =
+      c * reversedForwardPathMeasure initial (fun i => K i.castSucc) s := by
+  let e := prependEquiv (Ω := Ω) (Λ := Λ) n
+  have himage : MeasurableSet (e '' (s ×ˢ t)) :=
+    e.measurableEmbedding.measurableSet_image.mpr (hs.prod ht)
+  simp only [reversedForwardPathMeasure]
+  rw [Measure.map_apply e.measurable himage]
+  rw [show e ⁻¹' (e '' (s ×ˢ t)) = s ×ˢ t from
+    e.toEquiv.preimage_image (s ×ˢ t)]
+  rw [Measure.compProd_apply_prod hs ht,
+    setLIntegral_congr_fun hs hc, setLIntegral_const]
+
 noncomputable instance instIsProbabilityMeasureReversedForwardPathMeasure
     {n : ℕ} (initial : Measure Ω)
     (forward : Fin n → ProbabilityTheory.Kernel Ω (Ω × Λ))

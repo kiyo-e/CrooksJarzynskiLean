@@ -26,6 +26,12 @@ library contains:
 The development contains no `sorry` placeholders and introduces no custom
 axioms.
 
+The research contribution is the machine-checked construction and connection
+of these path measures and fluctuation relations, not the discovery of new
+physical laws: Crooks' relation and Jarzynski's equality are established
+results. Claims of priority for the formalization itself are intentionally
+left to a separate literature review.
+
 ## Main results
 
 The library proves:

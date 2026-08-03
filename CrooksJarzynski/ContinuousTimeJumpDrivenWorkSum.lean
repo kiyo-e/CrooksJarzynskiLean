@@ -25,6 +25,59 @@ universe u
 
 variable {Ω : Type u} [MeasurableSpace Ω]
 
+/-- The state from which the window with index `i` starts. Earlier starts are
+read recursively from the continuation of the reverse-oriented carrier. -/
+def startpointAt : {M : ℕ} → Path Ω M → Fin M → Ω
+  | 0, _, i => Fin.elim0 i
+  | _ + 1, γ, i =>
+      Fin.lastCases γ.2.1.1
+        (fun j => startpointAt (γ.2.1.1, γ.2.2) j) i
+
+/-- The complete path mark stored for the window with index `i`. -/
+def windowAt : {M : ℕ} → Path Ω M → Fin M → FullPath Ω
+  | 0, _, i => Fin.elim0 i
+  | _ + 1, γ, i =>
+      Fin.lastCases γ.2.1.2
+        (fun j => windowAt (γ.2.1.1, γ.2.2) j) i
+
+@[simp]
+theorem startpointAt_castSucc {M : ℕ} (γ : Path Ω (M + 1)) (i : Fin M) :
+    startpointAt γ i.castSucc = startpointAt (γ.2.1.1, γ.2.2) i := by
+  simp [startpointAt]
+
+@[simp]
+theorem startpointAt_last {M : ℕ} (γ : Path Ω (M + 1)) :
+    startpointAt γ (Fin.last M) = γ.2.1.1 := by
+  simp [startpointAt]
+
+@[simp]
+theorem windowAt_castSucc {M : ℕ} (γ : Path Ω (M + 1)) (i : Fin M) :
+    windowAt γ i.castSucc = windowAt (γ.2.1.1, γ.2.2) i := by
+  simp [windowAt]
+
+@[simp]
+theorem windowAt_last {M : ℕ} (γ : Path Ω (M + 1)) :
+    windowAt γ (Fin.last M) = γ.2.1.2 := by
+  simp [windowAt]
+
+@[fun_prop]
+theorem measurable_windowAt {M : ℕ} (i : Fin M) :
+    Measurable (fun γ : Path Ω M => windowAt γ i) := by
+  induction M with
+  | zero => exact Fin.elim0 i
+  | succ M ih =>
+      rcases Fin.eq_castSucc_or_eq_last i with ⟨j, rfl⟩ | rfl
+      · rw [show (fun γ : Path Ω (M + 1) => windowAt γ j.castSucc) =
+            fun γ => windowAt (γ.2.1.1, γ.2.2) j by
+          funext γ
+          exact windowAt_castSucc γ j]
+        exact (ih j).comp (by fun_prop)
+      · rw [show (fun γ : Path Ω (M + 1) => windowAt γ (Fin.last M)) =
+            fun γ => γ.2.1.2 by
+          funext γ
+          exact windowAt_last γ]
+        fun_prop
+
 /-- The endpoint reached by the window with index `i`. The last endpoint is at
 the front of the reverse-oriented carrier, while earlier endpoints are read
 recursively from its continuation. -/

@@ -3,6 +3,18 @@
 This branch adds a finite-window driven protocol on top of the normalized
 fixed-initial finite-state jump-process law.
 
+## Scope of the research contribution
+
+Crooks' fluctuation relation and Jarzynski's equality are established physics,
+not new physical laws claimed by this development. The contribution here is a
+formalization result: normalized fixed-initial finite-state CTMC path measures
+are constructed across every jump-count sector; complete `FullPath` marks are
+retained while finitely many driven windows are composed; generator-level
+Gibbs detailed balance is lifted to path reversal balance; and the resulting
+Crooks, Jarzynski, second-law, and work-distribution statements are checked as
+division-free measure identities. Any priority claim about being a first
+formalization would require a separate systematic literature review.
+
 ## Constructed path laws
 
 For each protocol window `i`, a `FiniteJumpGenerator` and a duration determine
@@ -62,6 +74,22 @@ MeasureProtocol.ContinuousTimeJump.Driven.ConnectedPath
 MeasureProtocol.ContinuousTimeJump.Driven.ConnectedPath.prepend
 ```
 
+Boundary matching is only the structural half of physical support. The
+stronger predicate also requires every stored window mark to be a valid
+fixed-horizon real-time chart:
+
+```lean
+MeasureProtocol.ContinuousTimeJump.Driven.IsProtocolValid
+MeasureProtocol.ContinuousTimeJump.Driven.forwardDrivenLaw_ae_isProtocolValid
+MeasureProtocol.ContinuousTimeJump.Driven.reverseDrivenLaw_ae_isProtocolValid
+```
+
+For reverse windows, validity is not obtained by a pointwise reversal of the
+single-window theorem: the sampled terminal holding time becomes the first
+holding time after reversal. The proof transports validity through the
+reversal-invariant raw counting chart, thereby discarding the zero-measure
+simplex boundary on which that holding time vanishes.
+
 ## Work convention
 
 The work observable is the sum of the instantaneous energy switches evaluated
@@ -71,12 +99,16 @@ at the terminal state of each window:
 W = Σᵢ [Eᵢ₊₁(Xᵢ,end) - Eᵢ(Xᵢ,end)].
 ```
 
-The carrier stores windows in reverse chronological order, so `endpointAt`
-reads the endpoint associated with a protocol index. The recursive definition
-is identified with the ordinary finite sum by:
+The paper-facing notation is the ordinary chronology
+`x₀ ─γ₀→ x₁ ─γ₁→ ⋯ ─γₘ₋₁→ xₘ`. Lean stores the nested carrier in reverse
+chronological order for kernel recursion; `startpointAt`, `endpointAt`, and
+`windowAt` translate a protocol index back to that ordinary notation. The
+recursive work definition is identified with the ordinary finite sum by:
 
 ```lean
+MeasureProtocol.ContinuousTimeJump.Driven.startpointAt
 MeasureProtocol.ContinuousTimeJump.Driven.endpointAt
+MeasureProtocol.ContinuousTimeJump.Driven.windowAt
 MeasureProtocol.ContinuousTimeJump.Driven.reversedEndpointSum_eq_sum
 MeasureProtocol.ContinuousTimeJump.Driven.work_eq_sum
 ```
@@ -142,6 +174,7 @@ atomwise ratio `P_F(W = w) = e^{β(w-ΔF)} P_R(W_R = -w)`:
 MeasureProtocol.ContinuousTimeJump.Driven.reverseWork
 MeasureProtocol.ContinuousTimeJump.Driven.reverseWork_eq_neg
 MeasureProtocol.ContinuousTimeJump.Driven.work_distribution_crooks_of_gibbsDetailedBalance
+MeasureProtocol.ContinuousTimeJump.Driven.work_distribution_crooks_reverseWork_of_gibbsDetailedBalance
 MeasureProtocol.ContinuousTimeJump.Driven.crooks_work_atom_of_gibbsDetailedBalance
 ```
 
@@ -152,16 +185,18 @@ provably separates two boundary-consistent carrier points (a `0 → 1 → 0` hop
 through the raised state versus resting), so the work function is genuinely
 nonconstant on structurally connected paths.  Every window mark of both
 comparison points is a valid real-time trajectory chart — the hop marks hold
-each state for half a unit window (`hopMark_isValid`, `restMark_isValid`).  This does not by itself assert
-nondegeneracy of the pushforward work distribution — for zero window durations
-the constructed laws never leave the initial state — and no such distributional
-claim is made:
+each state for half a unit window (`hopMark_isValid`, `restMark_isValid`). For
+strictly positive window widths, the constructed forward law gives positive
+probability both to work `0` and to work `log 2`; thus the realized work
+distribution, not only the carrier observable, is nondegenerate:
 
 ```lean
 MeasureProtocol.ContinuousTimeJump.Driven.ThreeStateTwoWindow.crooks
 MeasureProtocol.ContinuousTimeJump.Driven.ThreeStateTwoWindow.jarzynski_eq_one
 MeasureProtocol.ContinuousTimeJump.Driven.ThreeStateTwoWindow.second_law
 MeasureProtocol.ContinuousTimeJump.Driven.ThreeStateTwoWindow.work_not_constant
+MeasureProtocol.ContinuousTimeJump.Driven.ThreeStateTwoWindow.work_zero_atom_pos
+MeasureProtocol.ContinuousTimeJump.Driven.ThreeStateTwoWindow.work_log_two_atom_pos
 ```
 
 The marked-path induction supporting the headline statements is exposed
@@ -213,10 +248,12 @@ energy are exposed in explicit finite-sum form through
 `FiniteJumpGenerator.finitePartitionFunction` and
 `FiniteJumpGenerator.finiteFreeEnergy`.
 
-### Two independent formalization routes
+### Two path-balance formalization routes
 
-Detailed balance is lifted to the path level along two deliberately
-independent routes, and only one of them feeds the headline theorems.
+Detailed balance is lifted to the path level along two routes. This is not a
+claim of two independent end-to-end proofs of every headline theorem: the
+routes share the low-level balance vocabulary, and only one feeds the
+constructed-measure headlines.
 
 The *density route* (`ContinuousTimeJumpDrivenDensity`) proves that the Gibbs
 forward rate density and the aligned reverse rate density agree pointwise on
@@ -232,10 +269,23 @@ never manipulates densities: it identifies the Gibbs mixture of the actual
 reversal-invariant, and extracts the measure-level `WindowBalance` used by the
 marked-path Crooks induction.
 
-The headline theorems depend only on the mixture route; the density route is
-an independent consistency check that the same physical hypothesis supports
-the pointwise strategy.  The two routes share only the balance vocabulary
-(`ContinuousTimeJumpDrivenBalance`) and are import-independent of each other.
+The mixture route belongs in the main presentation because it reaches the
+actual constructed `pathLawFrom` measures. The density route is best read as a
+local consistency check and appendix-level alternative. Their dependency
+shape is:
+
+```text
+generator-level Gibbs balance
+            │
+            ├── density identity ── fixed-sector/all-sector check
+            │
+            └── Gibbs mixture ── reversal invariance ── WindowBalance
+                                                    │
+                                                    └── Crooks/Jarzynski/second law
+```
+
+The two routes share `ContinuousTimeJumpDrivenBalance` and are otherwise
+import-independent of each other.
 The shared balance module itself imports only the low-level generator,
 counting-chart, and Gibbs modules — not the marked driven-protocol layer — so
 the independence claim is visible in the import graph, and full-path reversal
@@ -292,9 +342,10 @@ TwoState.AsymmetricExample.map_physicalFiniteGenerator_pathLawFrom_terminalState
 ## Deferred extensions
 
 The measure construction intentionally remains on the raw reverse-oriented
-marked carrier; `ConnectedPath` supplies a structural view when pointwise
-boundary equations are useful. A future extension may package the almost-sure
-support theorem as a probability law directly on that subtype.
+marked carrier. `ConnectedPath` supplies a structural view for pointwise
+boundary equations, while `IsProtocolValid` and its forward/reverse
+almost-sure theorems package physical validity across all windows. A future
+extension may package the law directly on that subtype.
 
 Another extension may concatenate all window marks into one global real-time
 trajectory. General calendar-time-dependent rates and integrated hazards remain

@@ -138,6 +138,50 @@ theorem work_distribution_crooks_of_gibbsDetailedBalance
     (measurable_work energy fun _ => Measurable.of_discrete)
     (crooks_of_gibbsDetailedBalance β hβ energy generator duration hbalance)
 
+/-- **Work-distribution Crooks relation in the reverse experiment's own work
+coordinate.** The reverse distribution is reflected by `w ↦ -w` before it is
+compared with the forward distribution, so the theorem exposes `reverseWork`
+directly while retaining the division-free measure identity. -/
+theorem work_distribution_crooks_reverseWork_of_gibbsDetailedBalance
+    {M : ℕ} (β : ℝ) (hβ : β ≠ 0)
+    (energy : Fin (M + 1) → Ω → ℝ)
+    (generator : Fin M → FiniteJumpGenerator Ω)
+    (duration : Fin M → NNReal)
+    (hbalance : ∀ i,
+      (generator i).IsGibbsDetailedBalance β (energy i.castSucc)) :
+    CrooksRelation
+      ((forwardDrivenLaw
+        (Gibbs.measure (Measure.count : Measure Ω) β (energy 0))
+        generator duration).map (work energy))
+      (((reverseDrivenLaw
+        (Gibbs.measure (Measure.count : Measure Ω) β
+          (energy (Fin.last M)))
+        generator duration).map (reverseWork energy)).map
+          (fun w : ℝ => -w))
+      (fun w => ENNReal.ofReal (Real.exp (-β * w)))
+      (ENNReal.ofReal
+        (Real.exp (-β *
+          deltaFreeEnergy (Measure.count : Measure Ω) β energy))) := by
+  have hreverse :
+      ((reverseDrivenLaw
+          (Gibbs.measure (Measure.count : Measure Ω) β
+            (energy (Fin.last M)))
+          generator duration).map (reverseWork energy)).map
+            (fun w : ℝ => -w) =
+        (reverseDrivenLaw
+          (Gibbs.measure (Measure.count : Measure Ω) β
+            (energy (Fin.last M)))
+          generator duration).map (work energy) := by
+    rw [Measure.map_map measurable_neg (measurable_reverseWork energy
+      fun _ => Measurable.of_discrete)]
+    apply Measure.map_congr
+    filter_upwards [] with γ
+    rw [Function.comp_apply, reverseWork_eq_neg]
+    simp
+  rw [hreverse]
+  exact work_distribution_crooks_of_gibbsDetailedBalance
+    β hβ energy generator duration hbalance
+
 /-- **The conventional atomwise Crooks ratio for driven protocols**:
 `P_F(W = w) = exp (β (w - ΔF)) · P_R(W_R = -w)`, stated with the reverse
 experiment's own work observable and valid for every real work value. -/

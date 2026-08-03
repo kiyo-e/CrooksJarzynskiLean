@@ -115,6 +115,7 @@ change-of-variables lemmas above expose this as a reusable public API in
 | Reverse-order driven law starting from the final Gibbs state | `MeasureProtocol.ContinuousTimeJump.Driven.reverseDrivenLaw` |
 | Almost-sure forward-window boundary matching | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.forwardWindowKernel_ae_boundary` |
 | Almost-sure reverse-window boundary matching | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.reverseWindowKernel_ae_boundary` |
+| All-window physical support of the forward/reverse laws | `MeasureProtocol.ContinuousTimeJump.Driven.forwardDrivenLaw_ae_isProtocolValid`, `MeasureProtocol.ContinuousTimeJump.Driven.reverseDrivenLaw_ae_isProtocolValid` |
 | Division-free finite-generator detailed balance | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.IsDetailedBalanceWeight` |
 | Instantaneous Gibbs detailed balance | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.IsGibbsDetailedBalance` |
 | Gibbs-weighted jump products telescope under reversal | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.gibbsWeight_mul_jumpProduct_eq_reverse` |
@@ -130,12 +131,14 @@ change-of-variables lemmas above expose this as a reusable public API in
 | One-window work is the terminal energy quench | `MeasureProtocol.ContinuousTimeJump.Driven.work_one` |
 | Reverse work observable is the negated forward work | `MeasureProtocol.ContinuousTimeJump.Driven.reverseWork_eq_neg` |
 | Work-distribution Crooks relation for driven protocols | `MeasureProtocol.ContinuousTimeJump.Driven.work_distribution_crooks_of_gibbsDetailedBalance` |
+| Measure-level work-distribution Crooks theorem using intrinsic reverse work | `MeasureProtocol.ContinuousTimeJump.Driven.work_distribution_crooks_reverseWork_of_gibbsDetailedBalance` |
 | Conventional atomwise ratio `P_F(W=w) = e^{β(w-ΔF)} P_R(W_R=-w)` | `MeasureProtocol.ContinuousTimeJump.Driven.crooks_work_atom_of_gibbsDetailedBalance` |
-| Two-window three-state protocol with a nonconstant work observable (on boundary-consistent carrier points) | `MeasureProtocol.ContinuousTimeJump.Driven.ThreeStateTwoWindow.crooks`, `MeasureProtocol.ContinuousTimeJump.Driven.ThreeStateTwoWindow.work_not_constant` |
+| Two-window three-state protocol with positive-probability `0` and `log 2` work atoms for positive windows | `MeasureProtocol.ContinuousTimeJump.Driven.ThreeStateTwoWindow.work_zero_atom_pos`, `MeasureProtocol.ContinuousTimeJump.Driven.ThreeStateTwoWindow.work_log_two_atom_pos` |
 
 The path carrier stores one complete `FullPath` mark per window. The recursive
 kernel construction passes each recorded terminal state to the next window, and
-the boundary theorems record the resulting continuity almost surely. The
+the all-window support theorems record both boundary continuity and valid
+fixed-horizon real-time charts almost surely. The
 headline Crooks and Jarzynski statements are about these constructed measures,
 not about an intermediate sector sum. Concatenation into one global real-time
 trajectory is deferred.
