@@ -147,9 +147,13 @@ MeasureProtocol.ContinuousTimeJump.Driven.crooks_work_atom_of_gibbsDetailedBalan
 
 Beyond the one-window recovery of the legacy quench model, a genuinely
 multi-window example instantiates the headlines on three states with two
-distinct generators and three energy landscapes; its work observable provably
-takes two distinct values, so the fluctuation relations concern a nonconstant
-work distribution:
+distinct generators and three energy landscapes.  Its endpoint work observable
+provably separates two boundary-consistent carrier points (a `0 → 1 → 0` hop
+through the raised state versus resting), so the work function is genuinely
+nonconstant on structurally connected paths.  This does not by itself assert
+nondegeneracy of the pushforward work distribution — for zero window durations
+the constructed laws never leave the initial state — and no such distributional
+claim is made:
 
 ```lean
 MeasureProtocol.ContinuousTimeJump.Driven.ThreeStateTwoWindow.crooks
@@ -230,6 +234,11 @@ The headline theorems depend only on the mixture route; the density route is
 an independent consistency check that the same physical hypothesis supports
 the pointwise strategy.  The two routes share only the balance vocabulary
 (`ContinuousTimeJumpDrivenBalance`) and are import-independent of each other.
+The shared balance module itself imports only the low-level generator,
+counting-chart, and Gibbs modules — not the marked driven-protocol layer — so
+the independence claim is visible in the import graph, and full-path reversal
+lives in its own low-level module (`ContinuousTimeJumpFullPathReversal`)
+usable by both routes.
 
 ## Asymmetric two-state one-window recovery
 

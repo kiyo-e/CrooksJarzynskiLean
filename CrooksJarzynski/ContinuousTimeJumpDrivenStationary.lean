@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: kiyo-e
 -/
 import CrooksJarzynski.ContinuousTimeJumpDrivenBalance
+import CrooksJarzynski.ContinuousTimeJumpFullPathReversal
 
 /-!
 # Equilibrium reversal of driven jump sectors
@@ -135,7 +136,10 @@ theorem map_weightedSectorLaw_reverse
   funext γ
   exact G.rateDensity_detailedBalance_reverse weight hbalance γ
 
-/-- Equilibrium-weighted path law in a fixed jump-count sector. -/
+/-- Equilibrium-weighted path law in a fixed jump-count sector.  The initial
+state carries the unnormalized Boltzmann weight `exp (-β E)`, so this is a
+finite measure, not a probability measure; the normalized counterpart is
+`gibbsPathLaw`. -/
 noncomputable def equilibriumSectorLaw
     (G : FiniteJumpGenerator Ω) (T : NNReal)
     (β : ℝ) (energy : Ω → ℝ) (n : ℕ) : Measure (JumpPath Ω n) :=
@@ -191,7 +195,10 @@ theorem map_weightedFullPathLaw_reverse
     ((FullPath.measurable_mk n) hs)] at hsector
   exact hsector
 
-/-- Equilibrium-weighted all-jump-count path law. -/
+/-- Equilibrium-weighted all-jump-count path law.  As with
+`equilibriumSectorLaw`, the initial-state weight is the unnormalized Boltzmann
+factor: this measure has total mass equal to the partition function, and the
+normalized probability measure is `gibbsPathLaw`. -/
 noncomputable def equilibriumFullPathLaw
     (G : FiniteJumpGenerator Ω) (T : NNReal)
     (β : ℝ) (energy : Ω → ℝ) : Measure (FullPath Ω) :=

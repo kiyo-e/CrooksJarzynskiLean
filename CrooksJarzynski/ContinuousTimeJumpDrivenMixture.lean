@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: kiyo-e
 -/
 import CrooksJarzynski.ContinuousTimeJumpDrivenBalance
+import CrooksJarzynski.ContinuousTimeJumpFiniteGeneratorFullPath
 
 /-!
 # Mixtures of fixed-initial jump sectors

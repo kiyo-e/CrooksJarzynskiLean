@@ -131,7 +131,7 @@ change-of-variables lemmas above expose this as a reusable public API in
 | Reverse work observable is the negated forward work | `MeasureProtocol.ContinuousTimeJump.Driven.reverseWork_eq_neg` |
 | Work-distribution Crooks relation for driven protocols | `MeasureProtocol.ContinuousTimeJump.Driven.work_distribution_crooks_of_gibbsDetailedBalance` |
 | Conventional atomwise ratio `P_F(W=w) = e^{β(w-ΔF)} P_R(W_R=-w)` | `MeasureProtocol.ContinuousTimeJump.Driven.crooks_work_atom_of_gibbsDetailedBalance` |
-| Two-window three-state protocol with nonconstant work | `MeasureProtocol.ContinuousTimeJump.Driven.ThreeStateTwoWindow.crooks`, `MeasureProtocol.ContinuousTimeJump.Driven.ThreeStateTwoWindow.work_not_constant` |
+| Two-window three-state protocol with a nonconstant work observable (on boundary-consistent carrier points) | `MeasureProtocol.ContinuousTimeJump.Driven.ThreeStateTwoWindow.crooks`, `MeasureProtocol.ContinuousTimeJump.Driven.ThreeStateTwoWindow.work_not_constant` |
 
 The path carrier stores one complete `FullPath` mark per window. The recursive
 kernel construction passes each recorded terminal state to the next window, and

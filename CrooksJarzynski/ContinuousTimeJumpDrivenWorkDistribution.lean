@@ -13,9 +13,10 @@ space.  This module connects it to the presentation standard in the physics
 literature: the distribution of the work observable itself.
 
 Two ingredients are needed.  First, the reverse experiment's own work
-observable is defined intrinsically: its `j`-th window relaxes and then
-switches the reversed protocol one step forward, evaluated at that window's
-own endpoint, which the aligned carrier stores at position `j.rev`.  An index
+observable is defined intrinsically: its `j`-th window first quenches the
+energy one step along the reversed protocol — evaluated at that window's
+initial state, which the forward-aligned carrier stores at position `j.rev` —
+and then relaxes under the corresponding generator.  An index
 computation shows this observable is exactly the negated forward work — the
 sign convention familiar from the `P_F(W = w) = e^{β(w-ΔF)} P_R(W_R = -w)`
 form of Crooks' relation.  Second, pushing the measure-level relation forward
@@ -39,10 +40,11 @@ variable {Ω : Type u} [MeasurableSpace Ω]
 /-! ### The reverse experiment's own work observable -/
 
 /-- The work performed by the reverse experiment, read in its own chronology.
-The reverse protocol visits the energy landscapes in reversed order, so its
-`j`-th window switches `energy (j.castSucc).rev` off and
-`energy (j.succ).rev` on, evaluated at that window's own endpoint; the aligned
-carrier stores that endpoint at position `j.rev`. -/
+The reverse protocol visits the energy landscapes in reversed order, and each
+window quenches before it relaxes: the `j`-th window first switches
+`energy (j.castSucc).rev` off and `energy (j.succ).rev` on at its own initial
+state, and then relaxes under the matching generator.  The forward-aligned
+carrier stores that quench state at position `j.rev`. -/
 noncomputable def reverseWork
     {M : ℕ} (energy : Fin (M + 1) → Ω → ℝ) (γ : Path Ω M) : ℝ :=
   ∑ j : Fin M,

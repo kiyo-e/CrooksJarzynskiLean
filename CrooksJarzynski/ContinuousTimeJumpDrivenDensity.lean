@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: kiyo-e
 -/
 import CrooksJarzynski.ContinuousTimeJumpDrivenBalance
+import CrooksJarzynski.ContinuousTimeJumpFull
 
 /-!
 # Gibbs reversal of finite-generator window densities
@@ -148,7 +149,10 @@ theorem gibbsSector_crooks
 
 omit [DecidableEq Ω] in
 /-- Summing the equilibrium sector relations yields a Crooks relation on the
-complete finite-jump path space. -/
+complete finite-jump path space.  Both sides are unnormalized
+Boltzmann-weighted laws — no partition-function normalization has been divided
+out; because the same landscape weights both sides, the unnormalized masses
+agree and the relation holds with trivial work weight and constant `1`. -/
 theorem gibbsFullPath_crooks
     (G : FiniteJumpGenerator Ω) (T : NNReal)
     (β : ℝ) (energy : Ω → ℝ)

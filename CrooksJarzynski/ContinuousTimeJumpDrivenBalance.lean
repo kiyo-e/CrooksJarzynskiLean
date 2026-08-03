@@ -3,8 +3,9 @@ Copyright (c) 2026 kiyo-e. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: kiyo-e
 -/
-import CrooksJarzynski.ContinuousTimeJumpDriven
+import CrooksJarzynski.ContinuousTimeJumpFiniteGeneratorPathLaw
 import CrooksJarzynski.ContinuousTimeJumpSimplexReversal
+import CrooksJarzynski.MeasureProtocolGibbs
 
 /-!
 # Rate detailed balance for driven jump windows
@@ -15,6 +16,10 @@ its jump-rate factors. It also proves that the unsymmetrized finite-state
 counting chart is already invariant under path reversal, and exposes finite-sum
 partition functions for the counting-measure Gibbs specialization used by
 finite-state protocols.
+
+Only the low-level generator, counting-chart, and Gibbs modules are imported:
+this file is shared by both the density route and the mixture route, and it
+deliberately does not depend on the marked driven-protocol layer.
 -/
 
 open MeasureTheory

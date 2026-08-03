@@ -3,6 +3,7 @@ Copyright (c) 2026 kiyo-e. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: kiyo-e
 -/
+import CrooksJarzynski.ContinuousTimeJumpDrivenConnectedPath
 import CrooksJarzynski.ContinuousTimeJumpDrivenWorkDistribution
 
 /-!
@@ -16,11 +17,13 @@ window.
 
 The protocol raises the middle state's energy and then lowers it back.  The
 initial and final landscapes coincide, so the free-energy difference vanishes,
-while the endpoint work is genuinely path dependent: it takes at least two
-distinct values, so the fluctuation relations proved here concern a
-nonconstant work distribution.  The example also pins the `Fin.castSucc`
-orientation of the window-indexed balance hypothesis on a case where the two
-windows differ.
+while the endpoint work observable is genuinely nonconstant: it separates two
+boundary-consistent carrier points, one hopping through the raised state and
+one resting.  (This is a statement about the work observable on the carrier,
+not about nondegeneracy of the pushforward work distribution — for zero window
+durations the constructed laws never leave the initial state.)  The example
+also pins the `Fin.castSucc` orientation of the window-indexed balance
+hypothesis on a case where the two windows differ.
 -/
 
 open MeasureTheory ProbabilityTheory
@@ -142,20 +145,23 @@ theorem second_law (duration : Fin 2 → NNReal) :
   rw [deltaFreeEnergy_eq_zero] at h
   exact h
 
-/-! ### The work observable is genuinely nonconstant -/
+/-! ### The work observable is nonconstant on boundary-consistent paths -/
 
-/-- The zero-jump path resting at a prescribed state. -/
+/-- The zero-jump window path resting at a prescribed state. -/
 def restMark (x : Fin 3) : FullPath (Fin 3) :=
   ⟨0, (fun _ => x, fun _ => 0)⟩
 
-/-- A two-window carrier point with prescribed window endpoints. -/
-def carrierAt (x₁ x₂ : Fin 3) : Path (Fin 3) 2 :=
-  (x₂, ((x₁, restMark x₂), ((0, restMark x₁), PUnit.unit)))
+/-- The one-jump window path hopping from `x` to `y`. -/
+def hopMark (x y : Fin 3) : FullPath (Fin 3) :=
+  ⟨1, (![x, y], fun _ => 0)⟩
 
-/-- On this protocol the endpoint work only sees the raised landscape: it is
-the middle-state energy difference of the two window endpoints. -/
-theorem work_carrierAt (x₁ x₂ : Fin 3) :
-    work energy (carrierAt x₁ x₂) = energy 1 x₁ - energy 1 x₂ := by
+/-- On this protocol the endpoint work only sees the raised landscape: on any
+two-window carrier it is the middle-state energy difference of the two stored
+window endpoints, regardless of the window marks. -/
+theorem work_carrier_eq
+    (x₀ x₁ x₂ : Fin 3) (w₀ w₁ : FullPath (Fin 3)) :
+    work energy (x₂, ((x₁, w₁), ((x₀, w₀), PUnit.unit))) =
+      energy 1 x₁ - energy 1 x₂ := by
   rw [work_two_eq]
   show energy 1 x₁ - energy 0 x₁ + (energy 2 x₂ - energy 1 x₂) =
     energy 1 x₁ - energy 1 x₂
@@ -164,18 +170,43 @@ theorem work_carrierAt (x₁ x₂ : Fin 3) :
   rw [h0, h2]
   ring
 
-/-- **The two-window work observable takes two distinct values**, so the
-fluctuation relations above concern a nonconstant work distribution. -/
+/-- The boundary-consistent carrier point that rests at `0` through both
+windows. -/
+def restPath : ConnectedPath (Fin 3) 2 :=
+  ⟨(0, ((0, restMark 0), ((0, restMark 0), PUnit.unit))),
+    rfl, rfl, rfl, rfl, trivial⟩
+
+/-- A boundary-consistent carrier point that hops `0 → 1` in the first window
+and back `1 → 0` in the second. -/
+def hopPath : ConnectedPath (Fin 3) 2 :=
+  ⟨(0, ((1, hopMark 1 0), ((0, hopMark 0 1), PUnit.unit))),
+    rfl, rfl, rfl, rfl, trivial⟩
+
+/-- Hopping through the raised middle state costs `log 2`. -/
+theorem work_hopPath : work energy hopPath.1 = Real.log 2 := by
+  have h : work energy hopPath.1 = energy 1 1 - energy 1 0 :=
+    work_carrier_eq 0 1 0 (hopMark 0 1) (hopMark 1 0)
+  rw [h]
+  simp [energy]
+
+/-- Resting through both windows costs nothing. -/
+theorem work_restPath : work energy restPath.1 = 0 := by
+  have h : work energy restPath.1 = energy 1 0 - energy 1 0 :=
+    work_carrier_eq 0 0 0 (restMark 0) (restMark 0)
+  rw [h]
+  ring
+
+/-- **The endpoint work observable separates two boundary-consistent carrier
+points**: hopping through the raised middle state costs `log 2` while resting
+costs nothing.  This is a nonconstancy statement about the work observable on
+structurally connected paths; it does not by itself assert nondegeneracy of
+the pushforward work distribution (for zero window durations the constructed
+laws never leave the initial state, so the realized work vanishes almost
+surely). -/
 theorem work_not_constant :
-    work energy (carrierAt 1 0) ≠ work energy (carrierAt 0 0) := by
-  rw [work_carrierAt, work_carrierAt]
-  have hlog : (0 : ℝ) < Real.log 2 := Real.log_pos (by norm_num)
-  have h1 : energy 1 1 = Real.log 2 := by simp [energy]
-  have h0 : energy 1 0 = 0 := by simp [energy]
-  rw [h1, h0]
-  intro h
-  simp only [sub_zero, sub_self] at h
-  exact hlog.ne' h
+    work energy hopPath.1 ≠ work energy restPath.1 := by
+  rw [work_hopPath, work_restPath]
+  exact (Real.log_pos (by norm_num)).ne'
 
 end ThreeStateTwoWindow
 end Driven
