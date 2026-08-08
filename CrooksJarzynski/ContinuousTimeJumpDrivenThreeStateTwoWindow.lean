@@ -575,6 +575,199 @@ theorem work_not_constant :
   rw [work_hopPath, work_restPath]
   exact (Real.log_pos (by norm_num)).ne'
 
+/-! ### The same endpoints, not a function of the endpoints -/
+
+/-- For positive window durations the resting event `twoWindowEvent 0 0 0`
+has positive measure, and on it the initial endpoint, the final endpoint and
+the realized work are pinned to `0`, `0` and `0`. -/
+theorem work_zero_same_endpoints_event_pos (duration : Fin 2 → NNReal)
+    (_hduration : ∀ i, 0 < duration i) :
+    0 < (forwardDrivenLaw
+        (Gibbs.measure (Measure.count : Measure (Fin 3)) 1 (energy 0))
+        generator duration) (twoWindowEvent 0 0 0) ∧
+      ∀ γ ∈ twoWindowEvent 0 0 0,
+        Driven.startpointAt γ 0 = 0 ∧
+          Driven.endpointAt γ (Fin.last 1) = 0 ∧
+          work energy γ = 0 := by
+  letI : IsProbabilityMeasure
+      (Gibbs.measure (Measure.count : Measure (Fin 3)) 1 (energy 0)) :=
+    Gibbs.isProbabilityMeasure_measure
+      (Measure.count : Measure (Fin 3)) 1 (energy 0)
+      integrable_initial_boltzmann
+  constructor
+  · change 0 < Marked.reversedForwardPathMeasure
+      (Gibbs.measure (Measure.count : Measure (Fin 3)) 1 (energy 0))
+      (fun i => (generator i).forwardWindowKernel (duration i))
+      (twoWindowEvent 0 0 0)
+    rw [reversedForwardPathMeasure_twoWindowEvent]
+    exact ENNReal.mul_pos
+      (ENNReal.mul_pos (gibbs_initial_atom_pos 0).ne'
+        (transitionMass_self_pos genFlat (duration 0) 0).ne').ne'
+      (transitionMass_self_pos genTilted (duration 1) 0).ne'
+  · intro γ hγ
+    rcases hγ with ⟨p, hp, rfl⟩
+    constructor
+    · change Driven.startpointAt
+          ((p.2.1, ((p.1.1, p.2.2), p.1.2)) : Marked.MarkedPath (Fin 3) (FullPath (Fin 3)) 2)
+          (0 : Fin 2) = 0
+      rw [show (0 : Fin 2) = (0 : Fin 1).castSucc from rfl]
+      rw [Driven.startpointAt_castSucc]
+      rw [show (0 : Fin 1) = Fin.last 0 from rfl]
+      rw [Driven.startpointAt_last]
+      simp [hp.1.1]
+    · constructor
+      · change Driven.endpointAt
+          ((p.2.1, ((p.1.1, p.2.2), p.1.2)) : Marked.MarkedPath (Fin 3) (FullPath (Fin 3)) 2)
+          (Fin.last 1) = 0
+        rw [Driven.endpointAt_last]
+        exact hp.2
+      · change work energy (p.2.1, ((p.1.1, p.2.2), p.1.2)) = 0
+        rw [work_two_eq]
+        rw [show p.1.1 = 0 from hp.1.2]
+        rw [show p.2.1 = 0 from hp.2]
+        simp [energy]
+
+/-- For positive window durations the hopping event `twoWindowEvent 0 1 0`
+has positive measure, and on it the initial and final endpoints are pinned to
+`0` while the realized work is `log 2`. -/
+theorem work_log_two_same_endpoints_event_pos (duration : Fin 2 → NNReal)
+    (hduration : ∀ i, 0 < duration i) :
+    0 < (forwardDrivenLaw
+        (Gibbs.measure (Measure.count : Measure (Fin 3)) 1 (energy 0))
+        generator duration) (twoWindowEvent 0 1 0) ∧
+      ∀ γ ∈ twoWindowEvent 0 1 0,
+        Driven.startpointAt γ 0 = 0 ∧
+          Driven.endpointAt γ (Fin.last 1) = 0 ∧
+          work energy γ = Real.log 2 := by
+  letI : IsProbabilityMeasure
+      (Gibbs.measure (Measure.count : Measure (Fin 3)) 1 (energy 0)) :=
+    Gibbs.isProbabilityMeasure_measure
+      (Measure.count : Measure (Fin 3)) 1 (energy 0)
+      integrable_initial_boltzmann
+  constructor
+  · change 0 < Marked.reversedForwardPathMeasure
+      (Gibbs.measure (Measure.count : Measure (Fin 3)) 1 (energy 0))
+      (fun i => (generator i).forwardWindowKernel (duration i))
+      (twoWindowEvent 0 1 0)
+    rw [reversedForwardPathMeasure_twoWindowEvent]
+    have hjump₀ : 0 < genFlat.jumpRate 0 1 := by norm_num [genFlat]
+    have hjump₁ : 0 < genTilted.jumpRate 1 0 := by norm_num [genTilted]
+    exact ENNReal.mul_pos
+      (ENNReal.mul_pos (gibbs_initial_atom_pos 0).ne'
+        (transitionMass_pos_of_jumpRate_pos genFlat (duration 0)
+          (hduration 0) 0 1 hjump₀).ne').ne'
+      (transitionMass_pos_of_jumpRate_pos genTilted (duration 1)
+        (hduration 1) 1 0 hjump₁).ne'
+  · intro γ hγ
+    rcases hγ with ⟨p, hp, rfl⟩
+    constructor
+    · change Driven.startpointAt
+          ((p.2.1, ((p.1.1, p.2.2), p.1.2)) : Marked.MarkedPath (Fin 3) (FullPath (Fin 3)) 2)
+          (0 : Fin 2) = 0
+      rw [show (0 : Fin 2) = (0 : Fin 1).castSucc from rfl]
+      rw [Driven.startpointAt_castSucc]
+      rw [show (0 : Fin 1) = Fin.last 0 from rfl]
+      rw [Driven.startpointAt_last]
+      simp [hp.1.1]
+    · constructor
+      · change Driven.endpointAt
+          ((p.2.1, ((p.1.1, p.2.2), p.1.2)) : Marked.MarkedPath (Fin 3) (FullPath (Fin 3)) 2)
+          (Fin.last 1) = 0
+        rw [Driven.endpointAt_last]
+        exact hp.2
+      · change work energy (p.2.1, ((p.1.1, p.2.2), p.1.2)) = Real.log 2
+        rw [work_two_eq]
+        rw [show p.1.1 = 1 from hp.1.2]
+        rw [show p.2.1 = 0 from hp.2]
+        simp [energy]
+
+/-! ### The endpoint pair does not determine the realized work -/
+
+/-- An almost-everywhere equality of `work energy` with a function of the
+endpoint pair, restricted to a positive event on which the endpoints and the
+work are pinned, forces the value of the function at the pinned endpoints. -/
+private lemma ae_endpoint_pair_value {x₁ : Fin 3} {v : ℝ}
+    (f : Fin 3 → Fin 3 → ℝ) (duration : Fin 2 → NNReal)
+    (hf : (work energy) =ᵐ[forwardDrivenLaw
+        (Gibbs.measure (Measure.count : Measure (Fin 3)) 1 (energy 0))
+        generator duration] fun γ => f (Driven.startpointAt γ 0)
+        (Driven.endpointAt γ (Fin.last 1)))
+    (hpos : 0 < (forwardDrivenLaw
+        (Gibbs.measure (Measure.count : Measure (Fin 3)) 1 (energy 0))
+        generator duration) (twoWindowEvent 0 x₁ 0))
+    (hep : ∀ γ ∈ twoWindowEvent 0 x₁ 0, Driven.startpointAt γ 0 = 0 ∧
+        Driven.endpointAt γ (Fin.last 1) = 0 ∧ work energy γ = v) :
+    f 0 0 = v := by
+  classical
+  have hN : (forwardDrivenLaw
+        (Gibbs.measure (Measure.count : Measure (Fin 3)) 1 (energy 0))
+        generator duration) {γ : Path (Fin 3) 2 | work energy γ ≠
+      f (Driven.startpointAt γ 0) (Driven.endpointAt γ (Fin.last 1))} = 0 := by
+    rw [← ae_iff]
+    exact hf
+  have hgood : (twoWindowEvent 0 x₁ 0 \ {γ : Path (Fin 3) 2 | work energy γ ≠
+      f (Driven.startpointAt γ 0) (Driven.endpointAt γ (Fin.last 1))}).Nonempty := by
+    exact MeasureTheory.nonempty_of_measure_ne_zero
+      (μ := (forwardDrivenLaw
+        (Gibbs.measure (Measure.count : Measure (Fin 3)) 1 (energy 0))
+        generator duration))
+      (by
+        rw [show (forwardDrivenLaw
+              (Gibbs.measure (Measure.count : Measure (Fin 3)) 1 (energy 0))
+              generator duration) (twoWindowEvent 0 x₁ 0 \ {γ : Path (Fin 3) 2 | work energy γ ≠
+                f (Driven.startpointAt γ 0) (Driven.endpointAt γ (Fin.last 1))}) =
+            (forwardDrivenLaw
+              (Gibbs.measure (Measure.count : Measure (Fin 3)) 1 (energy 0))
+              generator duration) (twoWindowEvent 0 x₁ 0) by
+          apply measure_sdiff_null'
+          exact measure_mono_null Set.inter_subset_right hN]
+        exact ne_of_gt hpos)
+  rcases hgood with ⟨γ, hγA, hγN⟩
+  have hval : work energy γ = f (Driven.startpointAt γ 0)
+      (Driven.endpointAt γ (Fin.last 1)) := by
+    by_contra h
+    exact hγN (by simpa using h)
+  have hs : Driven.startpointAt γ 0 = 0 := (hep γ hγA).1
+  have ht : Driven.endpointAt γ (Fin.last 1) = 0 := (hep γ hγA).2.1
+  have hwork : work energy γ = v := (hep γ hγA).2.2
+  rw [hs, ht] at hval
+  rw [hwork] at hval
+  exact hval.symm
+
+/-- **The realized work is not almost surely a function of the endpoint pair
+alone**: two positive-probability events pin the same endpoint pair `(0, 0)`
+but realize the different work values `0` and `log 2`. -/
+theorem work_not_ae_initialFinalFunction (duration : Fin 2 → NNReal)
+    (hduration : ∀ i, 0 < duration i) :
+    ¬ ∃ f : Fin 3 → Fin 3 → ℝ,
+      (work energy) =ᵐ[forwardDrivenLaw
+        (Gibbs.measure (Measure.count : Measure (Fin 3)) 1 (energy 0))
+        generator duration] fun γ => f (Driven.startpointAt γ 0)
+        (Driven.endpointAt γ (Fin.last 1)) := by
+  rintro ⟨f, hf⟩
+  have h₀ : f 0 0 = 0 :=
+    ae_endpoint_pair_value (x₁ := 0) (v := 0) f duration hf
+      (work_zero_same_endpoints_event_pos duration hduration).1
+      (work_zero_same_endpoints_event_pos duration hduration).2
+  have h₂ : f 0 0 = Real.log 2 :=
+    ae_endpoint_pair_value (x₁ := 1) (v := Real.log 2) f duration hf
+      (work_log_two_same_endpoints_event_pos duration hduration).1
+      (work_log_two_same_endpoints_event_pos duration hduration).2
+  have hc : (0 : ℝ) = Real.log 2 := h₀.symm.trans h₂
+  exact (Real.log_pos (by norm_num)).ne' hc.symm
+
+/-- The same obstruction holds even for functions of the final state alone. -/
+theorem work_not_ae_finalStateFunction (duration : Fin 2 → NNReal)
+    (hduration : ∀ i, 0 < duration i) :
+    ¬ ∃ f : Fin 3 → ℝ,
+      (work energy) =ᵐ[forwardDrivenLaw
+        (Gibbs.measure (Measure.count : Measure (Fin 3)) 1 (energy 0))
+        generator duration] fun γ => f (Driven.endpointAt γ (Fin.last 1)) := by
+  rintro ⟨f, hf⟩
+  apply work_not_ae_initialFinalFunction duration hduration
+  refine ⟨fun _ y => f y, ?_⟩
+  simpa using hf
+
 end ThreeStateTwoWindow
 end Driven
 end ContinuousTimeJump

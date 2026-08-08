@@ -54,3 +54,21 @@ rewrite is closed by `exact (Measure.compProd_deterministic measurable_const).sy
 - Key gotcha: `simp only [Measure.real_def, transitionKernel_real_singleton_eq_exp_generator]`
   on the whole goal errors "function expected / NormedSpace.exp"; do the
   `.toReal → .real` fold per-factor with explicit `rw [← Measure.real_def]`.
+
+## M3 — DONE — three-state two-window: work is not a function of the endpoints
+- `work_zero_same_endpoints_event_pos` / `work_log_two_same_endpoints_event_pos`:
+  positive measure of `twoWindowEvent 0 0 0` / `twoWindowEvent 0 1 0` (+ pinned
+  endpoints `(0,0)` and work `0` / `log 2`).
+- `ae_endpoint_pair_value` (private helper): an a.e. equality restricted to a
+  positive pinned event forces the value at the pinned endpoints; uses
+  `ae_iff` + `MeasureTheory.nonempty_of_measure_ne_zero` + `measure_sdiff_null'`.
+- `work_not_ae_initialFinalFunction`: no `f : Fin 3 → Fin 3 → ℝ` reproduces
+  `work energy` a.e. from `(startpointAt γ 0, endpointAt γ (Fin.last 1))`
+  (both events pin `(0,0)`, work `0` vs `log 2` → contradiction).
+- `work_not_ae_finalStateFunction`: same obstruction for final-state-only `f`.
+- Gotchas: `Driven.startpointAt`/`endpointAt` unfold to `Fin.lastCases`; rewrite
+  the numeral index to `(0:Fin 1).castSucc` / `Fin.last 0` explicitly before
+  applying the `[simp]` fold lemmas; the `change` on the carrier needs the
+  explicit `: Marked.MarkedPath (Fin 3) (FullPath (Fin 3)) 2` type annotation
+  (the bare tuple misfires the continuation/pair unification).
+- Root module `lake build CrooksJarzynski` green (8731 jobs).
