@@ -41,3 +41,16 @@ rewrite is closed by `exact (Measure.compProd_deterministic measurable_const).sy
 ### Notes
 - The `n`-unused linter warning at the top of the file is intentionally benign.
 - No `sorry`/`axiom`/`unsafe` anywhere; all exported lemmas have complete proofs.
+## M2 — DONE (2025) — `ContinuousTimeJumpDrivenEndpointExp.lean`
+- `Markov.reversedForwardPathMeasure_ofFn_rev` (discrete stemma) fully proved.
+- `ContinuousTimeJump.Driven.forwardDrivenLaw_endpointCylinder_eq_exp_product`
+  proved. The final real/ENNReal block:
+  - `rw [ENNReal.toReal_mul]` after the discrete lemma;
+  - per-factor `hfact` via `rw [← Measure.real_def]` + `exact
+    FiniteJumpGenerator.transitionKernel_real_singleton_eq_exp_generator`;
+  - the `∏`-`toReal` inside the product via `rw [ENNReal.toReal_prod (Finset.univ)]`;
+  - closing the commuted product by `rw [mul_comm]` (ring/ring_nf both fail: ring
+    needs cancellation, ring_nf reduces to a `∨` disjunction — avoid them).
+- Key gotcha: `simp only [Measure.real_def, transitionKernel_real_singleton_eq_exp_generator]`
+  on the whole goal errors "function expected / NormedSpace.exp"; do the
+  `.toReal → .real` fold per-factor with explicit `rw [← Measure.real_def]`.
