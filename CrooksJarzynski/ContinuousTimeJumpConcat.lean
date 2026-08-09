@@ -565,10 +565,11 @@ private lemma concat_holding_pos {n m : ℕ} {γ : JumpPath Ω n} {δ : JumpPath
       let r : ℕ := (i : ℕ) - (n + 1)
       have hr : r < m := by omega
       have hseam : (concat γ δ).2 i.castSucc = δ.2 (⟨r, hr⟩ : Fin m).succ := by
-        rw [show (i.castSucc : Fin (n + m + 1)) = ⟨n + 1 + r, by omega⟩ by
+        have hcast : (i.castSucc : Fin (n + m + 1)) = ⟨n + 1 + r, by omega⟩ := by
           apply Fin.ext
           simp [r]
-          omega]
+          omega
+        conv_lhs => rw [hcast]
         rw [concat_snd_range_right (γ := γ) (δ := δ) (r := r) (hr := hr)]
       rw [hseam]
       have hr1 : r + 1 < m := by omega
@@ -594,11 +595,32 @@ theorem isValid_concat {T₁ T₂ : NNReal} {n m : ℕ}
       jumpTimes (concat γ δ) (Fin.last (n + m)) ≤ (totalHoldingTime (concat γ δ) : ℝ) :=
         jumpTimes_le_totalHoldingTime (concat γ δ) (Fin.last (n + m))
       _ = (γ.totalHoldingTime : ℝ) + (δ.totalHoldingTime : ℝ) := by
+        rw [← NNReal.coe_add]
         exact_mod_cast totalHoldingTime_concat γ δ
       _ ≤ (T₁ : ℝ) + (T₂ : ℝ) := by
         exact_mod_cast add_le_add hγtotal hδtotal
       _ = ((T₁ + T₂ : NNReal) : ℝ) := by
         rw [NNReal.coe_add]
+
+/-- The concatenation starts at the same state as the prefix, so both
+real-time trajectories agree at time zero.  (A first, tractable piece of the
+general gluing law for trajectories; the full left/right gluing along the
+whole time axis is deferred.) -/
+theorem trajectory_concat_zero {n m : ℕ} {γ : JumpPath Ω n} {δ : JumpPath Ω m}
+    (hγ : ∀ i : Fin n, 0 < γ.2 i.castSucc)
+    (hδ : ∀ i : Fin m, 0 < δ.2 i.castSucc) :
+    trajectory (concat γ δ) 0 = trajectory γ 0 := by
+  rw [trajectory_zero_of_pos (concat γ δ) (concat_holding_pos hγ hδ),
+    trajectory_zero_of_pos γ hγ]
+  rw [show (concat γ δ).1 (0 : Fin (n + m + 1)) = γ.1 (0 : Fin (n + 1)) by
+    change Fin.append (m := n + 1) (n := m) γ.1 (δ.1 ∘ Fin.succ)
+        (Fin.cast (by omega) (0 : Fin (n + m + 1))) = γ.1 (0 : Fin (n + 1))
+    rw [show (Fin.cast (by omega) (0 : Fin (n + m + 1)) : Fin (n + 1 + m)) =
+        Fin.castAdd m (0 : Fin (n + 1)) by
+      apply Fin.ext
+      simp]
+    rw [Fin.append_left (u := γ.1) (v := δ.1 ∘ Fin.succ) (i := (0 : Fin (n + 1)))]
+]
 
 end JumpPath
 
