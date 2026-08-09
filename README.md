@@ -75,6 +75,13 @@ The library proves:
   conventional atomwise ratio `P_F(W=w) = e^{β(w-ΔF)} P_R(W_R=-w)`, and a
   two-window three-state protocol whose work observable is genuinely
   nonconstant;
+- an endpoint law for driven protocols: erasing the complete-path window marks
+  recovers the endpoint Markov chain of the window transition kernels, so
+  singleton endpoint cylinders have mass equal to the initial atom times a
+  product of matrix exponentials `exp ((duration i) • Qᵢ)`;
+- positive-measure events of the three-state protocol pinning the same
+  endpoint pair `(0, 0)` while realizing work `0` and `log 2`, so the realized
+  work is not almost surely a function of the endpoint pair;
 - a symmetric unit-rate two-state CTMC whose `n`-jump sector has Poisson mass,
   whose complete finite-jump path law is normalized and non-explosive, and
   which satisfies full-path Crooks and Jarzynski theorems;
