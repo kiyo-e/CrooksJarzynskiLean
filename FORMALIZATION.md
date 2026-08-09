@@ -134,6 +134,12 @@ change-of-variables lemmas above expose this as a reusable public API in
 | Measure-level work-distribution Crooks theorem using intrinsic reverse work | `MeasureProtocol.ContinuousTimeJump.Driven.work_distribution_crooks_reverseWork_of_gibbsDetailedBalance` |
 | Conventional atomwise ratio `P_F(W=w) = e^{β(w-ΔF)} P_R(W_R=-w)` | `MeasureProtocol.ContinuousTimeJump.Driven.crooks_work_atom_of_gibbsDetailedBalance` |
 | Two-window three-state protocol with positive-probability `0` and `log 2` work atoms for positive windows | `MeasureProtocol.ContinuousTimeJump.Driven.ThreeStateTwoWindow.work_zero_atom_pos`, `MeasureProtocol.ContinuousTimeJump.Driven.ThreeStateTwoWindow.work_log_two_atom_pos` |
+| Erasing marks commutes with the marked path construction, yielding the endpoint-marginal Markov law | `MeasureProtocol.Marked.map_reversedForwardPathMeasure_eraseMarks` |
+| Endpoint marginal of one forward window kernel is the finite generator's transition kernel | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.endpointMarginal_forwardWindowKernel` |
+| Erasing all marks from the forward driven law gives the endpoint Markov chain of the window transition kernels | `MeasureProtocol.ContinuousTimeJump.Driven.map_forwardDrivenLaw_endpoints` |
+| Singleton endpoint cylinders of the driven law are initial-atom times matrix-exponential products | `MeasureProtocol.ContinuousTimeJump.Driven.forwardDrivenLaw_endpointCylinder_eq_exp_product` |
+| Positive-measure events with equal endpoints `(0, 0)` realizing work `0` and `log 2` | `MeasureProtocol.ContinuousTimeJump.Driven.ThreeStateTwoWindow.work_zero_same_endpoints_event_pos`, `MeasureProtocol.ContinuousTimeJump.Driven.ThreeStateTwoWindow.work_log_two_same_endpoints_event_pos` |
+| The realized work is not almost surely a function of the endpoint pair, nor of the final state | `MeasureProtocol.ContinuousTimeJump.Driven.ThreeStateTwoWindow.work_not_ae_initialFinalFunction`, `MeasureProtocol.ContinuousTimeJump.Driven.ThreeStateTwoWindow.work_not_ae_finalStateFunction` |
 
 The path carrier stores one complete `FullPath` mark per window. The recursive
 kernel construction passes each recorded terminal state to the next window, and

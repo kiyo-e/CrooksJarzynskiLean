@@ -34,7 +34,7 @@ variable [MeasurableSpace Ω] [MeasurableSpace Λ]
 preceding endpoint of every step. -/
 def eraseMarksContinuation : {n : ℕ} → MarkedContinuation Ω Λ n → Continuation Ω n
   | 0, _ => PUnit.unit
-  | n + 1, ((x, _), rest) => (x, eraseMarksContinuation rest)
+  | _ + 1, ((x, _), rest) => (x, eraseMarksContinuation rest)
 
 /-- Forget the transition marks of a reverse-oriented marked path, keeping the
 state sequence. -/

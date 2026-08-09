@@ -199,6 +199,19 @@ MeasureProtocol.ContinuousTimeJump.Driven.ThreeStateTwoWindow.work_zero_atom_pos
 MeasureProtocol.ContinuousTimeJump.Driven.ThreeStateTwoWindow.work_log_two_atom_pos
 ```
 
+For strictly positive window widths, two positive-measure events pin the same
+endpoint pair `(0, 0)` while realizing the different work values `0` (both
+windows rest) and `log 2` (a `0 → 1 → 0` hop through the raised middle state).
+Consequently the realized work is not almost surely a function of the
+(initial, final) endpoint pair, nor of the final state alone:
+
+```lean
+MeasureProtocol.ContinuousTimeJump.Driven.ThreeStateTwoWindow.work_zero_same_endpoints_event_pos
+MeasureProtocol.ContinuousTimeJump.Driven.ThreeStateTwoWindow.work_log_two_same_endpoints_event_pos
+MeasureProtocol.ContinuousTimeJump.Driven.ThreeStateTwoWindow.work_not_ae_initialFinalFunction
+MeasureProtocol.ContinuousTimeJump.Driven.ThreeStateTwoWindow.work_not_ae_finalStateFunction
+```
+
 The marked-path induction supporting the headline statements is exposed
 separately through:
 
@@ -209,6 +222,41 @@ MeasureProtocol.Marked.multiStep_endpoint_jarzynski
 MeasureProtocol.Marked.multiStep_endpoint_crooks_physical
 MeasureProtocol.Marked.multiStep_endpoint_jarzynski_integral
 MeasureProtocol.Marked.multiStep_endpoint_second_law
+```
+
+## Endpoint skeleton
+
+Every driven window stores the complete sampled jump path as its mark.
+Erasing those marks keeps only the window endpoint states. The general
+commutation theorem states that erasing the marks of a reverse-oriented
+marked path law is the same as building the unmarked Markov path law from
+the endpoint marginals of the marked kernels:
+
+```lean
+MeasureProtocol.Marked.eraseMarks
+MeasureProtocol.Marked.endpointMarginalKernel
+MeasureProtocol.Marked.map_reversedForwardPathMeasure_eraseMarks
+```
+
+Specialized to the driven instantiation, the endpoint marginal of one forward
+window kernel is exactly the finite generator's transition kernel, so erasing
+all marks from the forward driven law reproduces the endpoint Markov chain
+built from the windows' transition kernels:
+
+```lean
+MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.endpointMarginal_forwardWindowKernel
+MeasureProtocol.ContinuousTimeJump.Driven.map_forwardDrivenLaw_endpoints
+```
+
+The carrier is reverse-oriented; prescribing the states through `i.rev`
+corrects the indexing back to chronological order. Pinning every erased
+endpoint then evaluates a singleton endpoint cylinder, whose mass is the
+initial atom times the product of the matrix-exponential transition weights
+`exp ((duration i) • (generator i).generator)` along the chronological chain
+`states 0 → states 1 → … → states M`:
+
+```lean
+MeasureProtocol.ContinuousTimeJump.Driven.forwardDrivenLaw_endpointCylinder_eq_exp_product
 ```
 
 ## Detailed-balance interface
