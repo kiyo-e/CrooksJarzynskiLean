@@ -518,8 +518,7 @@ theorem totalHoldingTime_concat {n m : ℕ} (γ : JumpPath Ω n) (δ : JumpPath 
               _ = (∑ i : Fin (n + 1), γ.2 i) + δ.2 0 := by
                     rw [show (∑ i : Fin (n + 1), if i = Fin.last n then δ.2 0 else 0) =
                         δ.2 0 by
-                      rw [Finset.sum_ite_eq']
-                      simp]
+                      simp [Finset.sum_ite_eq']]
           have hR : (∑ i : Fin m, (concat γ δ).2 (Fin.cast h₂ (Fin.natAdd (n + 1) i))) =
               (∑ i : Fin m, δ.2 i.succ) := by
             refine Finset.sum_congr rfl ?_
@@ -534,6 +533,126 @@ theorem totalHoldingTime_concat {n m : ℕ} (γ : JumpPath Ω n) (δ : JumpPath 
             rw [← Fin.sum_univ_succ (fun i : Fin (m + 1) => δ.2 i)]]
 
 end JumpPath
+
+namespace FullPath
+
+variable {Ω : Type u}
+
+/-- Glue two complete finite-jump paths into one global real-time path.  The
+boundary state of the suffix is merged with the final state of the prefix. -/
+def concat (γ δ : FullPath Ω) : FullPath Ω :=
+  ⟨γ.1 + δ.1, JumpPath.concat γ.2 δ.2⟩
+
+/-- With a fixed prefix, concatenating a complete path is measurable in the
+suffix. -/
+private theorem measurable_concat_fixed_fst [MeasurableSpace Ω] {n m : ℕ}
+    (γ : JumpPath Ω n) :
+    Measurable (fun δ : JumpPath Ω m => JumpPath.concat γ δ) := by
+  apply Measurable.prodMk
+  · rw [measurable_pi_iff]
+    intro i
+    by_cases h : (i : ℕ) < n + 1
+    · let i0 : Fin (n + 1) := ⟨i, h⟩
+      have hcast : (Fin.cast (by omega) i : Fin (n + 1 + m)) = Fin.castAdd m i0 := by
+        apply Fin.ext
+        simp [i0]
+      have hterm :
+        (fun δ : JumpPath Ω m =>
+          Fin.append (m := n + 1) (n := m) γ.1 (δ.1 ∘ Fin.succ) (Fin.cast (by omega) i)) =
+          fun _ : JumpPath Ω m => γ.1 i0 := by
+        funext δ
+        rw [hcast]
+        exact Fin.append_left (u := γ.1) (v := δ.1 ∘ Fin.succ) (i := i0)
+      rw [hterm]
+      exact measurable_const
+    · have hlt : i.val - (n + 1) < m := by
+        have hiv : (i : ℕ) < n + m + 1 := i.isLt
+        omega
+      let j0 : Fin m := ⟨i.val - (n + 1), hlt⟩
+      have hcast : (Fin.cast (by omega) i : Fin (n + 1 + m)) = Fin.natAdd (n + 1) j0 := by
+        apply Fin.ext
+        simp [j0]
+        omega
+      have hterm :
+        (fun δ : JumpPath Ω m =>
+          Fin.append (m := n + 1) (n := m) γ.1 (δ.1 ∘ Fin.succ) (Fin.cast (by omega) i)) =
+          fun δ : JumpPath Ω m => (δ.1 ∘ Fin.succ) j0 := by
+        funext δ
+        rw [hcast]
+        exact Fin.append_right (u := γ.1) (v := δ.1 ∘ Fin.succ) (i := j0)
+      rw [hterm]
+      exact ((measurable_pi_apply (Fin.succ j0)).comp measurable_fst)
+  · rw [measurable_pi_iff]
+    intro i
+    by_cases h : (i : ℕ) < n + 1
+    · let i0 : Fin (n + 1) := ⟨i, h⟩
+      have hcast : (Fin.cast (by omega) i : Fin (n + 1 + m)) = Fin.castAdd m i0 := by
+        apply Fin.ext
+        simp [i0]
+      have hterm :
+        (fun δ : JumpPath Ω m =>
+          Fin.append (m := n + 1) (n := m)
+            (fun j : Fin (n + 1) =>
+              if j = Fin.last n then γ.2 j + δ.2 0 else γ.2 j)
+            (δ.2 ∘ Fin.succ) (Fin.cast (by omega) i)) =
+          fun δ : JumpPath Ω m =>
+            (if i0 = Fin.last n then γ.2 i0 + δ.2 0 else γ.2 i0) := by
+        funext δ
+        rw [hcast]
+        exact Fin.append_left (u := (fun j : Fin (n + 1) =>
+          if j = Fin.last n then γ.2 j + δ.2 0 else γ.2 j)) (v := δ.2 ∘ Fin.succ) (i := i0)
+      rw [hterm]
+      by_cases hseam : i0 = Fin.last n
+      · have hfun : (fun δ : JumpPath Ω m =>
+            (if i0 = Fin.last n then γ.2 i0 + δ.2 0 else γ.2 i0)) =
+            fun δ : JumpPath Ω m => γ.2 i0 + δ.2 0 := by
+          funext δ
+          simp [hseam]
+        rw [hfun]
+        exact (Measurable.add (measurable_const :
+            Measurable (fun _ : JumpPath Ω m => (γ.2 i0 : NNReal)))
+          ((measurable_pi_apply (0 : Fin (m + 1))).comp measurable_snd))
+      · have hfun : (fun δ : JumpPath Ω m =>
+            (if i0 = Fin.last n then γ.2 i0 + δ.2 0 else γ.2 i0)) =
+            fun _ : JumpPath Ω m => γ.2 i0 := by
+          funext δ
+          rw [if_neg hseam]
+        rw [hfun]
+        exact measurable_const
+    · have hlt : i.val - (n + 1) < m := by
+        have hiv : (i : ℕ) < n + m + 1 := i.isLt
+        omega
+      let j0 : Fin m := ⟨i.val - (n + 1), hlt⟩
+      have hcast : (Fin.cast (by omega) i : Fin (n + 1 + m)) = Fin.natAdd (n + 1) j0 := by
+        apply Fin.ext
+        simp [j0]
+        omega
+      have hterm :
+        (fun δ : JumpPath Ω m =>
+          Fin.append (m := n + 1) (n := m)
+            (fun j : Fin (n + 1) =>
+              if j = Fin.last n then γ.2 j + δ.2 0 else γ.2 j)
+            (δ.2 ∘ Fin.succ) (Fin.cast (by omega) i)) =
+          fun δ : JumpPath Ω m => (δ.2 ∘ Fin.succ) j0 := by
+        funext δ
+        rw [hcast]
+        exact Fin.append_right (u := (fun j : Fin (n + 1) =>
+          if j = Fin.last n then γ.2 j + δ.2 0 else γ.2 j)) (v := δ.2 ∘ Fin.succ) (i := j0)
+      rw [hterm]
+      exact ((measurable_pi_apply (Fin.succ j0)).comp measurable_snd)
+/-- Concatenating a complete path with a fixed prefix is measurable in the
+suffix. -/
+theorem measurable_concat [MeasurableSpace Ω] (γ : FullPath Ω) :
+    Measurable (fun δ : FullPath Ω => concat γ δ) := by
+  intro s hs
+  apply MeasurableSpace.measurableSet_iInf.mpr
+  intro m
+  change MeasurableSet
+    ((fun δ' : JumpPath Ω m => Sigma.mk (γ.1 + m) (JumpPath.concat γ.2 δ')) ⁻¹' s)
+  exact measurable_concat_fixed_fst γ.2 (FullPath.measurable_mk (γ.1 + m) hs)
+
+end FullPath
+
 end ContinuousTimeJump
 end MeasureProtocol
 end CrooksJarzynski
