@@ -532,6 +532,74 @@ theorem totalHoldingTime_concat {n m : ℕ} (γ : JumpPath Ω n) (δ : JumpPath 
               (∑ i : Fin (m + 1), δ.2 i) by
             rw [← Fin.sum_univ_succ (fun i : Fin (m + 1) => δ.2 i)]]
 
+/-- All non-terminal holding intervals of a concatenation are positive when
+the corresponding intervals of the two constituents are positive.  (The seam
+holding `γ.2 (last n) + δ.2 0` is positive because `δ.2 0` is.) -/
+private lemma concat_holding_pos {n m : ℕ} {γ : JumpPath Ω n} {δ : JumpPath Ω m}
+    (hγ : ∀ j : Fin n, 0 < γ.2 j.castSucc)
+    (hδ : ∀ j : Fin m, 0 < δ.2 j.castSucc) :
+    ∀ i : Fin (n + m), 0 < (concat γ δ).2 i.castSucc := by
+  intro i
+  by_cases h1 : (i : ℕ) < n
+  · rw [show (concat γ δ).2 i.castSucc = γ.2 ⟨(i : ℕ), by omega⟩ by
+      rw [show (i.castSucc : Fin (n + m + 1)) = ⟨(i : ℕ), by omega⟩ by
+        apply Fin.ext
+        simp]
+      rw [concat_snd_range_left (γ := γ) (δ := δ) (r := (i : ℕ))
+        (hr := by intro hiv; omega) (hrn1 := by omega)]]
+    simpa using hγ ⟨(i : ℕ), h1⟩
+  · by_cases h2 : (i : ℕ) = n
+    · have hgt0 : 0 < δ.2 0 := by
+        rw [show (0 : Fin (m + 1)) = (⟨0, by omega⟩ : Fin m).castSucc by
+          apply Fin.ext
+          simp]
+        exact hδ ⟨0, by omega⟩
+      have hseam : (concat γ δ).2 i.castSucc = γ.2 (Fin.last n) + δ.2 0 := by
+        rw [show (i.castSucc : Fin (n + m + 1)) = ⟨n, by omega⟩ by
+          apply Fin.ext
+          simp [h2]]
+        rw [concat_snd_boundary (γ := γ) (δ := δ)]
+      rw [hseam]
+      exact add_pos_of_nonneg_of_pos (NNReal.coe_nonneg _) hgt0
+    · have hgtn : n + 1 ≤ (i : ℕ) := by omega
+      let r : ℕ := (i : ℕ) - (n + 1)
+      have hr : r < m := by omega
+      have hseam : (concat γ δ).2 i.castSucc = δ.2 (⟨r, hr⟩ : Fin m).succ := by
+        rw [show (i.castSucc : Fin (n + m + 1)) = ⟨n + 1 + r, by omega⟩ by
+          apply Fin.ext
+          simp [r]
+          omega]
+        rw [concat_snd_range_right (γ := γ) (δ := δ) (r := r) (hr := hr)]
+      rw [hseam]
+      have hr1 : r + 1 < m := by omega
+      rw [show (⟨r, hr⟩ : Fin m).succ = (⟨r + 1, by omega⟩ : Fin m).castSucc by
+        apply Fin.ext
+        simp]
+      exact hδ ⟨r + 1, by omega⟩
+
+/-- Concatenating two valid charts is valid for the summed horizon, provided
+each constituent's full holding time fits its own horizon.  The extra holding
+time bounds are genuinely needed: `IsValid` only bounds the holding intervals
+strictly before the final one, while the concatenated jump time adds the
+terminal (and seam) intervals. -/
+theorem isValid_concat {T₁ T₂ : NNReal} {n m : ℕ}
+    (γ : JumpPath Ω n) (δ : JumpPath Ω m)
+    (hγ : IsValid T₁ γ) (hδ : IsValid T₂ δ)
+    (hγtotal : γ.totalHoldingTime ≤ T₁)
+    (hδtotal : δ.totalHoldingTime ≤ T₂) :
+    IsValid (T₁ + T₂) (concat γ δ) := by
+  constructor
+  · exact concat_holding_pos hγ.1 hδ.1
+  · calc
+      jumpTimes (concat γ δ) (Fin.last (n + m)) ≤ (totalHoldingTime (concat γ δ) : ℝ) :=
+        jumpTimes_le_totalHoldingTime (concat γ δ) (Fin.last (n + m))
+      _ = (γ.totalHoldingTime : ℝ) + (δ.totalHoldingTime : ℝ) := by
+        exact_mod_cast totalHoldingTime_concat γ δ
+      _ ≤ (T₁ : ℝ) + (T₂ : ℝ) := by
+        exact_mod_cast add_le_add hγtotal hδtotal
+      _ = ((T₁ + T₂ : NNReal) : ℝ) := by
+        rw [NNReal.coe_add]
+
 end JumpPath
 
 namespace FullPath
