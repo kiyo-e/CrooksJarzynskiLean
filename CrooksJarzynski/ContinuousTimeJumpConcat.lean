@@ -603,9 +603,7 @@ theorem isValid_concat {T₁ T₂ : NNReal} {n m : ℕ}
         rw [NNReal.coe_add]
 
 /-- The concatenation starts at the same state as the prefix, so both
-real-time trajectories agree at time zero.  (A first, tractable piece of the
-general gluing law for trajectories; the full left/right gluing along the
-whole time axis is deferred.) -/
+real-time trajectories agree at time zero. -/
 theorem trajectory_concat_zero {n m : ℕ} {γ : JumpPath Ω n} {δ : JumpPath Ω m}
     (hγ : ∀ i : Fin n, 0 < γ.2 i.castSucc)
     (hδ : ∀ i : Fin m, 0 < δ.2 i.castSucc) :
@@ -622,6 +620,198 @@ theorem trajectory_concat_zero {n m : ℕ} {γ : JumpPath Ω n} {δ : JumpPath �
     rw [Fin.append_left (u := γ.1) (v := δ.1 ∘ Fin.succ) (i := (0 : Fin (n + 1)))]
 ]
 
+/-- The state at every position of a concatenation, expressed by the position
+of the index. -/
+private lemma concat_fst_value_at {n m : ℕ} (γ : JumpPath Ω n) (δ : JumpPath Ω m)
+    {r : ℕ} (hr : r < n + m + 1) :
+    (concat γ δ).1 ⟨r, hr⟩ =
+      if h : r < n + 1 then γ.1 ⟨r, h⟩ else δ.1 ⟨r - n, by omega⟩ := by
+  by_cases h : r < n + 1
+  · have hidx : (⟨r, hr⟩ : Fin (n + m + 1)) =
+        Fin.cast (by omega : (n + 1) + m = n + m + 1)
+          (Fin.castAdd m (⟨r, h⟩ : Fin (n + 1))) := by
+      apply Fin.ext
+      simp
+    rw [hidx, concat_fst_castAdd]
+    simp [h]
+  · have hrm : r - (n + 1) < m := by omega
+    have hidx : (⟨r, hr⟩ : Fin (n + m + 1)) =
+        Fin.cast (by omega : (n + 1) + m = n + m + 1)
+          (Fin.natAdd (n + 1) (⟨r - (n + 1), hrm⟩ : Fin m)) := by
+      apply Fin.ext
+      simp
+      omega
+    rw [hidx, concat_fst_natAdd]
+    rw [show (⟨r - (n + 1), hrm⟩ : Fin m).succ = ⟨r - n, by omega⟩ by
+      apply Fin.ext
+      simp
+      omega]
+    simp [h]
+
+/-- Unfold one successor step of the real-time trajectory. -/
+private lemma trajectory_succ {k : ℕ} (γ : JumpPath Ω (k + 1)) (t : ℝ) :
+    trajectory γ t =
+      if jumpTimes γ (Fin.last (k + 1)) ≤ t then γ.1 (Fin.last (k + 1))
+      else trajectory (dropLast γ) t := rfl
+
+/-- Dropping the final state preserves all earlier jump times. -/
+theorem jumpTimes_dropLast {n : ℕ} (γ : JumpPath Ω (n + 1)) (k : Fin (n + 1)) :
+    jumpTimes (dropLast γ) k = jumpTimes γ k.castSucc := by
+  unfold jumpTimes
+  rw [sum_Iio_eq_sum_range (a := k)
+      (f := fun i : Fin (n + 1) => ((dropLast γ).2 i : ℝ))]
+  rw [sum_Iio_eq_sum_range (a := k.castSucc)
+      (f := fun i : Fin (n + 2) => (γ.2 i : ℝ))]
+  apply Finset.sum_congr rfl
+  intro r hr
+  have hrn : r < n + 1 := by
+    exact lt_trans (Finset.mem_range.mp hr) k.isLt
+  rw [dif_pos hrn, dif_pos (by omega : r < n + 2)]
+  rfl
+
+/-- Dropping the final state commutes with concatenation when the suffix has
+at least one jump. -/
+theorem dropLast_concat {n m : ℕ} (γ : JumpPath Ω n) (δ : JumpPath Ω (m + 1)) :
+    @dropLast Ω (n + m) (@concat Ω n (m + 1) γ δ) =
+      @concat Ω n m γ (@dropLast Ω m δ) := by
+  apply Prod.ext
+  · funext i
+    obtain ⟨r, hr⟩ := i
+    rw [show (@dropLast Ω (n + m) (@concat Ω n (m + 1) γ δ)).1 ⟨r, hr⟩ =
+        (@concat Ω n (m + 1) γ δ).1 ⟨r, by omega⟩ from rfl]
+    rw [concat_fst_value_at, concat_fst_value_at]
+    by_cases h : r < n + 1
+    · simp [h]
+    · simp only [dif_neg h]
+      rfl
+  · funext i
+    obtain ⟨r, hr⟩ := i
+    rw [show (@dropLast Ω (n + m) (@concat Ω n (m + 1) γ δ)).2 ⟨r, hr⟩ =
+        (@concat Ω n (m + 1) γ δ).2 ⟨r, by omega⟩ from rfl]
+    rw [concat_snd_value_at, concat_snd_value_at]
+    by_cases hlt : r < n
+    · simp [hlt]
+    · by_cases heq : r = n
+      · subst r
+        have hzero : (dropLast δ).2 0 = δ.2 0 := by
+          apply congrArg δ.2
+          apply Fin.ext
+          simp
+        simp [hzero]
+      · simp only [dif_neg hlt, dif_neg heq]
+        change δ.2 ⟨r - n, by omega⟩ =
+          δ.2 (⟨r - n, by omega⟩ : Fin (m + 1)).castSucc
+        apply congrArg δ.2
+        apply Fin.ext
+        simp
+
+/-- The trajectory depends only on the state sequence and jump times. -/
+theorem trajectory_congr : ∀ {n : ℕ} (γ γ' : JumpPath Ω n),
+    γ.1 = γ'.1 → (∀ k, jumpTimes γ k = jumpTimes γ' k) →
+    ∀ t : ℝ, trajectory γ t = trajectory γ' t
+  | 0, γ, γ', hstates, _, t => by
+      simp only [trajectory]
+      rw [hstates]
+  | n + 1, γ, γ', hstates, htimes, t => by
+      rw [trajectory_succ γ t, trajectory_succ γ' t,
+        htimes (Fin.last (n + 1)), hstates]
+      by_cases h : jumpTimes γ' (Fin.last (n + 1)) ≤ t
+      · rw [if_pos h, if_pos h]
+      · rw [if_neg h, if_neg h]
+        exact trajectory_congr (dropLast γ) (dropLast γ')
+          (funext fun i => congrFun hstates i.castSucc)
+          (fun k => by rw [jumpTimes_dropLast, jumpTimes_dropLast, htimes]) t
+
+private lemma concat_zero_states {n : ℕ} (γ : JumpPath Ω n) (δ : JumpPath Ω 0) :
+    (concat γ δ).1 = γ.1 := by
+  funext i
+  obtain ⟨r, hr⟩ := i
+  rw [concat_fst_value_at]
+  simp [show r < n + 1 by omega]
+
+private lemma jumpTimes_concat_zero_right {n : ℕ} (γ : JumpPath Ω n)
+    (δ : JumpPath Ω 0) (k : Fin (n + 1)) :
+    jumpTimes (concat γ δ) k = jumpTimes γ k := by
+  unfold jumpTimes
+  rw [sum_Iio_eq_sum_range (a := k)
+      (f := fun i : Fin (n + 1) => ((concat γ δ).2 i : ℝ))]
+  rw [sum_Iio_eq_sum_range (a := k)
+      (f := fun i : Fin (n + 1) => (γ.2 i : ℝ))]
+  apply Finset.sum_congr rfl
+  intro r hr
+  have hrn : r < n := by
+    have hrk := Finset.mem_range.mp hr
+    omega
+  rw [dif_pos (by omega : r < n + 1), dif_pos (by omega : r < n + 1)]
+  rw [concat_snd_value_at]
+  simp [hrn]
+
+private lemma trajectory_concat_zero_right {n : ℕ} (γ : JumpPath Ω n)
+    (δ : JumpPath Ω 0) (t : ℝ) :
+    trajectory (concat γ δ) t = trajectory γ t := by
+  exact trajectory_congr (concat γ δ) γ (concat_zero_states γ δ)
+    (jumpTimes_concat_zero_right γ δ) t
+
+private lemma jumpTimes_concat_last {n m : ℕ} (γ : JumpPath Ω n)
+    (δ : JumpPath Ω (m + 1)) :
+    jumpTimes (concat γ δ) (Fin.last (n + m + 1)) =
+      (γ.totalHoldingTime : ℝ) + jumpTimes δ (Fin.last (m + 1)) := by
+  change jumpTimes (concat γ δ) (Fin.last (n + (m + 1))) =
+    (γ.totalHoldingTime : ℝ) + jumpTimes δ (Fin.last (m + 1))
+  have hj : Fin.last (m + 1) ≠ 0 := by
+    intro h
+    have := congrArg Fin.val h
+    simp at this
+  have hidx : Fin.last (n + (m + 1)) =
+      Fin.cast (by omega : n + ((m + 1) + 1) = n + (m + 1) + 1)
+        (Fin.natAdd n (Fin.last (m + 1))) := by
+    apply Fin.ext
+    simp
+  rw [hidx]
+  exact jumpTimes_concat_right γ δ (Fin.last (m + 1)) hj
+
+/-- After the prefix has exhausted its total holding time, the concatenated
+trajectory follows the suffix on the shifted clock. -/
+theorem trajectory_concat_right : ∀ {m n : ℕ} (γ : JumpPath Ω n) (δ : JumpPath Ω m),
+    γ.1 (Fin.last n) = δ.1 0 →
+    ∀ t : ℝ, (γ.totalHoldingTime : ℝ) ≤ t →
+    trajectory (concat γ δ) t = trajectory δ (t - (γ.totalHoldingTime : ℝ))
+  | 0, n, γ, δ, hmatch, t, ht => by
+      rw [trajectory_concat_zero_right γ δ t]
+      rw [show trajectory δ (t - (γ.totalHoldingTime : ℝ)) = δ.1 0 from rfl, ← hmatch]
+      exact trajectory_eq_terminal_of_last_le γ t
+        (le_trans (jumpTimes_le_totalHoldingTime γ (Fin.last n)) ht)
+  | m + 1, n, γ, δ, hmatch, t, ht => by
+      change (if jumpTimes (@concat Ω n (m + 1) γ δ) (Fin.last (n + m + 1)) ≤ t then
+          (@concat Ω n (m + 1) γ δ).1 (Fin.last (n + m + 1))
+        else trajectory (@dropLast Ω (n + m) (@concat Ω n (m + 1) γ δ)) t) =
+        trajectory δ (t - (γ.totalHoldingTime : ℝ))
+      rw [trajectory_succ δ (t - (γ.totalHoldingTime : ℝ)),
+        jumpTimes_concat_last γ δ]
+      by_cases h : jumpTimes δ (Fin.last (m + 1)) ≤
+          t - (γ.totalHoldingTime : ℝ)
+      · rw [if_pos (by linarith), if_pos h]
+        exact concat_state_last γ δ hmatch
+      · rw [if_neg (by intro hc; exact h (by linarith)), if_neg h, dropLast_concat]
+        exact trajectory_concat_right γ (dropLast δ) hmatch t ht
+
+/-- Strictly before the prefix's total holding time the concatenated
+trajectory is the prefix's own. -/
+theorem trajectory_concat_left : ∀ {m n : ℕ} (γ : JumpPath Ω n) (δ : JumpPath Ω m),
+    ∀ t : ℝ, t < (γ.totalHoldingTime : ℝ) →
+    trajectory (concat γ δ) t = trajectory γ t
+  | 0, n, γ, δ, t, _ => trajectory_concat_zero_right γ δ t
+  | m + 1, n, γ, δ, t, ht => by
+      change (if jumpTimes (@concat Ω n (m + 1) γ δ) (Fin.last (n + m + 1)) ≤ t then
+          (@concat Ω n (m + 1) γ δ).1 (Fin.last (n + m + 1))
+        else trajectory (@dropLast Ω (n + m) (@concat Ω n (m + 1) γ δ)) t) = trajectory γ t
+      rw [if_neg (by
+        rw [jumpTimes_concat_last γ δ]
+        have h0 : 0 ≤ jumpTimes δ (Fin.last (m + 1)) := jumpTimes_nonneg δ _
+        linarith)]
+      rw [dropLast_concat]
+      exact trajectory_concat_left γ (dropLast δ) t ht
+
 end JumpPath
 
 namespace FullPath
@@ -632,6 +822,76 @@ variable {Ω : Type u}
 boundary state of the suffix is merged with the final state of the prefix. -/
 def concat (γ δ : FullPath Ω) : FullPath Ω :=
   ⟨γ.1 + δ.1, JumpPath.concat γ.2 δ.2⟩
+
+/-- The jump-free complete path resting at `x`. -/
+def rest (x : Ω) : FullPath Ω :=
+  ⟨0, fun _ => x, fun _ => 0⟩
+
+@[simp]
+theorem initialState_rest (x : Ω) : initialState (rest x) = x := rfl
+
+@[simp]
+theorem terminalState_rest (x : Ω) : terminalState (rest x) = x := rfl
+
+/-- The total holding time of a complete path. -/
+def totalHoldingTime : FullPath Ω → NNReal
+  | ⟨_, γ⟩ => γ.totalHoldingTime
+
+@[simp]
+theorem totalHoldingTime_rest (x : Ω) : totalHoldingTime (rest x) = 0 := by
+  simp [totalHoldingTime, rest, JumpPath.totalHoldingTime]
+
+/-- Complete-path concatenation adds total holding times. -/
+theorem totalHoldingTime_concat (γ δ : FullPath Ω) :
+    totalHoldingTime (concat γ δ) = totalHoldingTime γ + totalHoldingTime δ := by
+  rcases γ with ⟨n, γ⟩
+  rcases δ with ⟨m, δ⟩
+  exact JumpPath.totalHoldingTime_concat γ δ
+
+/-- Complete-path concatenation preserves the prefix's initial state. -/
+theorem initialState_concat (γ δ : FullPath Ω) :
+    initialState (concat γ δ) = initialState γ := by
+  rcases γ with ⟨n, γ⟩
+  rcases δ with ⟨m, δ⟩
+  exact JumpPath.concat_state_zero γ δ
+
+/-- A matched concatenation ends at the suffix's terminal state. -/
+theorem terminalState_concat (γ δ : FullPath Ω)
+    (hmatch : terminalState γ = initialState δ) :
+    terminalState (concat γ δ) = terminalState δ := by
+  rcases γ with ⟨n, γ⟩
+  rcases δ with ⟨m, δ⟩
+  exact JumpPath.concat_state_last γ δ hmatch
+
+/-- Valid complete paths concatenate over the summed horizon when each full
+holding time fits its constituent horizon. -/
+theorem isValid_concat {T₁ T₂ : NNReal} {γ δ : FullPath Ω}
+    (hγ : IsValid T₁ γ) (hδ : IsValid T₂ δ)
+    (hγtotal : totalHoldingTime γ ≤ T₁)
+    (hδtotal : totalHoldingTime δ ≤ T₂) :
+    IsValid (T₁ + T₂) (concat γ δ) := by
+  rcases γ with ⟨n, γ⟩
+  rcases δ with ⟨m, δ⟩
+  exact JumpPath.isValid_concat γ δ hγ hδ hγtotal hδtotal
+
+/-- Before the prefix's total holding time, a complete-path concatenation
+follows the prefix. -/
+theorem trajectory_concat_left (γ δ : FullPath Ω) {t : ℝ}
+    (ht : t < (totalHoldingTime γ : ℝ)) :
+    trajectory (concat γ δ) t = trajectory γ t := by
+  rcases γ with ⟨n, γ⟩
+  rcases δ with ⟨m, δ⟩
+  exact JumpPath.trajectory_concat_left γ δ t ht
+
+/-- From the prefix's total holding time onward, a matched complete-path
+concatenation follows the suffix on the shifted clock. -/
+theorem trajectory_concat_right (γ δ : FullPath Ω)
+    (hmatch : terminalState γ = initialState δ) {t : ℝ}
+    (ht : (totalHoldingTime γ : ℝ) ≤ t) :
+    trajectory (concat γ δ) t = trajectory δ (t - (totalHoldingTime γ : ℝ)) := by
+  rcases γ with ⟨n, γ⟩
+  rcases δ with ⟨m, δ⟩
+  exact JumpPath.trajectory_concat_right γ δ hmatch t ht
 
 /-- With a fixed prefix, concatenating a complete path is measurable in the
 suffix. -/
