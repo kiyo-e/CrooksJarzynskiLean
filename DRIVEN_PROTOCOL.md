@@ -387,6 +387,44 @@ TwoState.AsymmetricExample.physicalFiniteGenerator_terminalState_real_singleton_
 TwoState.AsymmetricExample.map_physicalFiniteGenerator_pathLawFrom_terminalState_eq_legacy
 ```
 
+## Pointwise real-time concatenation
+
+`JumpPath.concat` glues two finite-jump charts. The duplicated boundary state
+is represented once, and the prefix's terminal holding interval is added to
+the suffix's initial holding interval. The pointwise gluing laws state that
+strictly before the prefix's total holding time the concatenated trajectory is
+the prefix trajectory, while from that time onward it is the suffix trajectory
+on the shifted clock, provided the two seam states agree:
+
+```lean
+JumpPath.trajectory_concat_left
+JumpPath.trajectory_concat_right
+```
+
+`JumpPath.isValid_concat` proves validity for the sum of two horizons. Besides
+validity of each chart, it requires each chart's `totalHoldingTime` to fit its
+own horizon. This extra condition is necessary because `IsValid` bounds the
+last jump time but does not bound the residual terminal holding interval; that
+interval contributes to later jump times after concatenation.
+
+`FullPath.concat` lifts the construction to the dependent sum over jump
+counts, with endpoint, holding-time, validity, and trajectory wrappers.
+`FullPath.measurable_concat` proves measurability in the suffix for a fixed
+prefix.
+
+`Driven.concatenateWindows` folds all complete window marks into one global
+real-time chart. The carrier itself is reverse-oriented: its front contains
+the latest endpoint and window mark. `windowAt` recurses through the stored
+past and restores chronological order, and `concatenateWindows` follows that
+same order. `Driven.totalHoldingTime_concatenateWindows` identifies the global
+holding time with the finite window sum, while
+`Driven.isValid_concatenateWindows` combines per-window validity and explicit
+total-holding bounds into validity for the summed duration.
+
+These are pointwise path statements. No measure-level statement about the law
+of the concatenated chart is made here; composing the driven path law through
+this map remains future work for M5.
+
 ## Deferred extensions
 
 The measure construction intentionally remains on the raw reverse-oriented
@@ -395,6 +433,5 @@ boundary equations, while `IsProtocolValid` and its forward/reverse
 almost-sure theorems package physical validity across all windows. A future
 extension may package the law directly on that subtype.
 
-Another extension may concatenate all window marks into one global real-time
-trajectory. General calendar-time-dependent rates and integrated hazards remain
-outside this stepwise protocol layer.
+General calendar-time-dependent rates and integrated hazards remain outside
+this stepwise protocol layer.

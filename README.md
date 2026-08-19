@@ -99,6 +99,10 @@ The library proves:
   right-continuous step trajectory, and proofs that almost every path under the
   constructed law is a valid trajectory that starts at the prescribed state and
   ends at its recorded terminal state;
+- pointwise jump-path and complete-path concatenation with real-time left/right
+  gluing laws and summed-horizon validity;
+- chronological concatenation of every complete window mark in a driven path
+  into one global real-time chart, with holding-time and validity theorems;
 - an asymmetric two-state generator with rates `q(0,1)=2` and `q(1,0)=1`, whose
   Gibbs distribution is explicitly normalized, reversible, and stationary;
 - a normalized final-quench experiment with partition functions `Z₀=3` and
@@ -479,8 +483,10 @@ reference on the fixed horizon with derived volume `1 / n!`.
 
 The stepwise driving layer covers a fixed finite family of piecewise-constant
 finite-state windows. It retains one complete path mark per window and proves
-boundary matching almost surely under the constructed laws. Concatenating the
-marks into one global real-time trajectory is deferred.
+boundary matching almost surely under the constructed laws. The
+reverse-oriented carrier is read in chronological order to concatenate its
+marks into one pointwise global real-time trajectory. No measure-level law for
+that concatenated chart is asserted.
 
 For the symmetric unit-rate two-state CTMC, the library constructs normalized
 full and fixed-initial path laws, proves their Poisson jump-count law and
