@@ -118,6 +118,81 @@ theorem concat_injOn_exactConcatSupport {n m : ℕ} (S : NNReal) :
     hγ hγ' hmatch hmatch'
   rfl
 
+/-- Number of jumps whose physical jump time is strictly before `S`. -/
+noncomputable def jumpsBefore {k : ℕ} (S : NNReal) (γ : JumpPath Ω k) : ℕ :=
+  ((Finset.univ : Finset (Fin k)).filter fun i =>
+    jumpTimes γ i.succ < (S : ℝ)).card
+
+theorem jumpTimes_concat_lt_cut_iff {n m : ℕ} (S : NNReal)
+    (γ : JumpPath Ω n) (δ : JumpPath Ω m)
+    (hγtotal : γ.totalHoldingTime = S)
+    (hcut : ¬ HasJumpAt S (concat γ δ))
+    (i : Fin (n + m)) :
+    jumpTimes (concat γ δ) i.succ < (S : ℝ) ↔ i.val < n := by
+  constructor
+  · intro hi
+    by_contra hin
+    have hni : n ≤ i.val := Nat.le_of_not_gt hin
+    let j : Fin (m + 1) := ⟨i.val + 1 - n, by omega⟩
+    have hj : j ≠ 0 := by
+      intro hj0
+      have := congrArg Fin.val hj0
+      dsimp [j] at this
+      omega
+    have hidx : i.succ = Fin.cast (by omega : n + (m + 1) = n + m + 1)
+        (Fin.natAdd n j) := by
+      apply Fin.ext
+      simp [j]
+      omega
+    rw [hidx, jumpTimes_concat_right γ δ j hj, hγtotal] at hi
+    have hjnonneg := jumpTimes_nonneg δ j
+    linarith
+  · intro hin
+    let j : Fin n := ⟨i.val, hin⟩
+    have hidx : i.succ = Fin.cast (by omega : (n + 1) + m = n + m + 1)
+        (Fin.castAdd m j.succ) := by
+      apply Fin.ext
+      simp [j]
+    rw [hidx, jumpTimes_concat_left γ δ j.succ]
+    have hle := jumpTimes_le_totalHoldingTime γ j.succ
+    rw [hγtotal] at hle
+    apply lt_of_le_of_ne hle
+    intro heq
+    apply hcut
+    refine ⟨⟨i.val, by omega⟩, ?_⟩
+    simpa [hidx, jumpTimes_concat_left γ δ j.succ] using heq
+
+/-- An exact prefix contributes exactly its own jump count before the cut. -/
+theorem jumpsBefore_concat_of_exact_prefix {n m : ℕ} (S : NNReal)
+    (γ : JumpPath Ω n) (δ : JumpPath Ω m)
+    (hγtotal : γ.totalHoldingTime = S)
+    (hcut : ¬ HasJumpAt S (concat γ δ)) :
+    jumpsBefore S (concat γ δ) = n := by
+  unfold jumpsBefore
+  have hfilter :
+      ((Finset.univ : Finset (Fin (n + m))).filter fun i =>
+        jumpTimes (concat γ δ) i.succ < (S : ℝ)) =
+      (Finset.univ : Finset (Fin (n + m))).filter fun i => i.val < n := by
+    ext i
+    simp only [Finset.mem_filter, Finset.mem_univ, true_and]
+    exact jumpTimes_concat_lt_cut_iff S γ δ hγtotal hcut i
+  rw [hfilter]
+  let s := (Finset.univ : Finset (Fin (n + m))).filter fun i => i.val < n
+  have hcard : s.card = (Finset.univ : Finset (Fin n)).card := by
+    apply Finset.card_bij (fun i hi => (⟨i.val,
+      (Finset.mem_filter.mp hi).2⟩ : Fin n))
+    · intro i hi
+      simp
+    · intro i hi j hj hij
+      apply Fin.ext
+      exact congrArg (fun x : Fin n => x.val) hij
+    · intro j hj
+      refine ⟨(⟨j.val, by omega⟩ : Fin (n + m)), ?_, ?_⟩
+      · simp
+      · apply Fin.ext
+        rfl
+  simpa [s] using hcard
+
 end JumpPath
 
 namespace FullPath
@@ -142,6 +217,57 @@ theorem measurableSet_hasJumpAt (S : NNReal) :
   apply MeasurableSpace.measurableSet_iInf.mpr
   intro n
   exact JumpPath.measurableSet_hasJumpAt S
+
+omit [MeasurableSpace Ω] in
+/-- Number of jumps strictly before `S`, lifted to complete paths. -/
+noncomputable def jumpsBefore (S : NNReal) : FullPath Ω → ℕ
+  | ⟨_, γ⟩ => JumpPath.jumpsBefore S γ
+
+omit [MeasurableSpace Ω] in
+/-- Exact-prefix, no-cut-jump, seam-matched support for complete-path
+concatenation. -/
+def exactConcatSupport (S : NNReal) :
+    Set (FullPath Ω × FullPath Ω) :=
+  {p | totalHoldingTime p.1 = S ∧
+    ¬ HasJumpAt S (concat p.1 p.2) ∧
+    initialState p.2 = terminalState p.1}
+
+omit [MeasurableSpace Ω] in
+/-- **A.e.-support injectivity at the path level.**  Once the prefix exhausts
+the cut horizon, the cut is not itself a jump, and the seam states match,
+concatenation recovers both complete paths. -/
+theorem concat_injOn_exactConcatSupport (S : NNReal) :
+    Set.InjOn (fun p : FullPath Ω × FullPath Ω => concat p.1 p.2)
+      (exactConcatSupport S) := by
+  rintro ⟨⟨n, γ⟩, ⟨m, δ⟩⟩ hp ⟨⟨n', γ'⟩, ⟨m', δ'⟩⟩ hq hconcat
+  obtain ⟨hγtotal, hcut, hmatch⟩ := hp
+  obtain ⟨hγ'total, hcut', hmatch'⟩ := hq
+  change γ.totalHoldingTime = S at hγtotal
+  change γ'.totalHoldingTime = S at hγ'total
+  change ¬ JumpPath.HasJumpAt S (JumpPath.concat γ δ) at hcut
+  change ¬ JumpPath.HasJumpAt S (JumpPath.concat γ' δ') at hcut'
+  change δ.1 0 = γ.1 (Fin.last n) at hmatch
+  change δ'.1 0 = γ'.1 (Fin.last n') at hmatch'
+  have hn : n = n' := by
+    have hc := congrArg (jumpsBefore S) hconcat
+    change JumpPath.jumpsBefore S (JumpPath.concat γ δ) =
+      JumpPath.jumpsBefore S (JumpPath.concat γ' δ') at hc
+    rw [JumpPath.jumpsBefore_concat_of_exact_prefix S γ δ hγtotal hcut,
+      JumpPath.jumpsBefore_concat_of_exact_prefix S γ' δ' hγ'total hcut'] at hc
+    exact hc
+  have hnm : n + m = n' + m' := congrArg Sigma.fst hconcat
+  have hm : m = m' := by omega
+  subst n'
+  subst m'
+  change (⟨n + m, JumpPath.concat γ δ⟩ : FullPath Ω) =
+    ⟨n + m, JumpPath.concat γ' δ'⟩ at hconcat
+  have hjp : JumpPath.concat γ δ = JumpPath.concat γ' δ' := by
+    simpa only [Sigma.mk.inj_iff, heq_eq_eq, true_and] using hconcat
+  obtain ⟨hγ, hδ⟩ := JumpPath.concat_injective_of_exact_prefix hjp
+    hγtotal hγ'total hmatch.symm hmatch'.symm
+  subst γ'
+  subst δ'
+  rfl
 
 end FullPath
 
