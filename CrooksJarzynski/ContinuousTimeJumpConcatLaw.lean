@@ -374,6 +374,297 @@ theorem map_orderedSimplex_prod_joinTimes (S T : ℝ) (n m : ℕ) :
   rw [hpre] at h
   exact h.map_eq
 
+/-! ### The normalized free-simplex chart in cumulative-time coordinates -/
+
+theorem partialSum_succ_eq_sum_Iic {n : ℕ} (u : Fin n → ℝ) (i : Fin n) :
+    Fin.partialSum u i.succ = ∑ j ∈ Finset.Iic i, u j := by
+  unfold Fin.partialSum
+  rw [List.sum_take_ofFn]
+  apply Finset.sum_congr
+  · ext j
+    simp only [Finset.mem_filter, Finset.mem_univ, true_and, Finset.mem_Iic]
+    change j.val < i.val + 1 ↔ j.val ≤ i.val
+    omega
+  · simp
+
+theorem cumulativeTimes_eq_sum_Iic {n : ℕ} (u : Fin n → ℝ) (i : Fin n) :
+    cumulativeTimes n u i = ∑ j ∈ Finset.Iic i, u j := by
+  rw [cumulativeTimes_eq_partialSum]
+  exact partialSum_succ_eq_sum_Iic u i
+
+/-- Nonnegative physical holding increments whose total does not exceed the
+horizon. -/
+def incrementSimplexSet (H : ℝ) (n : ℕ) : Set (Fin n → ℝ) :=
+  {u | (∀ i, 0 ≤ u i) ∧ ∑ i, u i ≤ H}
+
+theorem measurableSet_incrementSimplexSet (H : ℝ) (n : ℕ) :
+    MeasurableSet (incrementSimplexSet H n) := by
+  unfold incrementSimplexSet
+  rw [show {u : Fin n → ℝ | (∀ i, 0 ≤ u i) ∧ ∑ i, u i ≤ H} =
+      (⋂ i, {u | 0 ≤ u i}) ∩ {u | ∑ i, u i ≤ H} by ext u; simp]
+  exact (MeasurableSet.iInter fun i =>
+    measurableSet_le measurable_const (measurable_pi_apply i)).inter
+      (measurableSet_le (by fun_prop) measurable_const)
+
+theorem preimage_orderedSimplexSet_cumulativeTimes (H : NNReal) (n : ℕ) :
+    cumulativeTimes n ⁻¹' orderedSimplexSet H n =
+      incrementSimplexSet H n := by
+  cases n with
+  | zero =>
+      ext u
+      change ((∀ i : Fin 0, 0 ≤ cumulativeTimes 0 u i ∧
+          cumulativeTimes 0 u i ≤ (H : ℝ)) ∧
+          Monotone (cumulativeTimes 0 u)) ↔
+        ((∀ i : Fin 0, 0 ≤ u i) ∧ ∑ i, u i ≤ (H : ℝ))
+      constructor
+      · intro _
+        constructor
+        · intro i
+          exact Fin.elim0 i
+        · change (0 : ℝ) ≤ H
+          exact H.coe_nonneg
+      · intro _
+        constructor
+        · intro i
+          exact Fin.elim0 i
+        · intro i
+          exact Fin.elim0 i
+  | succ n =>
+      ext u
+      simp only [Set.mem_preimage, orderedSimplexSet, Set.mem_setOf_eq,
+        incrementSimplexSet]
+      constructor
+      · rintro ⟨hbounds, hmono⟩
+        constructor
+        · intro i
+          refine Fin.cases ?_ (fun j => ?_) i
+          · simpa [cumulativeTimes] using (hbounds 0).1
+          · have hstep := hmono
+              (show Fin.castSucc j < j.succ from Fin.castSucc_lt_succ).le
+            rw [cumulativeTimes_eq_partialSum,
+              cumulativeTimes_eq_partialSum] at hstep
+            have hright : Fin.partialSum u j.succ.succ =
+                Fin.partialSum u (Fin.castSucc j).succ + u j.succ := by
+              exact Fin.partialSum_succ u j.succ
+            rw [hright] at hstep
+            linarith
+        · have hlast := (hbounds (Fin.last n)).2
+          rw [cumulativeTimes_eq_sum_Iic] at hlast
+          have hIic : Finset.Iic (Fin.last n) = Finset.univ := by
+            ext i
+            simp only [Finset.mem_Iic, Finset.mem_univ, iff_true]
+            exact Fin.le_last _
+          rw [hIic] at hlast
+          exact hlast
+      · rintro ⟨hnonneg, hsum⟩
+        constructor
+        · intro i
+          constructor
+          · rw [cumulativeTimes_eq_sum_Iic]
+            exact Finset.sum_nonneg fun j _ => hnonneg j
+          · rw [cumulativeTimes_eq_sum_Iic]
+            exact (Finset.sum_le_sum_of_subset_of_nonneg (Finset.subset_univ _)
+              (fun j _ _ => hnonneg j)).trans hsum
+        · intro i j hij
+          rw [cumulativeTimes_eq_sum_Iic, cumulativeTimes_eq_sum_Iic]
+          exact Finset.sum_le_sum_of_subset_of_nonneg
+            (Finset.Iic_subset_Iic.mpr hij) (fun k _ _ => hnonneg k)
+
+/-- Coordinatewise inclusion of the unit interval into the reals. -/
+def coePi (n : ℕ) : (Fin n → I) → (Fin n → ℝ) :=
+  fun u i => (u i : ℝ)
+
+theorem measurePreserving_coePi (n : ℕ) :
+    MeasurePreserving (coePi n) (volume : Measure (Fin n → I))
+      ((volume : Measure (Fin n → ℝ)).restrict
+        (Set.univ.pi fun _ : Fin n => Set.Icc (0 : ℝ) 1)) := by
+  constructor
+  · rw [measurable_pi_iff]
+    intro i
+    exact measurable_subtype_coe.comp (measurable_pi_apply i)
+  · unfold coePi
+    letI (i : Fin n) : SigmaFinite
+        ((volume : Measure I).map ((↑) : I → ℝ)) := by
+      rw [unitInterval.measurePreserving_coe.map_eq]
+      infer_instance
+    rw [volume_pi]
+    rw [Measure.pi_map_pi
+      (X := fun _ : Fin n => I) (Y := fun _ : Fin n => ℝ)
+      (f := fun _ => ((↑) : I → ℝ))
+      (fun _ => unitInterval.measurePreserving_coe.aemeasurable)]
+    simp_rw [unitInterval.measurePreserving_coe.map_eq]
+    rw [← Measure.restrict_pi_pi]
+    change (volume : Measure (Fin n → ℝ)).restrict
+      (Set.univ.pi fun _ : Fin n => Set.Icc (0 : ℝ) 1) = _
+    rfl
+
+theorem preimage_incrementSimplexSet_coePi (n : ℕ) :
+    coePi n ⁻¹' incrementSimplexSet 1 n = freeSimplexSet n := by
+  ext u
+  simp only [Set.mem_preimage, incrementSimplexSet, Set.mem_setOf_eq,
+    coePi, freeSimplexSet]
+  constructor
+  · exact fun h => h.2
+  · intro h
+    exact ⟨fun i => (u i).2.1, h⟩
+
+theorem incrementSimplexSet_one_subset_cube (n : ℕ) :
+    incrementSimplexSet 1 n ⊆
+      Set.univ.pi fun _ : Fin n => Set.Icc (0 : ℝ) 1 := by
+  intro u hu
+  rw [Set.mem_pi]
+  intro i _
+  constructor
+  · exact hu.1 i
+  · exact (Finset.single_le_sum (fun j _ => hu.1 j)
+      (Finset.mem_univ i)).trans hu.2
+
+theorem measurePreserving_coePi_restrict (n : ℕ) :
+    MeasurePreserving (coePi n)
+      ((volume : Measure (Fin n → I)).restrict (freeSimplexSet n))
+      ((volume : Measure (Fin n → ℝ)).restrict
+        (incrementSimplexSet 1 n)) := by
+  have h := (measurePreserving_coePi n).restrict_preimage
+    (measurableSet_incrementSimplexSet 1 n)
+  rw [preimage_incrementSimplexSet_coePi] at h
+  rw [Measure.restrict_restrict_of_subset
+    (incrementSimplexSet_one_subset_cube n)] at h
+  exact h
+
+theorem pi_const_smul (c : NNReal) (n : ℕ) :
+    Measure.pi (fun _ : Fin n => c • (volume : Measure ℝ)) =
+      (c : ℝ≥0∞) ^ n • (volume : Measure (Fin n → ℝ)) := by
+  apply Measure.pi_eq
+  intro s hs
+  rw [Measure.smul_apply]
+  change (c : ℝ≥0∞) ^ n *
+      (volume : Measure (Fin n → ℝ)) (Set.univ.pi s) = _
+  rw [volume_pi_pi s]
+  change (c : ℝ≥0∞) ^ n * ∏ i, volume (s i) =
+    ∏ i : Fin n, (c : ℝ≥0∞) * volume (s i)
+  rw [Finset.prod_mul_distrib, Finset.prod_const]
+  simp
+
+/-- Coordinatewise multiplication by the physical horizon. -/
+def scalePi (H : NNReal) (n : ℕ) : (Fin n → ℝ) → (Fin n → ℝ) :=
+  fun u i => (H : ℝ) * u i
+
+theorem measurePreserving_scalePi (H : NNReal) (hH : H ≠ 0) (n : ℕ) :
+    MeasurePreserving (scalePi H n)
+      ((H : ℝ≥0∞) ^ n • (volume : Measure (Fin n → ℝ)))
+      (volume : Measure (Fin n → ℝ)) := by
+  have hcoord : MeasurePreserving (fun x : ℝ => (H : ℝ) * x)
+      (H • (volume : Measure ℝ)) volume := by
+    constructor
+    · fun_prop
+    · rw [Measure.map_smul]
+      simpa [abs_of_nonneg H.coe_nonneg] using
+        (Real.smul_map_volume_mul_left (show (H : ℝ) ≠ 0 by exact_mod_cast hH))
+  constructor
+  · rw [measurable_pi_iff]
+    intro i
+    exact (measurable_const_mul (H : ℝ)).comp (measurable_pi_apply i)
+  · rw [← pi_const_smul H n]
+    symm
+    apply Measure.pi_eq
+    intro s hs
+    rw [Measure.map_apply (by
+      rw [measurable_pi_iff]
+      intro i
+      exact (measurable_const_mul (H : ℝ)).comp (measurable_pi_apply i))
+      (MeasurableSet.univ_pi hs)]
+    have hpre : scalePi H n ⁻¹' (Set.univ.pi s) =
+        Set.univ.pi fun i => (fun x : ℝ => (H : ℝ) * x) ⁻¹' s i := by
+      ext u
+      simp [scalePi]
+    rw [hpre, Measure.pi_pi _]
+    apply Finset.prod_congr rfl
+    intro i _
+    rw [← Measure.map_apply hcoord.measurable (hs i), hcoord.map_eq]
+
+theorem preimage_incrementSimplexSet_scalePi (H : NNReal) (hH : 0 < H)
+    (n : ℕ) :
+    scalePi H n ⁻¹' incrementSimplexSet H n =
+      incrementSimplexSet 1 n := by
+  ext u
+  simp only [Set.mem_preimage, incrementSimplexSet, Set.mem_setOf_eq,
+    scalePi]
+  have hHr : (0 : ℝ) < H := by exact_mod_cast hH
+  constructor
+  · rintro ⟨hnonneg, hsum⟩
+    constructor
+    · intro i
+      have hi := hnonneg i
+      nlinarith
+    · rw [← Finset.mul_sum] at hsum
+      nlinarith
+  · rintro ⟨hnonneg, hsum⟩
+    constructor
+    · intro i
+      exact mul_nonneg hHr.le (hnonneg i)
+    · rw [← Finset.mul_sum]
+      nlinarith
+
+theorem measurePreserving_scalePi_restrict (H : NNReal) (hH : 0 < H)
+    (n : ℕ) :
+    MeasurePreserving (scalePi H n)
+      ((H : ℝ≥0∞) ^ n •
+        (volume : Measure (Fin n → ℝ)).restrict
+          (incrementSimplexSet 1 n))
+      ((volume : Measure (Fin n → ℝ)).restrict
+        (incrementSimplexSet H n)) := by
+  have h := (measurePreserving_scalePi H hH.ne' n).restrict_preimage
+    (measurableSet_incrementSimplexSet H n)
+  rw [preimage_incrementSimplexSet_scalePi H hH,
+    Measure.restrict_smul] at h
+  exact h
+
+/-- The physical cumulative jump-time chart used by `assemblePath`. -/
+def physicalCumulativeTimes (H : NNReal) (n : ℕ) :
+    (Fin n → I) → (Fin n → ℝ) :=
+  fun u => cumulativeTimes n (scalePi H n (coePi n u))
+
+theorem measurePreserving_physicalCumulativeTimes_restrict
+    (H : NNReal) (hH : 0 < H) (n : ℕ) :
+    MeasurePreserving (physicalCumulativeTimes H n)
+      ((H : ℝ≥0∞) ^ n •
+        (volume : Measure (Fin n → I)).restrict
+          (freeSimplexSet n))
+      ((volume : Measure (Fin n → ℝ)).restrict
+        (orderedSimplexSet H n)) := by
+  have hcoe : MeasurePreserving (coePi n)
+      ((H : ℝ≥0∞) ^ n •
+        (volume : Measure (Fin n → I)).restrict
+          (freeSimplexSet n))
+      ((H : ℝ≥0∞) ^ n •
+        (volume : Measure (Fin n → ℝ)).restrict
+          (incrementSimplexSet 1 n)) := by
+    constructor
+    · exact (measurePreserving_coePi_restrict n).measurable
+    · rw [Measure.map_smul, (measurePreserving_coePi_restrict n).map_eq]
+  have hscale := (measurePreserving_scalePi_restrict H hH n).comp hcoe
+  have hcum := (measurePreserving_cumulativeTimes n).restrict_preimage
+    (measurableSet_orderedSimplexSet H n)
+  rw [preimage_orderedSimplexSet_cumulativeTimes H n] at hcum
+  have h := hcum.comp hscale
+  exact h.congr
+    ((measurePreserving_cumulativeTimes n).measurable.comp
+      ((measurePreserving_scalePi_restrict H hH n).measurable.comp
+        (measurePreserving_coePi_restrict n).measurable))
+    (ae_of_all _ fun u => rfl)
+
+/-- The normalized free-simplex chart transports to physical ordered jump
+times without a Jacobian calculation in holding-increment coordinates. -/
+theorem map_scaledFreeSimplex_cumulativeTimes
+    (H : NNReal) (hH : 0 < H) (n : ℕ) :
+    (((H : ℝ≥0∞) ^ n •
+      (volume : Measure (Fin n → I)).restrict
+        (freeSimplexSet n)).map
+      (physicalCumulativeTimes H n)) =
+      (volume : Measure (Fin n → ℝ)).restrict
+        (orderedSimplexSet H n) :=
+  (measurePreserving_physicalCumulativeTimes_restrict H hH n).map_eq
+
 end Simplex
 
 namespace FiniteJumpGenerator
