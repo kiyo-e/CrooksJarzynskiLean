@@ -26,6 +26,97 @@ namespace JumpPath
 
 variable {Ω : Type u}
 
+/-- Fixed-sector concatenation is measurable. -/
+@[fun_prop]
+theorem measurable_concat_prod [MeasurableSpace Ω] {n m : ℕ} :
+    Measurable (fun p : JumpPath Ω n × JumpPath Ω m =>
+      concat p.1 p.2) := by
+  apply Measurable.prodMk
+  · rw [measurable_pi_iff]
+    intro i
+    change Measurable (fun p : JumpPath Ω n × JumpPath Ω m =>
+      (concat p.1 p.2).1 i)
+    by_cases h : i.val < n + 1
+    · let i0 : Fin (n + 1) := ⟨i.val, h⟩
+      have hidx : i = Fin.cast (by omega : (n + 1) + m = n + m + 1)
+          (Fin.castAdd m i0) := by
+        apply Fin.ext
+        simp [i0]
+      have hfun : (fun p : JumpPath Ω n × JumpPath Ω m =>
+          (concat p.1 p.2).1 i) = fun p => p.1.1 i0 := by
+        funext p
+        rw [hidx, concat_fst_castAdd]
+      rw [hfun]
+      fun_prop
+
+    · have hlt : i.val - (n + 1) < m := by omega
+      let j0 : Fin m := ⟨i.val - (n + 1), hlt⟩
+      have hidx : i = Fin.cast (by omega : (n + 1) + m = n + m + 1)
+          (Fin.natAdd (n + 1) j0) := by
+        apply Fin.ext
+        simp [j0]
+        omega
+      have hfun : (fun p : JumpPath Ω n × JumpPath Ω m =>
+          (concat p.1 p.2).1 i) = fun p => p.2.1 j0.succ := by
+        funext p
+        rw [hidx, concat_fst_natAdd]
+      rw [hfun]
+      fun_prop
+  · rw [measurable_pi_iff]
+    intro i
+    change Measurable (fun p : JumpPath Ω n × JumpPath Ω m =>
+      (concat p.1 p.2).2 i)
+    by_cases h : i.val < n + 1
+    · let i0 : Fin (n + 1) := ⟨i.val, h⟩
+      have hidx : i = Fin.cast (by omega : (n + 1) + m = n + m + 1)
+          (Fin.castAdd m i0) := by
+        apply Fin.ext
+        simp [i0]
+      by_cases hlast : i0 = Fin.last n
+      · have hfun : (fun p : JumpPath Ω n × JumpPath Ω m =>
+            (concat p.1 p.2).2 i) = fun p => p.1.2 i0 + p.2.2 0 := by
+          funext p
+          rw [hidx, concat_snd_castAdd, if_pos hlast]
+        rw [hfun]
+        fun_prop
+      · have hfun : (fun p : JumpPath Ω n × JumpPath Ω m =>
+            (concat p.1 p.2).2 i) = fun p => p.1.2 i0 := by
+          funext p
+          rw [hidx, concat_snd_castAdd, if_neg hlast]
+        rw [hfun]
+        fun_prop
+    · have hlt : i.val - (n + 1) < m := by omega
+      let j0 : Fin m := ⟨i.val - (n + 1), hlt⟩
+      have hidx : i = Fin.cast (by omega : (n + 1) + m = n + m + 1)
+          (Fin.natAdd (n + 1) j0) := by
+        apply Fin.ext
+        simp [j0]
+        omega
+      have hfun : (fun p : JumpPath Ω n × JumpPath Ω m =>
+          (concat p.1 p.2).2 i) = fun p => p.2.2 j0.succ := by
+        funext p
+        rw [hidx, concat_snd_natAdd]
+      rw [hfun]
+      fun_prop
+
+/-- A fixed-sector path recorded by its states, cumulative jump times, and
+total duration.  The duration coordinate retains the final residual holding
+time, which is not visible in the jump times alone. -/
+def cumulativeChart {n : ℕ} (γ : JumpPath Ω n) :
+    (Fin (n + 1) → Ω) × ((Fin n → ℝ) × NNReal) :=
+  (γ.1, (fun i => jumpTimes γ i.succ, γ.totalHoldingTime))
+
+@[fun_prop]
+theorem measurable_cumulativeChart [MeasurableSpace Ω] {n : ℕ} :
+    Measurable (cumulativeChart : JumpPath Ω n →
+      (Fin (n + 1) → Ω) × ((Fin n → ℝ) × NNReal)) := by
+  apply Measurable.prodMk measurable_fst
+  apply Measurable.prodMk
+  · rw [measurable_pi_iff]
+    intro i
+    exact measurable_jumpTimes i.succ
+  · exact measurable_totalHoldingTime
+
 /-- A path has a jump at `S` when one of its noninitial recorded states starts
 at exactly that physical time. -/
 def HasJumpAt {n : ℕ} (S : NNReal) (γ : JumpPath Ω n) : Prop :=
@@ -878,6 +969,35 @@ namespace FiniteJumpGenerator
 
 variable {Ω : Type u} [Fintype Ω] [DecidableEq Ω]
 variable [MeasurableSpace Ω] [MeasurableSingletonClass Ω]
+
+/-- The fixed-jump-count continuation law, packaged as a kernel in its
+prescribed initial state. -/
+noncomputable def sectorKernel
+    (G : FiniteJumpGenerator Ω) (T : NNReal) (n : ℕ) :
+    Kernel Ω (JumpPath Ω n) :=
+  Kernel.ofFunOfCountable fun x => G.sectorLawFrom T x n
+
+@[simp]
+theorem sectorKernel_apply
+    (G : FiniteJumpGenerator Ω) (T : NNReal) (n : ℕ) (x : Ω) :
+    G.sectorKernel T n x = G.sectorLawFrom T x n :=
+  rfl
+
+/-- A fixed-sector suffix started at the terminal state of its prefix. -/
+noncomputable def continuationSectorKernel
+    (G : FiniteJumpGenerator Ω) (T : NNReal) (n m : ℕ) :
+    Kernel (JumpPath Ω n) (JumpPath Ω m) :=
+  (G.sectorKernel T m).comap
+    (fun γ => γ.1 (Fin.last n))
+    ((measurable_pi_apply (Fin.last n)).comp measurable_fst)
+
+@[simp]
+theorem continuationSectorKernel_apply
+    (G : FiniteJumpGenerator Ω) (T : NNReal) (n m : ℕ)
+    (γ : JumpPath Ω n) :
+    G.continuationSectorKernel T n m γ =
+      G.sectorLawFrom T (γ.1 (Fin.last n)) m :=
+  rfl
 
 /-- The fixed-initial sector law in its explicit state-sequence/simplex chart.
 The initial-state binding is the `fixedInitialWeight x` factor in the pulled
