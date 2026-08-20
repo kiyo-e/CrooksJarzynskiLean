@@ -196,6 +196,25 @@ namespace FiniteJumpGenerator
 variable {Ω : Type u} [Fintype Ω] [DecidableEq Ω]
 variable [MeasurableSpace Ω] [MeasurableSingletonClass Ω]
 
+/-- The fixed-initial sector law in its explicit state-sequence/simplex chart.
+The initial-state binding is the `fixedInitialWeight x` factor in the pulled
+back density. -/
+theorem sectorLawFrom_eq_chart
+    (G : FiniteJumpGenerator Ω) (T : NNReal) (x : Ω) (n : ℕ) :
+    G.sectorLawFrom T x n =
+      (((G.stateSequenceCountingReference n).prod
+          ((T : ℝ≥0∞) ^ n •
+            (volume : Measure (Fin n → I)).restrict
+              (Simplex.freeSimplexSet n))).withDensity
+        (fun p => JumpPath.rateDensity (fixedInitialWeight x)
+          G.pathEscapeRate G.pathJumpRate (Simplex.assemblePath T p))).map
+        (Simplex.assemblePath T) := by
+  unfold sectorLawFrom pathMeasure
+  rw [G.rawCountingReference_eq T n]
+  exact CrooksJarzynski.MeasureProtocol.map_withDensity _ _ _
+    (Simplex.measurable_assemblePath T)
+    (G.measurable_rateDensity (fixedInitialWeight x) n)
+
 omit [DecidableEq Ω] [MeasurableSingletonClass Ω] in
 /-- The raw counting reference is concentrated on paths that exactly fill the
 prescribed horizon. -/
