@@ -118,6 +118,9 @@ jobs:
           exit 0
       - name: Upload compiler diagnostics and dependency lock
         if: always()
+        # Diagnostics only: an upload failure (e.g. exhausted artifact storage
+        # quota) must not mask the verification result propagated below.
+        continue-on-error: true
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: lean-build-log

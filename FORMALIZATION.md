@@ -109,6 +109,10 @@ change-of-variables lemmas above expose this as a reusable public API in
 | Informal statement | Lean declaration |
 | --- | --- |
 | Complete-path reversal on the all-jump-count path space | `MeasureProtocol.ContinuousTimeJump.FullPath.reverse` |
+| Pointwise concatenation of finite-jump charts, with the seam holding intervals merged | `MeasureProtocol.ContinuousTimeJump.JumpPath.concat` |
+| Real-time left/right gluing laws for concatenated charts | `MeasureProtocol.ContinuousTimeJump.JumpPath.trajectory_concat_left`, `MeasureProtocol.ContinuousTimeJump.JumpPath.trajectory_concat_right` |
+| Validity of concatenated charts over the summed horizon | `MeasureProtocol.ContinuousTimeJump.JumpPath.isValid_concat` |
+| Complete-path concatenation and measurability in the suffix | `MeasureProtocol.ContinuousTimeJump.FullPath.concat`, `MeasureProtocol.ContinuousTimeJump.FullPath.measurable_concat` |
 | One forward window built from the actual fixed-initial path law | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.forwardWindowKernel` |
 | Forward-aligned reverse window | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.reverseWindowKernel` |
 | Forward law obtained by recursively binding window endpoints | `MeasureProtocol.ContinuousTimeJump.Driven.forwardDrivenLaw` |
@@ -116,6 +120,8 @@ change-of-variables lemmas above expose this as a reusable public API in
 | Almost-sure forward-window boundary matching | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.forwardWindowKernel_ae_boundary` |
 | Almost-sure reverse-window boundary matching | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.reverseWindowKernel_ae_boundary` |
 | All-window physical support of the forward/reverse laws | `MeasureProtocol.ContinuousTimeJump.Driven.forwardDrivenLaw_ae_isProtocolValid`, `MeasureProtocol.ContinuousTimeJump.Driven.reverseDrivenLaw_ae_isProtocolValid` |
+| Chronological concatenation of every complete window mark | `MeasureProtocol.ContinuousTimeJump.Driven.concatenateWindows` |
+| Total holding time and summed-duration validity of the concatenated window chart | `MeasureProtocol.ContinuousTimeJump.Driven.totalHoldingTime_concatenateWindows`, `MeasureProtocol.ContinuousTimeJump.Driven.isValid_concatenateWindows` |
 | Division-free finite-generator detailed balance | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.IsDetailedBalanceWeight` |
 | Instantaneous Gibbs detailed balance | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.IsGibbsDetailedBalance` |
 | Gibbs-weighted jump products telescope under reversal | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.gibbsWeight_mul_jumpProduct_eq_reverse` |
@@ -146,8 +152,10 @@ kernel construction passes each recorded terminal state to the next window, and
 the all-window support theorems record both boundary continuity and valid
 fixed-horizon real-time charts almost surely. The
 headline Crooks and Jarzynski statements are about these constructed measures,
-not about an intermediate sector sum. Concatenation into one global real-time
-trajectory is deferred.
+not about an intermediate sector sum. The reverse-oriented carrier is read by
+`windowAt` in chronological order, and `concatenateWindows` glues those marks
+into one pointwise global real-time chart. No measure-level law for that global
+chart is asserted.
 
 ## Concrete specializations
 
@@ -278,8 +286,9 @@ reversed paths is itself a theorem.
   every `FiniteJumpGenerator` on a finite state space.
 - The stepwise driving layer covers a fixed finite family of piecewise-constant
   finite-state windows, with one complete path mark per window. Boundary
-  matching is proved almost surely; concatenation into a single global
-  real-time trajectory is deferred.
+  matching is proved almost surely, and the reverse-oriented marks can be read
+  chronologically and concatenated into a single pointwise global real-time
+  trajectory. A measure-level law for the concatenated chart is not asserted.
 - A normalized, non-explosive path law is constructed for the symmetric
   unit-rate two-state CTMC. Its normalized fixed-initial terminal laws form a
   Markov kernel with matrix-exponential entries and Chapman--Kolmogorov.

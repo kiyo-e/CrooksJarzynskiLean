@@ -3,6 +3,8 @@ Copyright (c) 2026 kiyo-e. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: kiyo-e
 -/
+import CrooksJarzynski.ContinuousTimeJumpConcat
+import CrooksJarzynski.ContinuousTimeJumpDrivenConcat
 import CrooksJarzynski.ContinuousTimeJumpDrivenPhysical
 import CrooksJarzynski.ContinuousTimeJumpDrivenWorkDistribution
 import CrooksJarzynski.ContinuousTimeJumpDrivenThreeStateTwoWindow
@@ -18,6 +20,15 @@ This module keeps the driven-protocol audit separate from the historical
 headline list while subjecting both files to the same CI allowlist.
 -/
 
+#print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.JumpPath.trajectory_concat_left
+#print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.JumpPath.trajectory_concat_right
+#print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.JumpPath.isValid_concat
+#print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.JumpPath.totalHoldingTime_concat
+#print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.FullPath.measurable_concat
+#print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.FullPath.trajectory_concat_left
+#print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.FullPath.trajectory_concat_right
+#print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.Driven.isValid_concatenateWindows
+#print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.Driven.totalHoldingTime_concatenateWindows
 #print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.Driven.work_eq_sum
 #print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.Driven.work_two_eq
 #print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.Driven.reverseDrivenLaw_two_eq
