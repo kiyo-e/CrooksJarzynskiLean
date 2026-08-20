@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: kiyo-e
 -/
 import CrooksJarzynski.ContinuousTimeJumpConcatDensity
+import Mathlib.MeasureTheory.Group.Prod
 
 /-!
 # Concatenation law for finite-generator path measures
@@ -188,6 +189,190 @@ theorem rawPathProbability_ae_noJumpAt
       rw [JumpPath.jumpTimes, hidx, Finset.sum_map] at hi
       simpa only [assemblePath, holdingTimesOfFree, Fin.snoc_castSucc,
         Fin.castSuccEmb_apply, NNReal.coe_mul, coe_unitNNReal] using hi
+
+/-! ### Cumulative jump-time coordinates -/
+
+/-- The cumulative-time (`τ`) chart of a vector of physical holding
+increments. -/
+def cumulativeTimes : (n : ℕ) → (Fin n → ℝ) → Fin n → ℝ
+  | 0 => id
+  | n + 1 => fun u => Fin.cons (u 0)
+      (fun i => u 0 + cumulativeTimes n (Fin.tail u) i)
+
+@[fun_prop]
+theorem measurable_cumulativeTimes : ∀ n, Measurable (cumulativeTimes n)
+  | 0 => measurable_id
+  | n + 1 => by
+      unfold cumulativeTimes
+      rw [measurable_pi_iff]
+      intro i
+      refine Fin.cases ?_ (fun j => ?_) i
+      · exact measurable_pi_apply 0
+      · exact (measurable_pi_apply 0).add
+          ((measurable_pi_apply j).comp
+            ((measurable_cumulativeTimes n).comp (by fun_prop)))
+
+theorem cumulativeTimes_eq_partialSum : ∀ {n : ℕ}
+    (u : Fin n → ℝ) (i : Fin n),
+    cumulativeTimes n u i = Fin.partialSum u i.succ
+  | 0, _, i => Fin.elim0 i
+  | n + 1, u, i => by
+      refine Fin.cases ?_ (fun j => ?_) i
+      · change u 0 = Fin.partialSum u (Fin.succ 0)
+        rw [Fin.partialSum_succ]
+        simp
+      · rw [show cumulativeTimes (n + 1) u (Fin.succ j) =
+            u 0 + cumulativeTimes n (Fin.tail u) j from rfl,
+          cumulativeTimes_eq_partialSum]
+        exact (Fin.partialSum_succ' u j.succ).symm
+
+/-- Passing from holding increments to cumulative times preserves Lebesgue
+measure.  The induction uses only product decomposition and the
+translation-invariant shear `(x, τ) ↦ (x, x + τ)`. -/
+theorem measurePreserving_cumulativeTimes (n : ℕ) :
+    MeasurePreserving (cumulativeTimes n) volume volume := by
+  induction n with
+  | zero =>
+      exact MeasurePreserving.id volume
+  | succ n ih =>
+      let e := MeasurableEquiv.piFinSuccAbove (fun _ : Fin (n + 1) => ℝ) 0
+      have hsplit : MeasurePreserving e volume
+          ((volume : Measure ℝ).prod (volume : Measure (Fin n → ℝ))) :=
+        volume_preserving_piFinSuccAbove (fun _ : Fin (n + 1) => ℝ) 0
+      have hrec : MeasurePreserving
+          (fun p : ℝ × (Fin n → ℝ) => (p.1, cumulativeTimes n p.2))
+          ((volume : Measure ℝ).prod (volume : Measure (Fin n → ℝ)))
+          ((volume : Measure ℝ).prod (volume : Measure (Fin n → ℝ))) := by
+        convert (MeasurePreserving.id (volume : Measure ℝ)).prod ih using 1
+        funext p
+        rfl
+      have hshear : MeasurePreserving
+          (fun p : ℝ × (Fin n → ℝ) => (p.1, fun i => p.1 + p.2 i))
+          ((volume : Measure ℝ).prod (volume : Measure (Fin n → ℝ)))
+          ((volume : Measure ℝ).prod (volume : Measure (Fin n → ℝ))) := by
+        refine MeasurePreserving.skew_product
+          (g := fun (x : ℝ) (y : Fin n → ℝ) => fun i => x + y i)
+          (MeasurePreserving.id (volume : Measure ℝ)) (by fun_prop) ?_
+        refine ae_of_all _ fun x => ?_
+        exact (measurePreserving_add_left
+          (volume : Measure (Fin n → ℝ)) (fun _ => x)).map_eq
+      have hjoin : MeasurePreserving e.symm
+          ((volume : Measure ℝ).prod (volume : Measure (Fin n → ℝ))) volume :=
+        hsplit.symm e
+      have hcomp := hjoin.comp (hshear.comp (hrec.comp hsplit))
+      refine hcomp.congr (measurable_cumulativeTimes (n + 1)) ?_
+      refine ae_of_all _ fun u => ?_
+      apply e.injective
+      apply Prod.ext
+      · rfl
+      · funext i
+        rfl
+
+/-- Split a global cumulative-time vector into its first `n` and last `m`
+coordinates. -/
+noncomputable def splitTimesEquiv (n m : ℕ) : (Fin (n + m) → ℝ) ≃ᵐ
+    (Fin n → ℝ) × (Fin m → ℝ) :=
+  (MeasurableEquiv.piCongrLeft (fun _ : Fin n ⊕ Fin m => ℝ)
+    finSumFinEquiv.symm).trans
+      (MeasurableEquiv.sumPiEquivProdPi (fun _ : Fin n ⊕ Fin m => ℝ))
+
+theorem measurePreserving_splitTimesEquiv (n m : ℕ) :
+    MeasurePreserving (splitTimesEquiv n m) volume volume := by
+  have h1 := volume_measurePreserving_piCongrLeft
+    (fun _ : Fin n ⊕ Fin m => ℝ) (@finSumFinEquiv n m).symm
+  have h2 := volume_measurePreserving_sumPiEquivProdPi
+    (fun _ : Fin n ⊕ Fin m => ℝ)
+  exact h2.comp h1
+
+theorem splitTimesEquiv_apply_left (n m : ℕ) (τ : Fin (n + m) → ℝ)
+    (i : Fin n) : (splitTimesEquiv n m τ).1 i = τ (Fin.castAdd m i) := by
+  change (MeasurableEquiv.piCongrLeft (fun _ : Fin n ⊕ Fin m => ℝ)
+    (@finSumFinEquiv n m).symm τ) (Sum.inl i) = _
+  simpa using MeasurableEquiv.piCongrLeft_apply_apply
+    (β := fun _ : Fin n ⊕ Fin m => ℝ)
+    (@finSumFinEquiv n m).symm τ (Fin.castAdd m i)
+
+theorem splitTimesEquiv_apply_right (n m : ℕ) (τ : Fin (n + m) → ℝ)
+    (i : Fin m) : (splitTimesEquiv n m τ).2 i = τ (Fin.natAdd n i) := by
+  change (MeasurableEquiv.piCongrLeft (fun _ : Fin n ⊕ Fin m => ℝ)
+    (@finSumFinEquiv n m).symm τ) (Sum.inr i) = _
+  simpa using MeasurableEquiv.piCongrLeft_apply_apply
+    (β := fun _ : Fin n ⊕ Fin m => ℝ)
+    (@finSumFinEquiv n m).symm τ (Fin.natAdd n i)
+
+/-- Translate suffix times by the cut level. -/
+noncomputable def shiftTimesEquiv (S : ℝ) (n m : ℕ) :
+    ((Fin n → ℝ) × (Fin m → ℝ)) ≃ᵐ ((Fin n → ℝ) × (Fin m → ℝ)) :=
+  (MeasurableEquiv.refl (Fin n → ℝ)).prodCongr
+    (MeasurableEquiv.addLeft (fun _ : Fin m => S))
+
+/-- Join prefix times with suffix times translated by the cut level. -/
+noncomputable def joinTimesEquiv (S : ℝ) (n m : ℕ) :
+    ((Fin n → ℝ) × (Fin m → ℝ)) ≃ᵐ (Fin (n + m) → ℝ) :=
+  (shiftTimesEquiv S n m).trans (splitTimesEquiv n m).symm
+
+theorem measurePreserving_shiftTimesEquiv (S : ℝ) (n m : ℕ) :
+    MeasurePreserving (shiftTimesEquiv S n m) volume volume := by
+  exact (MeasurePreserving.id (volume : Measure (Fin n → ℝ))).prod
+    (measurePreserving_add_left
+      (volume : Measure (Fin m → ℝ)) (fun _ => S))
+
+theorem measurePreserving_joinTimesEquiv (S : ℝ) (n m : ℕ) :
+    MeasurePreserving (joinTimesEquiv S n m) volume volume := by
+  exact ((measurePreserving_splitTimesEquiv n m).symm
+    (splitTimesEquiv n m)).comp (measurePreserving_shiftTimesEquiv S n m)
+
+/-- Ordered cumulative jump times in the physical interval `[0, H]`. -/
+def orderedSimplexSet (H : ℝ) (n : ℕ) : Set (Fin n → ℝ) :=
+  {τ | (∀ i, 0 ≤ τ i ∧ τ i ≤ H) ∧ Monotone τ}
+
+theorem measurableSet_orderedSimplexSet (H : ℝ) (n : ℕ) :
+    MeasurableSet (orderedSimplexSet H n) := by
+  unfold orderedSimplexSet
+  rw [show {τ : Fin n → ℝ | (∀ i, 0 ≤ τ i ∧ τ i ≤ H) ∧ Monotone τ} =
+      (⋂ i, {τ | 0 ≤ τ i ∧ τ i ≤ H}) ∩
+        ⋂ i, ⋂ j, ⋂ (_h : i ≤ j), {τ | τ i ≤ τ j} by
+    ext τ
+    simp only [Set.mem_inter_iff, Set.mem_iInter, Set.mem_setOf_eq]
+    rfl]
+  apply MeasurableSet.inter
+  · exact MeasurableSet.iInter fun i =>
+      (measurableSet_le measurable_const (measurable_pi_apply i)).inter
+        (measurableSet_le (measurable_pi_apply i) measurable_const)
+  · exact MeasurableSet.iInter fun i => MeasurableSet.iInter fun j =>
+      MeasurableSet.iInter fun _ =>
+        measurableSet_le (measurable_pi_apply i) (measurable_pi_apply j)
+
+/-- The global ordered-time sector with `n` prefix times and `m` suffix times. -/
+def cutOrderedSimplexSet (S T : ℝ) (n m : ℕ) :
+    Set (Fin (n + m) → ℝ) :=
+  joinTimesEquiv S n m ''
+    (orderedSimplexSet S n ×ˢ orderedSimplexSet T m)
+
+theorem measurableSet_cutOrderedSimplexSet (S T : ℝ) (n m : ℕ) :
+    MeasurableSet (cutOrderedSimplexSet S T n m) := by
+  exact (joinTimesEquiv S n m).measurableEmbedding.measurableSet_image'
+    ((measurableSet_orderedSimplexSet S n).prod
+      (measurableSet_orderedSimplexSet T m))
+
+/-- **Simplex splitting in cumulative jump-time coordinates.**  Product
+Lebesgue measure on the prefix and suffix ordered simplexes maps to restricted
+Lebesgue measure on the global cut sector. -/
+theorem map_orderedSimplex_prod_joinTimes (S T : ℝ) (n m : ℕ) :
+    (((volume : Measure (Fin n → ℝ)).restrict (orderedSimplexSet S n)).prod
+      ((volume : Measure (Fin m → ℝ)).restrict (orderedSimplexSet T m))).map
+        (joinTimesEquiv S n m) =
+      (volume : Measure (Fin (n + m) → ℝ)).restrict
+        (cutOrderedSimplexSet S T n m) := by
+  rw [Measure.prod_restrict]
+  let A := orderedSimplexSet S n ×ˢ orderedSimplexSet T m
+  let B := cutOrderedSimplexSet S T n m
+  have hpre : joinTimesEquiv S n m ⁻¹' B = A := by
+    apply Set.preimage_image_eq A (joinTimesEquiv S n m).injective
+  have h := (measurePreserving_joinTimesEquiv S n m).restrict_preimage
+    (measurableSet_cutOrderedSimplexSet S T n m)
+  rw [hpre] at h
+  exact h.map_eq
 
 end Simplex
 
