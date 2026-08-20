@@ -26,11 +26,10 @@ namespace FiniteJumpGenerator
 variable {Ω : Type u} [Fintype Ω] [DecidableEq Ω]
 variable [MeasurableSpace Ω] [MeasurableSingletonClass Ω]
 
-/-- **Fidelity anchor.**  Pushing positive-horizon path concatenation through
+/-- **Fidelity anchor.**  Pushing path concatenation through
 the terminal state recovers Chapman--Kolmogorov for the transition kernel. -/
 theorem transitionKernel_add_from_pathLawFrom_add
-    (G : FiniteJumpGenerator Ω) (S T : NNReal)
-    (hS : 0 < S) (hT : 0 < T) :
+    (G : FiniteJumpGenerator Ω) (S T : NNReal) :
     G.transitionKernel (S + T) =
       G.transitionKernel T ∘ₖ G.transitionKernel S := by
   apply ProbabilityTheory.Kernel.ext
@@ -42,7 +41,7 @@ theorem transitionKernel_add_from_pathLawFrom_add
       (fun p : FullPath Ω × FullPath Ω => FullPath.concat p.1 p.2) :=
     FullPath.measurable_concat_prod_of_point x
   rw [G.transitionKernel_apply]
-  rw [G.pathLawFrom_add S T hS hT x]
+  rw [G.pathLawFrom_add S T x]
   rw [ProbabilityTheory.Kernel.comp_apply' _ _ _ hy]
   rw [Measure.map_apply FullPath.measurable_terminalState hy]
   rw [Measure.map_apply hf

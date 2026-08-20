@@ -5,6 +5,7 @@ Authors: kiyo-e
 -/
 import CrooksJarzynski.ContinuousTimeJumpConcatLaw
 import Mathlib.Data.Finset.NatAntidiagonal
+import Mathlib.Probability.HasLaw
 
 /-!
 # Concatenation of finite-generator path laws
@@ -21,6 +22,153 @@ namespace MeasureProtocol
 namespace ContinuousTimeJump
 
 universe u
+
+namespace JumpPath
+
+variable {Ω : Type u}
+
+/-- Transport a fixed-sector path along an equality of jump counts. -/
+def reindex {n m : ℕ} (h : n = m) (γ : JumpPath Ω n) : JumpPath Ω m :=
+  (γ.1 ∘ Fin.cast (by omega), γ.2 ∘ Fin.cast (by omega))
+
+@[simp]
+theorem reindex_rfl {n : ℕ} (γ : JumpPath Ω n) : reindex rfl γ = γ := by
+  rfl
+
+@[simp]
+theorem jumpTimes_reindex {n m : ℕ} (h : n = m) (γ : JumpPath Ω n)
+    (i : Fin (m + 1)) :
+    jumpTimes (reindex h γ) i = jumpTimes γ (Fin.cast (by omega) i) := by
+  subst h
+  rfl
+
+@[simp]
+theorem totalHoldingTime_reindex {n m : ℕ} (h : n = m)
+    (γ : JumpPath Ω n) :
+    (reindex h γ).totalHoldingTime = γ.totalHoldingTime := by
+  subst h
+  rfl
+
+theorem measurable_reindex [MeasurableSpace Ω] {n m : ℕ} (h : n = m) :
+    Measurable (reindex (Ω := Ω) h) := by
+  subst m
+  convert (measurable_id : Measurable (id : JumpPath Ω n → JumpPath Ω n)) using 1
+  funext γ
+  exact reindex_rfl γ
+
+/-- The unique chart-shaped path with no jumps, resting at `x`. -/
+def zeroJumpPath (x : Ω) : JumpPath Ω 0 :=
+  (fun _ => x, fun _ => 0)
+
+/-- A jump-free prefix is a left identity when its state matches the suffix. -/
+theorem concat_zeroJumpPath {m : ℕ} (x : Ω) (γ : JumpPath Ω m)
+    (hmatch : x = γ.1 0) :
+    concat (zeroJumpPath x) γ =
+      reindex (Nat.zero_add m).symm γ := by
+  subst x
+  unfold concat zeroJumpPath reindex
+  apply Prod.ext
+  · funext i
+    change Fin.append (fun _ : Fin 1 => γ.1 0) (γ.1 ∘ Fin.succ)
+        (Fin.cast (by omega) i) = γ.1 (Fin.cast (by omega) i)
+    rw [Fin.append_left_eq_cons]
+    simp only [Function.comp_apply]
+    rw [← Fin.cons_self_tail γ.1]
+    congr 1
+  · funext i
+    change Fin.append
+        (fun j : Fin 1 => if j = Fin.last 0 then 0 + γ.2 0 else 0)
+        (γ.2 ∘ Fin.succ) (Fin.cast (by omega) i) =
+      γ.2 (Fin.cast (by omega) i)
+    rw [Fin.append_left_eq_cons]
+    simp only [Function.comp_apply]
+    have hhead : (if (0 : Fin 1) = Fin.last 0 then
+        0 + γ.2 0 else 0) = γ.2 0 := by simp
+    rw [hhead, ← Fin.cons_self_tail γ.2]
+    congr 1
+
+/-- A jump-free suffix is a right identity for fixed-sector concatenation. -/
+theorem concat_zeroJumpPath_right {n : ℕ} (γ : JumpPath Ω n) (x : Ω) :
+    concat γ (zeroJumpPath x) =
+      reindex (Nat.add_zero n).symm γ := by
+  unfold concat zeroJumpPath reindex
+  apply Prod.ext
+  · funext i
+    change Fin.append γ.1 ((fun _ : Fin 1 => x) ∘ Fin.succ)
+        (Fin.cast (by omega) i) = γ.1 (Fin.cast (by omega) i)
+    rw [Fin.append_right_nil _ _ rfl]
+    simp only [Function.comp_apply]
+    apply congrArg γ.1
+    apply Fin.ext
+    rfl
+  · funext i
+    change Fin.append
+        (fun j : Fin (n + 1) =>
+          if j = Fin.last n then γ.2 j + 0 else γ.2 j)
+        ((fun _ : Fin 1 => 0) ∘ Fin.succ) (Fin.cast (by omega) i) =
+      γ.2 (Fin.cast (by omega) i)
+    rw [Fin.append_right_nil _ _ rfl]
+    simp only [Function.comp_apply]
+    split <;> simp
+
+end JumpPath
+
+namespace FullPath
+
+variable {Ω : Type u}
+
+/-- Reindexing a fixed-sector representative does not change its complete
+path. -/
+theorem mk_reindex {n m : ℕ} (h : n = m) (γ : JumpPath Ω n) :
+    (⟨n, γ⟩ : FullPath Ω) = ⟨m, JumpPath.reindex h γ⟩ := by
+  subst h
+  rfl
+
+/-- A seam-matched resting prefix is a left identity on complete paths. -/
+theorem concat_rest_left (x : Ω) (γ : FullPath Ω)
+    (hmatch : initialState γ = x) :
+    concat (rest x) γ = γ := by
+  rcases γ with ⟨m, γ⟩
+  change (⟨0 + m, JumpPath.concat (JumpPath.zeroJumpPath x) γ⟩ : FullPath Ω) =
+    ⟨m, γ⟩
+  rw [JumpPath.concat_zeroJumpPath x γ hmatch.symm]
+  exact (mk_reindex (Nat.zero_add m).symm γ).symm
+
+/-- A resting suffix is a right identity on complete paths. -/
+theorem concat_rest_right (γ : FullPath Ω) (x : Ω) :
+    concat γ (rest x) = γ := by
+  rcases γ with ⟨n, γ⟩
+  change (⟨n + 0, JumpPath.concat γ (JumpPath.zeroJumpPath x)⟩ : FullPath Ω) =
+    ⟨n, γ⟩
+  rw [JumpPath.concat_zeroJumpPath_right γ x]
+  exact (mk_reindex (Nat.add_zero n).symm γ).symm
+
+/-- At horizon zero, validity and exact total holding time determine the
+unique resting complete path. -/
+theorem eq_rest_of_isValid_zero (x : Ω) (γ : FullPath Ω)
+    (hvalid : IsValid 0 γ) (htotal : totalHoldingTime γ = 0)
+    (hinitial : initialState γ = x) :
+    γ = rest x := by
+  rcases γ with ⟨n, γ⟩
+  cases n with
+  | zero =>
+      have hγ : γ = JumpPath.zeroJumpPath x := by
+        apply Prod.ext
+        · funext i
+          rw [Fin.eq_zero i]
+          exact hinitial
+        · funext i
+          rw [Fin.eq_zero i]
+          change γ.2 0 = 0
+          simpa [FullPath.totalHoldingTime, JumpPath.totalHoldingTime] using htotal
+      exact congrArg (Sigma.mk 0) hγ
+  | succ n =>
+      have hpos := JumpPath.jumpTimes_last_pos_of_pos γ hvalid.1
+      have hle := hvalid.2
+      norm_num at hle
+      linarith
+
+end FullPath
 
 namespace FiniteJumpGenerator
 
@@ -310,9 +458,25 @@ theorem pathLawFrom_add_rhs_normalForm
             G.continuationFullSectorKernel T p.2).map f := Measure.sum_sum _
     _ = _ := rfl
 
+/-- The zero-horizon path law is concentrated on the unique resting path at
+its prescribed initial state. -/
+theorem pathLawFrom_zero
+    (G : FiniteJumpGenerator Ω) (x : Ω) :
+    G.pathLawFrom 0 x = Measure.dirac (FullPath.rest x) := by
+  have hae : (id : FullPath Ω → FullPath Ω) =ᵐ[G.pathLawFrom 0 x]
+      fun _ => FullPath.rest x := by
+    filter_upwards [G.pathLawFrom_ae_isValid 0 x,
+      G.pathLawFrom_ae_totalHoldingTime 0 x,
+      G.pathLawFrom_ae_initialState 0 x] with γ hvalid htotal hinitial
+    exact FullPath.eq_rest_of_isValid_zero x γ hvalid htotal hinitial
+  have hlaw : HasLaw (id : FullPath Ω → FullPath Ω)
+      (Measure.dirac (FullPath.rest x)) (G.pathLawFrom 0 x) :=
+    hasLaw_dirac_of_ae_eq hae
+  simpa using hlaw.map_eq
+
 /-- **Path-level Chapman--Kolmogorov for positive horizons.**  First sample a
 prefix, then a suffix started at its terminal state, and concatenate them. -/
-theorem pathLawFrom_add
+theorem pathLawFrom_add_of_pos
     (G : FiniteJumpGenerator Ω) (S T : NNReal)
     (hS : 0 < S) (hT : 0 < T) (x : Ω) :
     G.pathLawFrom (S + T) x =
@@ -324,6 +488,70 @@ theorem pathLawFrom_add
   funext p
   exact G.liftMeasure_sectorLawFrom_restrict_jumpsBeforeSet
     S T hS hT x p.1 p.2
+
+/-- Concatenation with the zero-horizon prefix law. -/
+theorem pathLawFrom_add_zero_left
+    (G : FiniteJumpGenerator Ω) (T : NNReal) (x : Ω) :
+    G.pathLawFrom T x =
+      (G.pathLawFrom 0 x ⊗ₘ G.continuationPathKernel T).map
+        (fun p => FullPath.concat p.1 p.2) := by
+  rw [G.pathLawFrom_zero x]
+  let f := fun p : FullPath Ω × FullPath Ω => FullPath.concat p.1 p.2
+  have hf : Measurable f := FullPath.measurable_concat_prod_of_point x
+  ext s hs
+  rw [Measure.map_apply hf hs]
+  rw [Measure.compProd_apply (hf hs)]
+  rw [lintegral_dirac' _
+    (ProbabilityTheory.Kernel.measurable_kernel_prodMk_left (hf hs))]
+  rw [continuationPathKernel_apply, FullPath.terminalState_rest]
+  apply measure_congr
+  filter_upwards [G.pathLawFrom_ae_initialState T x] with γ hγ
+  apply propext
+  change (γ ∈ s) ↔ FullPath.concat (FullPath.rest x) γ ∈ s
+  rw [FullPath.concat_rest_left x γ hγ]
+
+/-- Concatenation with the zero-horizon continuation law. -/
+theorem pathLawFrom_add_zero_right
+    (G : FiniteJumpGenerator Ω) (S : NNReal) (x : Ω) :
+    G.pathLawFrom S x =
+      (G.pathLawFrom S x ⊗ₘ G.continuationPathKernel 0).map
+        (fun p => FullPath.concat p.1 p.2) := by
+  let f := fun p : FullPath Ω × FullPath Ω => FullPath.concat p.1 p.2
+  have hf : Measurable f := FullPath.measurable_concat_prod_of_point x
+  ext s hs
+  rw [Measure.map_apply hf hs]
+  rw [Measure.compProd_apply (hf hs)]
+  rw [← lintegral_indicator_one hs]
+  apply lintegral_congr
+  intro γ
+  rw [continuationPathKernel_apply, G.pathLawFrom_zero]
+  rw [Measure.dirac_apply' _ (measurable_prodMk_left (hf hs))]
+  by_cases hγ : γ ∈ s
+  · have hmem : FullPath.rest (FullPath.terminalState γ) ∈
+        Prod.mk γ ⁻¹' f ⁻¹' s := by
+      change FullPath.concat γ (FullPath.rest (FullPath.terminalState γ)) ∈ s
+      rwa [FullPath.concat_rest_right]
+    rw [Set.indicator_of_mem hγ, Set.indicator_of_mem hmem]
+    rfl
+  · have hmem : FullPath.rest (FullPath.terminalState γ) ∉
+        Prod.mk γ ⁻¹' f ⁻¹' s := by
+      intro hmem
+      apply hγ
+      change FullPath.concat γ (FullPath.rest (FullPath.terminalState γ)) ∈ s at hmem
+      rwa [FullPath.concat_rest_right] at hmem
+    rw [Set.indicator_of_notMem hγ, Set.indicator_of_notMem hmem]
+
+/-- **Path-level Chapman--Kolmogorov at arbitrary nonnegative horizons.** -/
+theorem pathLawFrom_add
+    (G : FiniteJumpGenerator Ω) (S T : NNReal) (x : Ω) :
+    G.pathLawFrom (S + T) x =
+      (G.pathLawFrom S x ⊗ₘ G.continuationPathKernel T).map
+        (fun p => FullPath.concat p.1 p.2) := by
+  rcases eq_zero_or_pos S with rfl | hS
+  · simpa using G.pathLawFrom_add_zero_left T x
+  rcases eq_zero_or_pos T with rfl | hT
+  · simpa using G.pathLawFrom_add_zero_right S x
+  exact G.pathLawFrom_add_of_pos S T hS hT x
 
 /-- The two-step complete-path kernel obtained by conditional concatenation. -/
 noncomputable def concatenatedPathKernel
@@ -340,15 +568,14 @@ theorem concatenatedPathKernel_apply
       (G.pathLawFrom S x ⊗ₘ G.continuationPathKernel T).map
         (fun p => FullPath.concat p.1 p.2) := rfl
 
-/-- Kernel form of positive-horizon path-law concatenation. -/
+/-- Kernel form of path-law concatenation at arbitrary nonnegative horizons. -/
 theorem pathKernel_add
-    (G : FiniteJumpGenerator Ω) (S T : NNReal)
-    (hS : 0 < S) (hT : 0 < T) :
+    (G : FiniteJumpGenerator Ω) (S T : NNReal) :
     G.pathKernel (S + T) = G.concatenatedPathKernel S T := by
   apply ProbabilityTheory.Kernel.ext
   intro x
   rw [pathKernel_apply, concatenatedPathKernel_apply]
-  exact G.pathLawFrom_add S T hS hT x
+  exact G.pathLawFrom_add S T x
 
 end FiniteJumpGenerator
 end ContinuousTimeJump
