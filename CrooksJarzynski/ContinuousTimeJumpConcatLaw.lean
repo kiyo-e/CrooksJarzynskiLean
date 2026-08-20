@@ -441,6 +441,92 @@ theorem concat_injOn_exactConcatSupport (S : NNReal) :
   subst δ'
   rfl
 
+/-- The jump-count coordinate of a complete path. -/
+def jumpCount : FullPath Ω → ℕ := Sigma.fst
+
+theorem measurable_jumpCount : Measurable (jumpCount : FullPath Ω → ℕ) := by
+  intro s hs
+  apply MeasurableSpace.measurableSet_iInf.mpr
+  intro n
+  change MeasurableSet ((fun _ : JumpPath Ω n => n) ⁻¹' s)
+  exact measurable_const hs
+
+omit [MeasurableSpace Ω] in
+/-- A canonical inhabitant of every jump-count sector, used only outside that
+sector when constructing measurable projections. -/
+def defaultPath (x : Ω) (n : ℕ) : JumpPath Ω n :=
+  (fun _ => x, fun _ => 0)
+
+/-- Project a complete path to one fixed sector, using a harmless default away
+from that sector. -/
+noncomputable def sectorProjection (x : Ω) (n : ℕ) :
+    FullPath Ω → JumpPath Ω n
+  | ⟨k, γ⟩ => if h : k = n then h ▸ γ else defaultPath x n
+
+theorem measurable_sectorProjection (x : Ω) (n : ℕ) :
+    Measurable (sectorProjection x n) := by
+  intro s hs
+  apply MeasurableSpace.measurableSet_iInf.mpr
+  intro k
+  change MeasurableSet
+    ((fun γ : JumpPath Ω k => sectorProjection x n ⟨k, γ⟩) ⁻¹' s)
+  by_cases h : k = n
+  · subst k
+    simpa [sectorProjection] using hs
+  · have hm : Measurable (fun γ : JumpPath Ω k =>
+        sectorProjection x n ⟨k, γ⟩) := by
+      simp only [sectorProjection, h, ↓reduceDIte]
+      exact measurable_const
+    exact hm hs
+
+omit [MeasurableSpace Ω] in
+@[simp]
+theorem sectorProjection_mk (x : Ω) {n : ℕ} (γ : JumpPath Ω n) :
+    sectorProjection x n ⟨n, γ⟩ = γ := by
+  simp [sectorProjection]
+
+/-- Complete-path concatenation is jointly measurable.  The point supplies
+defaults for the countable fixed-sector decomposition; the resulting function
+does not depend on it. -/
+theorem measurable_concat_prod_of_point (x : Ω) :
+    Measurable (fun p : FullPath Ω × FullPath Ω => concat p.1 p.2) := by
+  intro s hs
+  rw [show (fun p : FullPath Ω × FullPath Ω => concat p.1 p.2) ⁻¹' s =
+      ⋃ n, ⋃ m,
+        ({p | jumpCount p.1 = n ∧ jumpCount p.2 = m} ∩
+          (fun p => (⟨n + m, JumpPath.concat
+            (sectorProjection x n p.1) (sectorProjection x m p.2)⟩ :
+              FullPath Ω)) ⁻¹' s) by
+    ext p
+    rcases p with ⟨⟨n, γ⟩, ⟨m, δ⟩⟩
+    simp only [Set.mem_preimage, Set.mem_iUnion, Set.mem_inter_iff,
+      Set.mem_setOf_eq]
+    constructor
+    · intro hp
+      refine ⟨n, m, ⟨rfl, rfl⟩, ?_⟩
+      rw [sectorProjection_mk, sectorProjection_mk]
+      change concat ⟨n, γ⟩ ⟨m, δ⟩ ∈ s
+      exact hp
+    · rintro ⟨n', m', ⟨hn, hm⟩, hp⟩
+      change n = n' at hn
+      change m = m' at hm
+      subst n'
+      subst m'
+      rw [sectorProjection_mk, sectorProjection_mk] at hp
+      change concat ⟨n, γ⟩ ⟨m, δ⟩ ∈ s at hp
+      exact hp]
+  apply MeasurableSet.iUnion
+  intro n
+  apply MeasurableSet.iUnion
+  intro m
+  apply MeasurableSet.inter
+  · exact (((measurable_jumpCount.comp measurable_fst).eq_const n).setOf).inter
+      (((measurable_jumpCount.comp measurable_snd).eq_const m).setOf)
+  · exact ((FullPath.measurable_mk (n + m)).comp
+      (JumpPath.measurable_concat_prod.comp
+        ((measurable_sectorProjection x n).comp measurable_fst |>.prodMk
+          ((measurable_sectorProjection x m).comp measurable_snd)))) hs
+
 end FullPath
 
 /-- Move a measurable map of the first marginal through a composition-product
