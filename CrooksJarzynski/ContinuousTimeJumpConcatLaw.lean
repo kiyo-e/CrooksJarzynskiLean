@@ -37,6 +37,87 @@ theorem measurableSet_hasJumpAt [MeasurableSpace Ω] {n : ℕ} (S : NNReal) :
   exact MeasurableSet.iUnion fun i =>
     ((measurable_jumpTimes i.succ).eq_const (S : ℝ)).setOf
 
+/-- At fixed jump counts, the exact prefix horizon and the matched seam recover
+both inputs from their concatenation. -/
+theorem concat_injective_of_exact_prefix
+    {n m : ℕ} {S : NNReal}
+    {γ γ' : JumpPath Ω n} {δ δ' : JumpPath Ω m}
+    (hconcat : concat γ δ = concat γ' δ')
+    (hγtotal : γ.totalHoldingTime = S)
+    (hγ'total : γ'.totalHoldingTime = S)
+    (hmatch : γ.1 (Fin.last n) = δ.1 0)
+    (hmatch' : γ'.1 (Fin.last n) = δ'.1 0) :
+    γ = γ' ∧ δ = δ' := by
+  have hγfst : γ.1 = γ'.1 := by
+    funext i
+    rw [← concat_fst_castAdd γ δ i, hconcat,
+      concat_fst_castAdd γ' δ' i]
+  have hγsndAway : ∀ i : Fin (n + 1), i ≠ Fin.last n → γ.2 i = γ'.2 i := by
+    intro i hi
+    have h := congrArg
+      (fun p : JumpPath Ω (n + m) =>
+        p.2 (Fin.cast (by omega : (n + 1) + m = n + m + 1)
+          (Fin.castAdd m i))) hconcat
+    simpa [concat_snd_castAdd, hi] using h
+  have hsumAway :
+      (∑ i ∈ (Finset.univ : Finset (Fin (n + 1))).erase (Fin.last n), γ.2 i) =
+        ∑ i ∈ (Finset.univ : Finset (Fin (n + 1))).erase (Fin.last n), γ'.2 i := by
+    apply Finset.sum_congr rfl
+    intro i hi
+    exact hγsndAway i (Finset.ne_of_mem_erase hi)
+  have htotal : (∑ i, γ.2 i) = ∑ i, γ'.2 i := by
+    simpa only [totalHoldingTime] using hγtotal.trans hγ'total.symm
+  have hγlast : γ.2 (Fin.last n) = γ'.2 (Fin.last n) := by
+    rw [← Finset.sum_erase_add (Finset.univ : Finset (Fin (n + 1))) γ.2
+      (Finset.mem_univ (Fin.last n))] at htotal
+    rw [← Finset.sum_erase_add (Finset.univ : Finset (Fin (n + 1))) γ'.2
+      (Finset.mem_univ (Fin.last n))] at htotal
+    rw [hsumAway] at htotal
+    exact add_left_cancel htotal
+  have hγsnd : γ.2 = γ'.2 := by
+    funext i
+    by_cases hi : i = Fin.last n
+    · simpa [hi] using hγlast
+    · exact hγsndAway i hi
+  have hδfst : δ.1 = δ'.1 := by
+    funext i
+    refine Fin.cases ?_ (fun j => ?_) i
+    · rw [← hmatch, ← hmatch', hγfst]
+    · rw [← concat_fst_natAdd γ δ j, hconcat,
+        concat_fst_natAdd γ' δ' j]
+  have hδzero : δ.2 0 = δ'.2 0 := by
+    have h := congrArg
+      (fun p : JumpPath Ω (n + m) => p.2 ⟨n, by omega⟩) hconcat
+    simp only [concat_snd_boundary] at h
+    rw [hγlast] at h
+    exact add_left_cancel h
+  have hδsnd : δ.2 = δ'.2 := by
+    funext i
+    refine Fin.cases hδzero (fun j => ?_) i
+    rw [← concat_snd_natAdd γ δ j, hconcat,
+      concat_snd_natAdd γ' δ' j]
+  constructor
+  · exact Prod.ext hγfst hγsnd
+  · exact Prod.ext hδfst hδsnd
+
+/-- The support on which fixed-sector concatenation is injective. -/
+def exactConcatSupport {n m : ℕ} (S : NNReal) :
+    Set (JumpPath Ω n × JumpPath Ω m) :=
+  {p | p.1.totalHoldingTime = S ∧
+    p.1.1 (Fin.last n) = p.2.1 0}
+
+theorem concat_injOn_exactConcatSupport {n m : ℕ} (S : NNReal) :
+    Set.InjOn (fun p : JumpPath Ω n × JumpPath Ω m =>
+      concat p.1 p.2) (exactConcatSupport S) := by
+  intro p hp q hq hpq
+  rcases p with ⟨γ, δ⟩
+  rcases q with ⟨γ', δ'⟩
+  obtain ⟨hγ, hmatch⟩ := hp
+  obtain ⟨hγ', hmatch'⟩ := hq
+  obtain ⟨rfl, rfl⟩ := concat_injective_of_exact_prefix hpq
+    hγ hγ' hmatch hmatch'
+  rfl
+
 end JumpPath
 
 namespace FullPath
