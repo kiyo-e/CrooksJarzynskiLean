@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: kiyo-e
 -/
 import CrooksJarzynski.ContinuousTimeJumpConcatPathLawBridge
+import CrooksJarzynski.MeasureProtocolMarginals
 import CrooksJarzynski.MeasureProtocolPaths
 
 /-!
@@ -104,5 +105,119 @@ theorem map_pathLawFrom_sampleAt_horizon_le
 end FiniteJumpGenerator
 
 end ContinuousTimeJump
+
+namespace Markov
+
+variable {Ω : Type u} [MeasurableSpace Ω]
+
+/-- The last state of a chronological finite trajectory. -/
+def chronologicalLast {n : ℕ} (γ : Trajectory Ω n) : Ω :=
+  finalState γ.1 γ.2
+
+@[fun_prop]
+theorem measurable_chronologicalLast {n : ℕ} :
+    Measurable (chronologicalLast (Ω := Ω) (n := n)) := by
+  rw [show chronologicalLast (Ω := Ω) (n := n) =
+      fun γ : Trajectory Ω n => Trajectory.stateAt γ (Fin.last n) by
+    funext γ
+    exact (Trajectory.stateAt_last γ).symm]
+  exact (measurable_pi_apply (Fin.last n)).comp
+    Trajectory.measurable_stateAt
+
+/-- Append a newly sampled endpoint to a chronological finite trajectory. -/
+noncomputable def appendState {n : ℕ} (p : Trajectory Ω n × Ω) :
+    Trajectory Ω (n + 1) :=
+  Trajectory.reverse
+    ((prependEquiv n) (Trajectory.reverse p.1, p.2))
+
+@[fun_prop]
+theorem measurable_appendState {n : ℕ} :
+    Measurable (appendState (Ω := Ω) (n := n)) := by
+  exact Trajectory.measurable_reverse.comp
+    ((prependEquiv n).measurable.comp
+      ((Trajectory.measurable_reverse.comp measurable_fst).prodMk
+        measurable_snd))
+
+@[simp]
+theorem reverse_prependEquiv (n : ℕ) (p : Trajectory Ω n × Ω) :
+    Trajectory.reverse ((prependEquiv n) p) =
+      appendState (Trajectory.reverse p.1, p.2) := by
+  simp [appendState]
+
+/-- Peel the last transition from a chronological forward finite-path law. -/
+theorem chronologicalForwardPathMeasure_succ
+    {n : ℕ} (initial : Measure Ω)
+    (forward : Fin (n + 1) → ProbabilityTheory.Kernel Ω Ω)
+    [IsProbabilityMeasure initial]
+    [hforward : ∀ i : Fin (n + 1), IsMarkovKernel (forward i)] :
+    chronologicalForwardPathMeasure initial forward =
+      ((chronologicalForwardPathMeasure initial
+          (fun i : Fin n => forward i.castSucc)) ⊗ₘ
+        (forward (Fin.last n)).comap
+          (chronologicalLast (Ω := Ω) (n := n))
+          (measurable_chronologicalLast (Ω := Ω) (n := n))).map
+            (appendState (Ω := Ω) (n := n)) := by
+  let forwardPrefix : Fin n → ProbabilityTheory.Kernel Ω Ω :=
+    fun i => forward i.castSucc
+  let μ : Measure (Trajectory Ω n) :=
+    reversedForwardPathMeasure initial forwardPrefix
+  let κ : ProbabilityTheory.Kernel (Trajectory Ω n) Ω :=
+    endpointKernel (forward (Fin.last n)) n
+  let e : Trajectory Ω n ≃ᵐ Trajectory Ω n :=
+    Trajectory.reverseMeasurableEquiv Ω n
+  letI : ∀ i : Fin n, IsMarkovKernel (forwardPrefix i) :=
+    fun i => hforward i.castSucc
+  haveI : IsProbabilityMeasure μ := by
+    dsimp [μ]
+    infer_instance
+  haveI : IsMarkovKernel κ := by
+    dsimp [κ]
+    infer_instance
+  have htransport := map_compProd_prodMap_equiv μ κ e
+  have hkernel :
+      κ.comap e.symm e.symm.measurable =
+        (forward (Fin.last n)).comap
+          (chronologicalLast (Ω := Ω) (n := n))
+          (measurable_chronologicalLast (Ω := Ω) (n := n)) := by
+    apply ProbabilityTheory.Kernel.ext
+    intro γ
+    ext s hs
+    simp only [ProbabilityTheory.Kernel.comap_apply]
+    change (forward (Fin.last n)) (Trajectory.reverse γ).1 s =
+      (forward (Fin.last n)) (finalState γ.1 γ.2) s
+    rw [Trajectory.reverse_fst]
+  unfold chronologicalForwardPathMeasure
+  simp only [reversedForwardPathMeasure]
+  rw [Measure.map_map
+    (Trajectory.reverseMeasurableEquiv Ω (n + 1)).measurable
+    (prependEquiv n).measurable]
+  calc
+    (μ ⊗ₘ κ).map
+          (Trajectory.reverse ∘ fun p => (prependEquiv n) p) =
+        (μ ⊗ₘ κ).map
+          (appendState ∘ Prod.map (Trajectory.reverseMeasurableEquiv Ω n)
+            (id : Ω → Ω)) := by
+            apply Measure.map_congr
+            filter_upwards [] with p
+            exact reverse_prependEquiv n p
+    _ = ((μ ⊗ₘ κ).map
+          (Prod.map (Trajectory.reverseMeasurableEquiv Ω n)
+            (id : Ω → Ω))).map
+            appendState := by
+          rw [Measure.map_map measurable_appendState
+            ((Trajectory.reverseMeasurableEquiv Ω n).measurable.prodMap
+              measurable_id)]
+    _ = (μ.map (Trajectory.reverseMeasurableEquiv Ω n) ⊗ₘ
+          κ.comap e.symm e.symm.measurable).map appendState := by
+          rw [htransport]
+    _ = (μ.map (Trajectory.reverseMeasurableEquiv Ω n) ⊗ₘ
+          (forward (Fin.last n)).comap
+            (chronologicalLast (Ω := Ω) (n := n))
+            (measurable_chronologicalLast (Ω := Ω) (n := n))).map
+              appendState := by
+          rw [hkernel]
+
+end Markov
+
 end MeasureProtocol
 end CrooksJarzynski
