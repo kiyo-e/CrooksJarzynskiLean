@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: kiyo-e
 -/
 import CrooksJarzynski.ContinuousTimeJumpConcatPathLawBridge
+import CrooksJarzynski.MeasureProtocolFiniteBridge
 import CrooksJarzynski.MeasureProtocolMarginals
 import CrooksJarzynski.MeasureProtocolPaths
 
@@ -138,11 +139,28 @@ theorem measurable_appendState {n : ℕ} :
       ((Trajectory.measurable_reverse.comp measurable_fst).prodMk
         measurable_snd))
 
-@[simp]
 theorem reverse_prependEquiv (n : ℕ) (p : Trajectory Ω n × Ω) :
     Trajectory.reverse ((prependEquiv n) p) =
       appendState (Trajectory.reverse p.1, p.2) := by
   simp [appendState]
+
+@[simp]
+theorem stateAt_appendState_castSucc {n : ℕ}
+    (p : Trajectory Ω n × Ω) (i : Fin (n + 1)) :
+    Trajectory.stateAt (appendState p) i.castSucc =
+      Trajectory.stateAt p.1 i := by
+  rw [appendState, Trajectory.stateAt_reverse]
+  rw [Trajectory.rev_castSucc_edge]
+  change Trajectory.stateAt (Trajectory.reverse p.1) i.rev =
+    Trajectory.stateAt p.1 i
+  rw [Trajectory.stateAt_reverse]
+  simp
+
+@[simp]
+theorem stateAt_appendState_last {n : ℕ} (p : Trajectory Ω n × Ω) :
+    Trajectory.stateAt (appendState p) (Fin.last (n + 1)) = p.2 := by
+  rw [appendState, Trajectory.stateAt_last, Trajectory.finalState_reverse]
+  rfl
 
 /-- Peel the last transition from a chronological forward finite-path law. -/
 theorem chronologicalForwardPathMeasure_succ
@@ -217,7 +235,279 @@ theorem chronologicalForwardPathMeasure_succ
               appendState := by
           rw [hkernel]
 
+/-- A zero-step chronological path law records only its initial point. -/
+theorem chronologicalForwardPathMeasure_zero_dirac
+    [Fintype Ω] [MeasurableSingletonClass Ω] (x : Ω) :
+    chronologicalForwardPathMeasure (Measure.dirac x)
+        (fun i : Fin 0 => Fin.elim0 i) =
+      Measure.dirac (Trajectory.ofFn fun _ => x) := by
+  have hreverse (γ : Trajectory Ω 0) :
+      (Trajectory.reverseMeasurableEquiv Ω 0).symm γ = γ := by
+    apply Trajectory.ext
+    intro i
+    change Trajectory.stateAt (Trajectory.reverse γ) i =
+      Trajectory.stateAt γ i
+    rw [Trajectory.stateAt_reverse]
+    congr 1
+    apply Fin.ext
+    omega
+  apply Measure.ext_of_singleton
+  intro γ
+  rw [Measure.dirac_apply' _ (measurableSet_singleton γ)]
+  unfold chronologicalForwardPathMeasure
+  rw [Measure.map_apply
+    (Trajectory.reverseMeasurableEquiv Ω 0).measurable
+    (measurableSet_singleton γ)]
+  rw [← (Trajectory.reverseMeasurableEquiv Ω 0).image_symm,
+    Set.image_singleton, hreverse]
+  simp only [reversedForwardPathMeasure, reversePathMeasure,
+    reverseContinuationKernel]
+  rw [MathlibBridge.compProd_singleton]
+  rcases γ with ⟨y, c⟩
+  cases c
+  simp only [ProbabilityTheory.Kernel.deterministic_apply]
+  by_cases hxy : x = y
+  · subst y
+    simp [Trajectory.ofFn]
+    change (1 : ℝ≥0∞) = 1
+    rfl
+  · simp [hxy, Trajectory.ofFn]
+
 end Markov
+
+namespace ContinuousTimeJump
+namespace FiniteJumpGenerator
+
+variable {Ω : Type u} [Fintype Ω] [DecidableEq Ω]
+variable [MeasurableSpace Ω] [MeasurableSingletonClass Ω]
+
+/-- Mapping a continuation path to its endpoint gives the transition kernel
+started from the prefix endpoint. -/
+theorem map_continuationPathKernel_terminalState
+    (G : FiniteJumpGenerator Ω) (T : NNReal) :
+    (G.continuationPathKernel T).map FullPath.terminalState =
+      ((G.transitionKernel T).comap FullPath.terminalState
+        FullPath.measurable_terminalState) := by
+  apply ProbabilityTheory.Kernel.ext
+  intro γ
+  rw [ProbabilityTheory.Kernel.map_apply _
+      FullPath.measurable_terminalState γ,
+    G.continuationPathKernel_apply,
+    ProbabilityTheory.Kernel.comap_apply,
+    G.transitionKernel_apply]
+
+/-- The sampled path law obeys the same last-step recursion as the
+chronological discrete-time path measure. -/
+theorem map_pathLawFrom_sampleAt_succ
+    (G : FiniteJumpGenerator Ω) (x : Ω) {n : ℕ}
+    (time : Fin (n + 2) → NNReal) (hmono : Monotone time) :
+    (G.pathLawFrom (time (Fin.last (n + 1))) x).map
+        (FullPath.sampleAt time) =
+      (((G.pathLawFrom (time (Fin.last n).castSucc) x).map
+          (FullPath.sampleAt (fun i : Fin (n + 1) => time i.castSucc))) ⊗ₘ
+        (G.transitionKernel
+          (time (Fin.last (n + 1)) - time (Fin.last n).castSucc)).comap
+            (Markov.chronologicalLast (Ω := Ω) (n := n))
+            (Markov.measurable_chronologicalLast (Ω := Ω) (n := n))).map
+              (Markov.appendState (Ω := Ω) (n := n)) := by
+  let earlierTime : Fin (n + 1) → NNReal := fun i => time i.castSucc
+  let cutTime : NNReal := time (Fin.last n).castSucc
+  let endTime : NNReal := time (Fin.last (n + 1))
+  let duration : NNReal := endTime - cutTime
+  let μ : Measure (FullPath Ω) := G.pathLawFrom cutTime x
+  let continuation := G.continuationPathKernel duration
+  let sample : FullPath Ω → Trajectory Ω n :=
+    FullPath.sampleAt earlierTime
+  let endpoint : FullPath Ω → Ω := FullPath.terminalState
+  let K : ProbabilityTheory.Kernel Ω Ω := G.transitionKernel duration
+  let lastKernel : ProbabilityTheory.Kernel (Trajectory Ω n) Ω := K.comap
+    (Markov.chronologicalLast (Ω := Ω) (n := n))
+    (Markov.measurable_chronologicalLast (Ω := Ω) (n := n))
+  have hcut : cutTime ≤ endTime := by
+    exact hmono (Fin.le_last (Fin.last n).castSucc)
+  have hadd : cutTime + duration = endTime := by
+    dsimp [duration]
+    rw [add_comm, tsub_add_cancel_of_le hcut]
+  have hsampleLast :
+      endpoint =ᵐ[μ]
+        (Markov.chronologicalLast ∘ sample) := by
+    dsimp [μ]
+    filter_upwards [G.pathLawFrom_ae_trajectory_horizon cutTime x] with γ hγ
+    change FullPath.terminalState γ =
+      finalState (sample γ).1 (sample γ).2
+    rw [← Trajectory.stateAt_last]
+    simp only [sample, FullPath.sampleAt, Trajectory.stateAt_ofFn,
+      earlierTime]
+    exact hγ.symm
+  have hkernelAE :
+      K.comap endpoint FullPath.measurable_terminalState =ᵐ[μ]
+        lastKernel.comap sample (FullPath.measurable_sampleAt earlierTime) := by
+    filter_upwards [hsampleLast] with γ hγ
+    apply Measure.ext
+    intro s hs
+    dsimp [lastKernel]
+    change K (endpoint γ) s =
+      K ((Markov.chronologicalLast ∘ sample) γ) s
+    rw [hγ]
+  have hjoint :
+      (μ ⊗ₘ continuation).map (Prod.map sample endpoint) =
+        μ.map sample ⊗ₘ lastKernel := by
+    calc
+      (μ ⊗ₘ continuation).map (Prod.map sample endpoint) =
+          ((μ ⊗ₘ continuation).map (Prod.map id endpoint)).map
+            (Prod.map sample id) := by
+              rw [Measure.map_map
+                ((FullPath.measurable_sampleAt earlierTime).prodMap
+                  measurable_id)
+                (measurable_id.prodMap FullPath.measurable_terminalState)]
+              apply Measure.map_congr
+              filter_upwards [] with p
+              rfl
+      _ = (μ ⊗ₘ continuation.map endpoint).map
+            (Prod.map sample id) := by
+              rw [← Measure.compProd_map FullPath.measurable_terminalState]
+      _ = (μ ⊗ₘ K.comap endpoint
+              FullPath.measurable_terminalState).map
+            (Prod.map sample id) := by
+              rw [G.map_continuationPathKernel_terminalState duration]
+      _ = (μ ⊗ₘ lastKernel.comap sample
+              (FullPath.measurable_sampleAt earlierTime)).map
+            (Prod.map sample id) := by
+              rw [Measure.compProd_congr hkernelAE]
+      _ = μ.map sample ⊗ₘ lastKernel := by
+              rw [map_compProd_eq_map_compProd_comap μ lastKernel sample
+                (FullPath.measurable_sampleAt earlierTime)]
+  change (G.pathLawFrom endTime x).map (FullPath.sampleAt time) =
+    (μ.map sample ⊗ₘ lastKernel).map Markov.appendState
+  rw [← hadd]
+  rw [G.pathLawFrom_add]
+  have hconcat : Measurable
+      (fun p : FullPath Ω × FullPath Ω => FullPath.concat p.1 p.2) :=
+    FullPath.measurable_concat_prod_of_point x
+  rw [Measure.map_map (FullPath.measurable_sampleAt time) hconcat]
+  have hsampleConcat :
+      (FullPath.sampleAt time ∘
+        fun p : FullPath Ω × FullPath Ω => FullPath.concat p.1 p.2) =ᵐ[
+          μ ⊗ₘ continuation]
+        (Markov.appendState ∘ Prod.map sample endpoint) := by
+    apply Measure.ae_compProd_of_ae_ae
+    · exact (((FullPath.measurable_sampleAt time).comp hconcat).eq
+        (Markov.measurable_appendState.comp
+          ((FullPath.measurable_sampleAt earlierTime).comp measurable_fst |>.prodMk
+            (FullPath.measurable_terminalState.comp measurable_snd)))).setOf
+    · dsimp [μ]
+      filter_upwards [G.pathLawFrom_ae_totalHoldingTime cutTime x,
+        G.pathLawFrom_ae_trajectory_horizon cutTime x] with γ htotal hhorizon
+      dsimp [continuation]
+      rw [G.continuationPathKernel_apply]
+      filter_upwards [G.pathLawFrom_ae_initialState duration
+          (FullPath.terminalState γ),
+        G.pathLawFrom_ae_trajectory_zero duration
+          (FullPath.terminalState γ),
+        G.pathLawFrom_ae_trajectory_horizon duration
+          (FullPath.terminalState γ)] with δ hinitial hzero hend
+      apply Trajectory.ext
+      intro i
+      refine Fin.lastCases ?_ (fun j => ?_) i
+      · simp only [FullPath.sampleAt,
+          Trajectory.stateAt_ofFn, Markov.stateAt_appendState_last,
+          endpoint]
+        have hright := FullPath.trajectory_concat_right γ δ
+          hinitial.symm (t := (endTime : ℝ))
+            (by rw [htotal]; exact_mod_cast hcut)
+        rw [hright, htotal]
+        dsimp [duration] at hend
+        simpa only [NNReal.coe_sub hcut] using hend
+      · simp only [FullPath.sampleAt,
+          Trajectory.stateAt_ofFn, Markov.stateAt_appendState_castSucc,
+          sample, earlierTime]
+        have htime : time j.castSucc ≤ cutTime := by
+          exact hmono (Fin.castSucc_le_castSucc_iff.mpr (Fin.le_last j))
+        by_cases hlt : time j.castSucc < cutTime
+        · apply FullPath.trajectory_concat_left
+          rw [htotal]
+          exact_mod_cast hlt
+        · have heq : time j.castSucc = cutTime :=
+            le_antisymm htime (not_lt.mp hlt)
+          have hright := FullPath.trajectory_concat_right γ δ
+            hinitial.symm (t := (time j.castSucc : ℝ))
+              (by rw [htotal, heq])
+          rw [hright, htotal, heq]
+          norm_num
+          exact hzero.trans hhorizon.symm
+  rw [Measure.map_congr hsampleConcat]
+  rw [← Measure.map_map Markov.measurable_appendState
+    ((FullPath.measurable_sampleAt earlierTime).prodMap
+      FullPath.measurable_terminalState)]
+  rw [hjoint]
+
+/-- At an exact final observation horizon, all sampled path coordinates have
+the chronological transition-kernel law. -/
+theorem pathLawFrom_finiteDimensional_eq_horizon
+    (G : FiniteJumpGenerator Ω) (x : Ω) {n : ℕ}
+    (time : Fin (n + 1) → NNReal)
+    (hmono : Monotone time) (h0 : time 0 = 0) :
+    (G.pathLawFrom (time (Fin.last n)) x).map
+        (FullPath.sampleAt time) =
+      Markov.chronologicalForwardPathMeasure (Measure.dirac x)
+        (fun i : Fin n =>
+          G.transitionKernel (time i.succ - time i.castSucc)) := by
+  induction n with
+  | zero =>
+      rw [show time (Fin.last 0) = 0 by simpa using h0]
+      have hsample :
+          FullPath.sampleAt time =ᵐ[G.pathLawFrom 0 x]
+            fun _ => Trajectory.ofFn fun _ => x := by
+        filter_upwards [G.pathLawFrom_ae_trajectory_zero 0 x] with γ hγ
+        apply Trajectory.ext
+        intro i
+        simp only [FullPath.sampleAt, Trajectory.stateAt_ofFn]
+        rw [show time i = 0 by rw [Fin.eq_zero i, h0]]
+        exact hγ
+      rw [Measure.map_congr hsample]
+      have hconst :
+          (G.pathLawFrom 0 x).map
+              (fun _ : FullPath Ω =>
+                Trajectory.ofFn (n := 0) fun _ => x) =
+            Measure.dirac (Trajectory.ofFn (n := 0) fun _ => x) := by
+        apply Measure.ext
+        intro s hs
+        rw [Measure.map_apply measurable_const hs,
+          Measure.dirac_apply' _ hs]
+        by_cases hmem : Trajectory.ofFn (n := 0) (fun _ => x) ∈ s
+        · simp [hmem, measure_univ]
+        · simp [hmem]
+      rw [hconst]
+      exact Markov.chronologicalForwardPathMeasure_zero_dirac x |>.symm
+  | succ n ih =>
+      let earlierTime : Fin (n + 1) → NNReal := fun i => time i.castSucc
+      have hmonoEarlier : Monotone earlierTime := fun _ _ hij =>
+        hmono (Fin.castSucc_le_castSucc_iff.mpr hij)
+      have hzeroEarlier : earlierTime 0 = 0 := by
+        simpa [earlierTime] using h0
+      rw [G.map_pathLawFrom_sampleAt_succ x time hmono]
+      rw [ih earlierTime hmonoEarlier hzeroEarlier]
+      rw [Markov.chronologicalForwardPathMeasure_succ]
+      congr 2
+
+/-- **Finite-dimensional distributions of the fixed-initial path law.**
+Sampling the continuous-time construction at any monotone finite family of
+times gives the chronological path measure of its transition kernels. -/
+theorem pathLawFrom_finiteDimensional_eq
+    (G : FiniteJumpGenerator Ω) (T : NNReal) (x : Ω)
+    {n : ℕ} (time : Fin (n + 1) → NNReal)
+    (hmono : Monotone time) (h0 : time 0 = 0)
+    (hT : time (Fin.last n) ≤ T) :
+    (G.pathLawFrom T x).map (FullPath.sampleAt time) =
+      Markov.chronologicalForwardPathMeasure (Measure.dirac x)
+        (fun i : Fin n =>
+          G.transitionKernel (time i.succ - time i.castSucc)) := by
+  rw [G.map_pathLawFrom_sampleAt_horizon_le
+    (time (Fin.last n)) T hT x time le_rfl hmono]
+  exact G.pathLawFrom_finiteDimensional_eq_horizon x time hmono h0
+
+end FiniteJumpGenerator
+end ContinuousTimeJump
 
 end MeasureProtocol
 end CrooksJarzynski
