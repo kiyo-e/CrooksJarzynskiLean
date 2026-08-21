@@ -109,6 +109,8 @@ end ContinuousTimeJump
 
 namespace Markov
 
+universe u
+
 variable {Ω : Type u} [MeasurableSpace Ω]
 
 /-- The last state of a chronological finite trajectory. -/
@@ -277,6 +279,8 @@ end Markov
 
 namespace ContinuousTimeJump
 namespace FiniteJumpGenerator
+
+universe u
 
 variable {Ω : Type u} [Fintype Ω] [DecidableEq Ω]
 variable [MeasurableSpace Ω] [MeasurableSingletonClass Ω]
@@ -505,6 +509,34 @@ theorem pathLawFrom_finiteDimensional_eq
   rw [G.map_pathLawFrom_sampleAt_horizon_le
     (time (Fin.last n)) T hT x time le_rfl hmono]
   exact G.pathLawFrom_finiteDimensional_eq_horizon x time hmono h0
+
+/-- The state at any time before the path horizon has the corresponding
+transition-kernel law. -/
+theorem map_pathLawFrom_trajectory_eq_transitionKernel
+    (G : FiniteJumpGenerator Ω) (T t : NNReal) (ht : t ≤ T) (x : Ω) :
+    (G.pathLawFrom T x).map
+        (fun γ => FullPath.trajectory γ t) =
+      G.transitionKernel t x := by
+  let time : Fin 1 → NNReal := fun _ => t
+  let eval : Trajectory Ω 0 → Ω := fun γ => Trajectory.stateAt γ 0
+  have heval : Measurable eval :=
+    (measurable_pi_apply (0 : Fin 1)).comp Trajectory.measurable_stateAt
+  have hsample := G.map_pathLawFrom_sampleAt_horizon_le
+    t T ht x time le_rfl monotone_const
+  have hmap := congrArg (fun μ : Measure (Trajectory Ω 0) => μ.map eval) hsample
+  rw [Measure.map_map heval (FullPath.measurable_sampleAt time),
+    Measure.map_map heval (FullPath.measurable_sampleAt time)] at hmap
+  have hrestrict :
+      (G.pathLawFrom T x).map (fun γ => FullPath.trajectory γ t) =
+        (G.pathLawFrom t x).map (fun γ => FullPath.trajectory γ t) := by
+    simpa [Function.comp_def, eval, time, FullPath.sampleAt,
+      Trajectory.ofFn] using hmap
+  calc
+    (G.pathLawFrom T x).map (fun γ => FullPath.trajectory γ t) =
+        (G.pathLawFrom t x).map (fun γ => FullPath.trajectory γ t) := hrestrict
+    _ = (G.pathLawFrom t x).map FullPath.terminalState :=
+      Measure.map_congr (G.pathLawFrom_ae_trajectory_horizon t x)
+    _ = G.transitionKernel t x := (G.transitionKernel_apply t x).symm
 
 end FiniteJumpGenerator
 end ContinuousTimeJump
