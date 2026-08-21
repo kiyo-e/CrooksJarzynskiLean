@@ -928,9 +928,7 @@ noncomputable def timesBefore {k : ℕ} (S : ℝ) (τ : Fin k → ℝ) : ℕ :=
 theorem timesBefore_eq_sum {k : ℕ} (S : ℝ) (τ : Fin k → ℝ) :
     timesBefore S τ = ∑ i, if τ i < S then 1 else 0 := by
   classical
-  simpa [timesBefore] using
-    (Finset.sum_boole (R := ℕ) (fun i : Fin k => τ i < S)
-      (Finset.univ : Finset (Fin k))).symm
+  simp [timesBefore]
 
 theorem measurable_timesBefore (S : ℝ) (k : ℕ) :
     Measurable (timesBefore (k := k) S) := by
@@ -1173,7 +1171,7 @@ theorem cutOrderedSimplexSet_subset_orderedCountSet_union_boundary
         exact congrArg (fun z : Fin n => z.val) hij
       · intro j hj
         refine ⟨(⟨j.val, by omega⟩ : Fin (n + m)), ?_, ?_⟩
-        · simp [r]
+        · simp
         · apply Fin.ext
           rfl
     simpa using hcard
@@ -1608,12 +1606,14 @@ def splitSuffixStates (n m : ℕ) (c : Fin (n + m + 1) → Ω) :
   Fin.cons (c ⟨n, by omega⟩) fun j =>
     c (Fin.cast (by omega) (Fin.natAdd (n + 1) j))
 
+omit [MeasurableSpace Ω] in
 theorem splitStates_seam (n m : ℕ) (c : Fin (n + m + 1) → Ω) :
     splitPrefixStates n m c (Fin.last n) = splitSuffixStates n m c 0 := by
   apply congrArg c
   apply Fin.ext
   simp
 
+omit [MeasurableSpace Ω] in
 theorem seamJoinStates_splitStates (n m : ℕ)
     (c : Fin (n + m + 1) → Ω) :
     seamJoinStates (splitPrefixStates n m c) (splitSuffixStates n m c) = c := by
@@ -1630,6 +1630,7 @@ theorem seamJoinStates_splitStates (n m : ℕ)
   · simp [splitPrefixStates]
   · simp [splitSuffixStates]
 
+omit [MeasurableSpace Ω] in
 theorem splitStates_seamJoinStates {n m : ℕ}
     (p : seamStatePairs (Ω := Ω) n m) :
     (splitPrefixStates n m (seamJoinStates p.1.1 p.1.2),
