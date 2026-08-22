@@ -324,6 +324,7 @@ theorem map_concat_compProd_liftMeasure
     (measurable_prodMk_left (hf hs))]
   rfl
 
+omit [Fintype Ω] [DecidableEq Ω] [MeasurableSingletonClass Ω] in
 theorem liftMeasure_sum {ι : Type*}
     (n : ℕ) (μ : ι → Measure (JumpPath Ω n)) :
     FullPath.liftMeasure n (Measure.sum μ) =
@@ -332,6 +333,7 @@ theorem liftMeasure_sum {ι : Type*}
   exact Measure.map_sum (FullPath.measurable_mk n).aemeasurable
 
 set_option maxHeartbeats 800000 in
+omit [MeasurableSingletonClass Ω] in
 /-- The long-horizon path law, partitioned by its prefix and suffix jump
 counts. -/
 theorem pathLawFrom_add_lhs_normalForm
