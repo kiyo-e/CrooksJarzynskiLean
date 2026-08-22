@@ -538,6 +538,22 @@ theorem map_pathLawFrom_trajectory_eq_transitionKernel
       Measure.map_congr (G.pathLawFrom_ae_trajectory_horizon t x)
     _ = G.transitionKernel t x := (G.transitionKernel_apply t x).symm
 
+/-- The mass of observing a state at any time before the path horizon is the
+corresponding entry of the matrix exponential. -/
+theorem pathLawFrom_trajectory_real_singleton_eq_exp_generator
+    (G : FiniteJumpGenerator Ω) (T t : NNReal) (ht : t ≤ T) (x y : Ω) :
+    ((G.pathLawFrom T x).map
+        (fun γ => FullPath.trajectory γ t)).real {y} =
+      NormedSpace.exp ((t : ℝ) • G.generator) x y := by
+  rw [G.map_pathLawFrom_trajectory_eq_transitionKernel T t ht x]
+  exact G.transitionKernel_real_singleton_eq_exp_generator t x y
+
+example (G : FiniteJumpGenerator Ω) (T : NNReal) (x y : Ω) :
+    ((G.pathLawFrom T x).map FullPath.terminalState).real {y} =
+      NormedSpace.exp ((T : ℝ) • G.generator) x y := by
+  rw [← Measure.map_congr (G.pathLawFrom_ae_trajectory_horizon T x)]
+  exact G.pathLawFrom_trajectory_real_singleton_eq_exp_generator T T le_rfl x y
+
 end FiniteJumpGenerator
 end ContinuousTimeJump
 
