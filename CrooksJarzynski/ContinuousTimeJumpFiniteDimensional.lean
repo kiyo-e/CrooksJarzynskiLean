@@ -510,6 +510,72 @@ theorem pathLawFrom_finiteDimensional_eq
     (time (Fin.last n)) T hT x time le_rfl hmono]
   exact G.pathLawFrom_finiteDimensional_eq_horizon x time hmono h0
 
+/-- The atom of every finite-dimensional marginal is the initial-state
+indicator times the product of the corresponding matrix-exponential entries. -/
+theorem pathLawFrom_sampleAt_real_singleton_eq_exp_product
+    (G : FiniteJumpGenerator Ω) (T : NNReal) (x : Ω)
+    {n : ℕ} (time : Fin (n + 1) → NNReal)
+    (hmono : Monotone time) (h0 : time 0 = 0)
+    (hT : time (Fin.last n) ≤ T) (γ : Trajectory Ω n) :
+    ((G.pathLawFrom T x).map (FullPath.sampleAt time)).real {γ} =
+      (if Trajectory.stateAt γ 0 = x then 1 else 0) *
+        ∏ i : Fin n,
+          NormedSpace.exp
+              ((((time i.succ - time i.castSucc) : NNReal) : ℝ) • G.generator)
+            (Trajectory.stateAt γ i.castSucc) (Trajectory.stateAt γ i.succ) := by
+  let initial : FiniteDistribution Ω :=
+    { prob := fun y => if y = x then 1 else 0
+      nonneg := fun y => by split_ifs <;> positivity
+      sum_prob := by simp }
+  let K : Fin n → CrooksJarzynski.Kernel Ω := fun i y =>
+    { prob := fun z =>
+        (G.transitionKernel (time i.succ - time i.castSucc) y).real {z}
+      nonneg := fun z => measureReal_nonneg
+      sum_prob := by
+        calc
+          (∑ z, (G.transitionKernel
+                (time i.succ - time i.castSucc) y).real {z}) =
+              (G.transitionKernel
+                (time i.succ - time i.castSucc) y).real
+                (Finset.univ : Finset Ω) :=
+            sum_measureReal_singleton (Finset.univ : Finset Ω)
+          _ = (G.transitionKernel
+                (time i.succ - time i.castSucc) y).real Set.univ := by simp
+          _ = 1 := by
+            rw [Measure.real_def, measure_univ, ENNReal.toReal_one] }
+  have hinitial : initial.toMeasure = Measure.dirac x := by
+    apply Measure.ext_of_singleton
+    intro y
+    rw [FiniteDistribution.toMeasure_singleton,
+      Measure.dirac_apply' _ (measurableSet_singleton y)]
+    by_cases hy : y = x
+    · subst y
+      simp [initial]
+    · simp [initial, hy, Ne.symm hy]
+  have hK (i : Fin n) :
+      MathlibBridge.toKernel (K i) =
+        G.transitionKernel (time i.succ - time i.castSucc) := by
+    apply ProbabilityTheory.Kernel.ext
+    intro y
+    apply Measure.ext_of_singleton
+    intro z
+    rw [MathlibBridge.toKernel_singleton]
+    change ENNReal.ofReal
+        ((G.transitionKernel (time i.succ - time i.castSucc) y).real {z}) = _
+    rw [Measure.real_def, ENNReal.ofReal_toReal]
+    exact ne_of_lt measure_singleton_lt_top
+  rw [G.pathLawFrom_finiteDimensional_eq T x time hmono h0 hT]
+  rw [← hinitial]
+  simp_rw [← hK]
+  rw [Measure.real_def,
+    MathlibBridge.chronologicalForwardPathMeasure_singleton]
+  rw [ENNReal.toReal_ofReal
+    (mul_nonneg (initial.nonneg γ.1) (transitionWeight_nonneg K γ.1 γ.2))]
+  rw [Trajectory.transitionWeight_eq_transitionProduct]
+  simp only [Trajectory.transitionProduct, K]
+  simp_rw [G.transitionKernel_real_singleton_eq_exp_generator]
+  simp [initial]
+
 /-- The state at any time before the path horizon has the corresponding
 transition-kernel law. -/
 theorem map_pathLawFrom_trajectory_eq_transitionKernel
@@ -537,6 +603,22 @@ theorem map_pathLawFrom_trajectory_eq_transitionKernel
     _ = (G.pathLawFrom t x).map FullPath.terminalState :=
       Measure.map_congr (G.pathLawFrom_ae_trajectory_horizon t x)
     _ = G.transitionKernel t x := (G.transitionKernel_apply t x).symm
+
+/-- The mass of observing a state at any time before the path horizon is the
+corresponding entry of the matrix exponential. -/
+theorem pathLawFrom_trajectory_real_singleton_eq_exp_generator
+    (G : FiniteJumpGenerator Ω) (T t : NNReal) (ht : t ≤ T) (x y : Ω) :
+    ((G.pathLawFrom T x).map
+        (fun γ => FullPath.trajectory γ t)).real {y} =
+      NormedSpace.exp ((t : ℝ) • G.generator) x y := by
+  rw [G.map_pathLawFrom_trajectory_eq_transitionKernel T t ht x]
+  exact G.transitionKernel_real_singleton_eq_exp_generator t x y
+
+example (G : FiniteJumpGenerator Ω) (T : NNReal) (x y : Ω) :
+    ((G.pathLawFrom T x).map FullPath.terminalState).real {y} =
+      NormedSpace.exp ((T : ℝ) • G.generator) x y := by
+  rw [← Measure.map_congr (G.pathLawFrom_ae_trajectory_horizon T x)]
+  exact G.pathLawFrom_trajectory_real_singleton_eq_exp_generator T T le_rfl x y
 
 end FiniteJumpGenerator
 end ContinuousTimeJump
