@@ -228,6 +228,13 @@ chart is asserted.
 | The identification specialized to the branching three-state Y chain | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.ThreeStateBranching.pathLawFrom_terminalState_eq_exp_generator` |
 | Almost every path is a valid real-time trajectory (positive waits, horizon) | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.pathLawFrom_ae_isValid` |
 | The real-time trajectory starts at the prescribed state and ends at the recorded terminal state | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.pathLawFrom_ae_trajectory_endpoints` |
+| Path-level Chapman--Kolmogorov for the fixed-initial path law | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.pathLawFrom_add` |
+| Path-level Chapman--Kolmogorov in kernel form | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.pathKernel_add` |
+| The transition-kernel semigroup law recovered from path-level concatenation | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.transitionKernel_add_from_pathLawFrom_add` |
+| Every finite-dimensional marginal is the chronological path measure of the transition kernels | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.pathLawFrom_finiteDimensional_eq` |
+| Every single-time marginal is the corresponding transition-kernel row | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.map_pathLawFrom_trajectory_eq_transitionKernel` |
+| Every finite-dimensional atom is a product of matrix-exponential entries | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.pathLawFrom_sampleAt_real_singleton_eq_exp_product` |
+| Every single-time atom is the corresponding matrix-exponential entry | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.pathLawFrom_trajectory_real_singleton_eq_exp_generator` |
 | Original finite protocol satisfies measure Crooks | `Protocol.measure_crooks` |
 | Original finite protocol satisfies real-integral Jarzynski | `Protocol.measure_jarzynski_integral` |
 | General forward path singleton mass equals legacy `forwardWeight` | `Protocol.measure_forwardWeight_singleton` |

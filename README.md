@@ -95,6 +95,13 @@ The library proves:
   kernel satisfying Chapman--Kolmogorov, and the result specializes to a
   genuinely branching three-state Y chain that no two-state parity argument
   reaches;
+- a path-level Chapman--Kolmogorov law for the constructed fixed-initial path
+  law: cutting at any intermediate horizon identifies the full law with the
+  concatenation of the prefix and an independent continuation started at its
+  terminal state, and recovers the transition-kernel semigroup law;
+- identification of every finite-dimensional marginal of the fixed-initial
+  path law with the chronological Markov path measure of its transition
+  kernels, with atom masses given by products of `exp (Δt • Q)` entries;
 - a real-time reading of the chart representation: jump times, a
   right-continuous step trajectory, and proofs that almost every path under the
   constructed law is a valid trajectory that starts at the prescribed state and
