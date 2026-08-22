@@ -530,17 +530,28 @@ theorem pathLawFrom_sampleAt_real_singleton_eq_exp_product
   let K : Fin n → CrooksJarzynski.Kernel Ω := fun i y =>
     { prob := fun z =>
         (G.transitionKernel (time i.succ - time i.castSucc) y).real {z}
-      nonneg := fun z => Measure.real_nonneg
+      nonneg := fun z => measureReal_nonneg
       sum_prob := by
-        simpa using Measure.sum_measureReal_singleton
-          (μ := G.transitionKernel (time i.succ - time i.castSucc) y)
-          (Finset.univ : Finset Ω) }
+        calc
+          (∑ z, (G.transitionKernel
+                (time i.succ - time i.castSucc) y).real {z}) =
+              (G.transitionKernel
+                (time i.succ - time i.castSucc) y).real
+                (Finset.univ : Finset Ω) :=
+            sum_measureReal_singleton (Finset.univ : Finset Ω)
+          _ = (G.transitionKernel
+                (time i.succ - time i.castSucc) y).real Set.univ := by simp
+          _ = 1 := by
+            rw [Measure.real_def, measure_univ, ENNReal.toReal_one] }
   have hinitial : initial.toMeasure = Measure.dirac x := by
     apply Measure.ext_of_singleton
     intro y
     rw [FiniteDistribution.toMeasure_singleton,
       Measure.dirac_apply' _ (measurableSet_singleton y)]
-    simp [initial]
+    by_cases hy : y = x
+    · subst y
+      simp [initial]
+    · simp [initial, hy, Ne.symm hy]
   have hK (i : Fin n) :
       MathlibBridge.toKernel (K i) =
         G.transitionKernel (time i.succ - time i.castSucc) := by
