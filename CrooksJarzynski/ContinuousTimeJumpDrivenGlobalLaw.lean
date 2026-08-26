@@ -527,6 +527,37 @@ theorem forwardGlobalLaw_ae_totalHoldingTime
   rw [totalHoldingTime_concatenateWindows]
   exact Finset.sum_congr rfl fun i _ => htotal i
 
+/-- The reverse global law is concentrated on valid concatenated charts. -/
+theorem reverseGlobalLaw_ae_isValid
+    {M : ℕ} (final : Measure Ω)
+    (generator : Fin M → FiniteJumpGenerator Ω)
+    (duration : Fin M → NNReal) :
+    ∀ᵐ γ ∂reverseGlobalLaw final generator duration,
+      FullPath.IsValid (∑ i, duration i) γ := by
+  unfold reverseGlobalLaw
+  rw [ae_map_iff measurable_concatenateWindows.aemeasurable
+    (FullPath.measurableSet_isValid (∑ i, duration i))]
+  filter_upwards
+    [reverseDrivenLaw_ae_isProtocolValid final generator duration,
+      reverseDrivenLaw_ae_windowsTotal final generator duration] with γ hvalid htotal
+  exact isValid_concatenateWindows duration γ hvalid.2
+    (fun i => (htotal i).le)
+
+/-- The reverse global chart exactly fills the sum of all window durations. -/
+theorem reverseGlobalLaw_ae_totalHoldingTime
+    {M : ℕ} (final : Measure Ω)
+    (generator : Fin M → FiniteJumpGenerator Ω)
+    (duration : Fin M → NNReal) :
+    ∀ᵐ γ ∂reverseGlobalLaw final generator duration,
+      FullPath.totalHoldingTime γ = ∑ i, duration i := by
+  unfold reverseGlobalLaw
+  rw [ae_map_iff measurable_concatenateWindows.aemeasurable
+    (FullPath.measurable_totalHoldingTime.eq_const (∑ i, duration i)).setOf]
+  filter_upwards
+    [reverseDrivenLaw_ae_windowsTotal final generator duration] with γ htotal
+  rw [totalHoldingTime_concatenateWindows]
+  exact Finset.sum_congr rfl fun i _ => htotal i
+
 end Driven
 end ContinuousTimeJump
 end MeasureProtocol

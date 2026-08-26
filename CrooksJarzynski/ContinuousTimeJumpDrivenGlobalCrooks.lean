@@ -28,7 +28,11 @@ variable {Ω : Type u} [Fintype Ω]
 variable [MeasurableSpace Ω] [MeasurableSingletonClass Ω]
 variable [DecidableEq Ω] [Nonempty Ω]
 
-/-- **Work-distribution Crooks relation on concatenated global charts.** -/
+/-- **Work-distribution Crooks relation for the forward and aligned-reverse
+global work laws.** The reverse carrier is chronology-aligned with the forward
+protocol, so `globalWork` evaluated under `reverseGlobalLaw` is the aligned
+work coordinate; the intrinsic reverse-chronology reading is carried by
+`reverseWork` and `reverseWork_eq_neg` on the marked layer. -/
 theorem global_work_distribution_crooks_of_gibbsDetailedBalance
     {M : ℕ} (β : ℝ) (hβ : β ≠ 0)
     (energy : Fin (M + 1) → Ω → ℝ)
