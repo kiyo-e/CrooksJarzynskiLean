@@ -13,6 +13,7 @@ import CrooksJarzynski.MeasureProtocolMarkedEndpoints
 import CrooksJarzynski.ContinuousTimeJumpDrivenEndpointLaw
 import CrooksJarzynski.ContinuousTimeJumpDrivenEndpointExp
 import CrooksJarzynski.ContinuousTimeJumpDrivenGlobalCrooks
+import CrooksJarzynski.ContinuousTimeJumpDrivenGlobalThreeStateTwoWindow
 
 /-!
 # Axiom audit for stepwise driven jump protocols
