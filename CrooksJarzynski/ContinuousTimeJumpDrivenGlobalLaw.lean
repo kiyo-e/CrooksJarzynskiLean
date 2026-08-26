@@ -37,6 +37,99 @@ theorem measurable_concatenateWindows :
       exact FullPath.measurable_concat_prod.comp
         ((measurable_concatenateWindows.comp (by fun_prop)).prodMk (by fun_prop))
 
+/-- Elapsed protocol time at a window boundary. -/
+def boundaryTime {M : ℕ} (duration : Fin M → NNReal)
+    (i : Fin (M + 1)) : NNReal :=
+  ∑ j ∈ Finset.Iio i, Fin.lastCases 0 duration j
+
+@[simp]
+theorem boundaryTime_zero {M : ℕ} (duration : Fin M → NNReal) :
+    boundaryTime duration 0 = 0 := by
+  simp [boundaryTime]
+
+@[simp]
+theorem boundaryTime_last {M : ℕ} (duration : Fin M → NNReal) :
+    boundaryTime duration (Fin.last M) = ∑ i, duration i := by
+  simp [boundaryTime]
+
+theorem boundaryTime_succ {M : ℕ} (duration : Fin M → NNReal) (i : Fin M) :
+    boundaryTime duration i.succ =
+      boundaryTime duration i.castSucc + duration i := by
+  have hIio : Finset.Iio i.succ =
+      insert i.castSucc (Finset.Iio i.castSucc) := by
+    ext j
+    simp only [Finset.mem_Iio, Finset.mem_insert]
+    constructor
+    · intro h
+      by_cases heq : j = i.castSucc
+      · exact Or.inl heq
+      · right
+        change j.val < i.val + 1 at h
+        have hle : j.val ≤ i.val := Nat.le_of_lt_succ h
+        have hneval : j.val ≠ i.val := by
+          intro hvaleq
+          apply heq
+          apply Fin.ext
+          exact hvaleq
+        exact Fin.mk_lt_mk.mpr (lt_of_le_of_ne hle hneval)
+    · rintro (rfl | h)
+      · exact Fin.castSucc_lt_succ
+      · exact h.trans Fin.castSucc_lt_succ
+  rw [boundaryTime, boundaryTime, hIio, Finset.sum_insert]
+  · simp [add_comm]
+  · simp
+
+private theorem boundaryTime_castSucc {M : ℕ}
+    (duration : Fin (M + 1) → NNReal) (i : Fin (M + 1)) :
+    boundaryTime duration i.castSucc =
+      boundaryTime (fun j : Fin M => duration j.castSucc) i := by
+  rw [boundaryTime, boundaryTime, Fin.Iio_castSucc, Finset.sum_map]
+  apply Finset.sum_congr rfl
+  intro j hj
+  have hne : j ≠ Fin.last M := by
+    exact ne_of_lt ((Finset.mem_Iio.mp hj).trans_le (Fin.le_last i))
+  rcases Fin.exists_castSucc_eq.2 hne with ⟨k, rfl⟩
+  simp
+
+private theorem boundaryTime_le_last {M : ℕ}
+    (duration : Fin M → NNReal) (i : Fin (M + 1)) :
+    boundaryTime duration i ≤ boundaryTime duration (Fin.last M) := by
+  unfold boundaryTime
+  apply Finset.sum_le_sum_of_subset_of_nonneg
+  · intro j hj
+    exact Finset.mem_Iio.mpr ((Finset.mem_Iio.mp hj).trans_le (Fin.le_last i))
+  · intro j _ _
+    simp
+
+/-- Work read directly from the global right-continuous trajectory at every
+window-end time. -/
+noncomputable def globalWork {M : ℕ} (energy : Fin (M + 1) → Ω → ℝ)
+    (duration : Fin M → NNReal) (γ : FullPath Ω) : ℝ :=
+  ∑ i : Fin M,
+    (energy i.succ
+        (FullPath.trajectory γ ((boundaryTime duration i.succ : NNReal) : ℝ)) -
+      energy i.castSucc
+        (FullPath.trajectory γ ((boundaryTime duration i.succ : NNReal) : ℝ)))
+
+/-- The work observable read from a global chart is measurable. -/
+theorem measurable_globalWork {M : ℕ}
+    (energy : Fin (M + 1) → Ω → ℝ) (duration : Fin M → NNReal)
+    (henergy : ∀ i, Measurable (energy i)) :
+    Measurable (globalWork energy duration) := by
+  unfold globalWork
+  fun_prop
+
+/-- A boundary-consistent concatenation ends at the carrier's current
+endpoint. -/
+theorem terminalState_concatenateWindows :
+    ∀ {M : ℕ} {γ : Path Ω M}, IsBoundaryConsistent γ →
+      FullPath.terminalState (concatenateWindows γ) = γ.1
+  | 0, γ, _ => by simp [concatenateWindows]
+  | M + 1, γ, hγ => by
+      rw [concatenateWindows, FullPath.terminalState_concat _ _
+        ((terminalState_concatenateWindows hγ.2.2).trans hγ.1.symm)]
+      exact hγ.2.1
+
 variable [Fintype Ω] [DecidableEq Ω] [MeasurableSingletonClass Ω]
 
 /-- The forward law of the single concatenated real-time chart. -/
@@ -124,6 +217,152 @@ private theorem forwardDrivenLaw_ae_windowsTotal :
         refine Fin.lastCases ?_ (fun j => ?_) i
         · simpa using hwindow
         · simpa using hpast j
+
+/-- Almost every forward driven carrier has exact window horizons and no jump
+at the local time-zero seams. -/
+theorem forwardDrivenLaw_ae_windowRegular
+    {M : ℕ} (initial : Measure Ω)
+    (generator : Fin M → FiniteJumpGenerator Ω)
+    (duration : Fin M → NNReal) :
+    ∀ᵐ γ ∂forwardDrivenLaw initial generator duration,
+      ∀ i, ¬FullPath.HasJumpAt 0 (windowAt γ i) ∧
+        FullPath.totalHoldingTime (windowAt γ i) = duration i := by
+  filter_upwards
+    [forwardDrivenLaw_ae_isProtocolValid initial generator duration,
+      forwardDrivenLaw_ae_windowsTotal initial generator duration] with γ hvalid htotal
+  exact fun i =>
+    ⟨FullPath.not_hasJumpAt_zero_of_isValid _ (hvalid.2 i), htotal i⟩
+
+omit [Fintype Ω] [DecidableEq Ω] [MeasurableSingletonClass Ω] in
+private theorem trajectory_concatenateWindows_boundary_pointwise :
+    ∀ {M : ℕ} (duration : Fin M → NNReal) (γ : Path Ω M),
+      IsBoundaryConsistent γ →
+      (∀ i, ¬FullPath.HasJumpAt 0 (windowAt γ i) ∧
+        FullPath.totalHoldingTime (windowAt γ i) = duration i) →
+      ∀ i : Fin M,
+        FullPath.trajectory (concatenateWindows γ)
+            ((boundaryTime duration i.succ : NNReal) : ℝ) =
+          endpointAt γ i
+  | 0, duration, γ, hboundary, hregular, i => Fin.elim0 i
+  | M + 1, duration, γ, hboundary, hregular, i => by
+      refine Fin.lastCases ?_ (fun j => ?_) i
+      · have htotal :
+            FullPath.totalHoldingTime (concatenateWindows γ) =
+              ∑ k, duration k := by
+          rw [totalHoldingTime_concatenateWindows]
+          exact Finset.sum_congr rfl fun k _ => (hregular k).2
+        rw [show (Fin.last M).succ = Fin.last (M + 1) by ext; simp]
+        rw [boundaryTime_last, ← htotal,
+          FullPath.trajectory_total_eq_terminal,
+          terminalState_concatenateWindows hboundary, endpointAt_last]
+      · let past : Path Ω M := (γ.2.1.1, γ.2.2)
+        let pastDuration : Fin M → NNReal :=
+          fun k => duration k.castSucc
+        have hpastBoundary : IsBoundaryConsistent past := hboundary.2.2
+        have hpastRegular : ∀ k,
+            ¬FullPath.HasJumpAt 0 (windowAt past k) ∧
+              FullPath.totalHoldingTime (windowAt past k) = pastDuration k := by
+          intro k
+          simpa [past, pastDuration] using hregular k.castSucc
+        have hih := trajectory_concatenateWindows_boundary_pointwise
+          pastDuration past hpastBoundary hpastRegular j
+        have hidx : (j.castSucc).succ = j.succ.castSucc := by
+          apply Fin.ext
+          rfl
+        have htime : boundaryTime duration (j.castSucc).succ =
+            boundaryTime pastDuration j.succ := by
+          rw [hidx, boundaryTime_castSucc]
+        have hpastTotal :
+            FullPath.totalHoldingTime (concatenateWindows past) =
+              boundaryTime pastDuration (Fin.last M) := by
+          rw [boundaryTime_last, totalHoldingTime_concatenateWindows]
+          exact Finset.sum_congr rfl fun k _ => (hpastRegular k).2
+        have hle :
+            ((boundaryTime pastDuration j.succ : NNReal) : ℝ) ≤
+              (FullPath.totalHoldingTime (concatenateWindows past) : ℝ) := by
+          rw [hpastTotal]
+          exact_mod_cast boundaryTime_le_last pastDuration j.succ
+        by_cases hlt :
+            ((boundaryTime pastDuration j.succ : NNReal) : ℝ) <
+              (FullPath.totalHoldingTime (concatenateWindows past) : ℝ)
+        · rw [concatenateWindows, htime]
+          rw [FullPath.trajectory_concat_left _ _ hlt]
+          simpa [past] using hih
+        · have hge :
+              (FullPath.totalHoldingTime (concatenateWindows past) : ℝ) ≤
+                ((boundaryTime pastDuration j.succ : NNReal) : ℝ) :=
+            le_of_not_gt hlt
+          have heq :
+              ((boundaryTime pastDuration j.succ : NNReal) : ℝ) =
+                (FullPath.totalHoldingTime (concatenateWindows past) : ℝ) :=
+            le_antisymm hle hge
+          have hmatch :
+              FullPath.terminalState (concatenateWindows past) =
+                FullPath.initialState γ.2.1.2 :=
+            (terminalState_concatenateWindows hpastBoundary).trans
+              hboundary.1.symm
+          have hno : ¬FullPath.HasJumpAt 0 γ.2.1.2 := by
+            simpa using (hregular (Fin.last M)).1
+          rw [concatenateWindows, htime]
+          rw [FullPath.trajectory_concat_right _ _ hmatch hge]
+          rw [heq, sub_self,
+            FullPath.trajectory_zero_of_not_hasJumpAt_zero _ hno]
+          calc
+            FullPath.initialState γ.2.1.2 =
+                FullPath.terminalState (concatenateWindows past) := hmatch.symm
+            _ = FullPath.trajectory (concatenateWindows past)
+                ((boundaryTime pastDuration j.succ : NNReal) : ℝ) := by
+              rw [heq, FullPath.trajectory_total_eq_terminal]
+            _ = endpointAt γ j.castSucc := by
+              simpa [past] using hih
+
+/-- Almost every concatenated forward chart agrees with the marked carrier at
+every protocol boundary. -/
+theorem trajectory_concatenateWindows_boundary_ae
+    {M : ℕ} (initial : Measure Ω)
+    (generator : Fin M → FiniteJumpGenerator Ω)
+    (duration : Fin M → NNReal) :
+    ∀ᵐ γ ∂forwardDrivenLaw initial generator duration,
+      ∀ i : Fin M,
+        FullPath.trajectory (concatenateWindows γ)
+            ((boundaryTime duration i.succ : NNReal) : ℝ) =
+          endpointAt γ i := by
+  filter_upwards
+    [forwardDrivenLaw_ae_isBoundaryConsistent initial generator duration,
+      forwardDrivenLaw_ae_windowRegular initial generator duration] with γ hboundary hregular
+  exact trajectory_concatenateWindows_boundary_pointwise
+    duration γ hboundary hregular
+
+/-- Pulling global trajectory work back to the marked carrier recovers the
+original endpoint work almost surely under the forward law. -/
+theorem work_comp_concatenateWindows_ae
+    {M : ℕ} (initial : Measure Ω)
+    (energy : Fin (M + 1) → Ω → ℝ)
+    (generator : Fin M → FiniteJumpGenerator Ω)
+    (duration : Fin M → NNReal) :
+    ∀ᵐ γ ∂forwardDrivenLaw initial generator duration,
+      globalWork energy duration (concatenateWindows γ) = work energy γ := by
+  filter_upwards
+    [trajectory_concatenateWindows_boundary_ae initial generator duration] with γ hboundary
+  rw [globalWork, work_eq_sum]
+  exact Finset.sum_congr rfl fun i _ => by rw [hboundary i]
+
+/-- The global forward work distribution is the marked-carrier work
+distribution. -/
+theorem map_globalWork_forwardGlobalLaw
+    {M : ℕ} (initial : Measure Ω)
+    (energy : Fin (M + 1) → Ω → ℝ)
+    (generator : Fin M → FiniteJumpGenerator Ω)
+    (duration : Fin M → NNReal) :
+    (forwardGlobalLaw initial generator duration).map
+        (globalWork energy duration) =
+      (forwardDrivenLaw initial generator duration).map (work energy) := by
+  unfold forwardGlobalLaw
+  rw [Measure.map_map
+    (measurable_globalWork energy duration fun _ => Measurable.of_discrete)
+    measurable_concatenateWindows]
+  apply Measure.map_congr
+  exact work_comp_concatenateWindows_ae initial energy generator duration
 
 /-- The forward global law is concentrated on valid concatenated charts. -/
 theorem forwardGlobalLaw_ae_isValid
