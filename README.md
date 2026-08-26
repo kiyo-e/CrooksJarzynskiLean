@@ -70,6 +70,14 @@ The library proves:
   window, recursive boundary matching, reverse protocol order, endpoint work,
   and physical Crooks, Jarzynski, and second-law statements derived from
   instantaneous finite-state Gibbs detailed balance;
+- forward and reverse global path laws on `FullPath`, obtained by measurably
+  concatenating the chronological window charts;
+- global work observables read from the real-time trajectory at window
+  boundaries, including intrinsic reverse-experiment work whose law agrees
+  with the marked reverse-work law; and
+- Crooks, Jarzynski, average-work second-law, and work-distribution Crooks
+  statements, including the conventional atomwise ratio, on the global path
+  laws;
 - the work-distribution form of the driven Crooks relation, the intrinsic
   reverse work observable with its sign convention `W_R = -W`, the
   conventional atomwise ratio `P_F(W=w) = e^{β(w-ΔF)} P_R(W_R=-w)`, and a
@@ -492,8 +500,9 @@ The stepwise driving layer covers a fixed finite family of piecewise-constant
 finite-state windows. It retains one complete path mark per window and proves
 boundary matching almost surely under the constructed laws. The
 reverse-oriented carrier is read in chronological order to concatenate its
-marks into one pointwise global real-time trajectory. No measure-level law for
-that concatenated chart is asserted.
+marks into one global real-time trajectory. Pushing the forward and reverse
+marked laws through that measurable concatenation gives global `FullPath`
+laws, with global trajectory work and transported fluctuation relations.
 
 For the symmetric unit-rate two-state CTMC, the library constructs normalized
 full and fixed-initial path laws, proves their Poisson jump-count law and

@@ -421,9 +421,44 @@ holding time with the finite window sum, while
 `Driven.isValid_concatenateWindows` combines per-window validity and explicit
 total-holding bounds into validity for the summed duration.
 
-These are pointwise path statements. No measure-level statement about the law
-of the concatenated chart is made here; composing the driven path law through
-this map remains future work for M5.
+### Global path laws and work
+
+Measurability of `concatenateWindows` lets the marked forward and reverse laws
+be pushed to laws on one chronological `FullPath` chart. The global work
+observable reads the state of that chart at every window boundary:
+
+```lean
+Driven.forwardGlobalLaw
+Driven.reverseGlobalLaw
+Driven.boundaryTime
+Driven.globalWork
+Driven.measurable_globalWork
+```
+
+The reverse carrier is chronology-aligned with the forward protocol, so
+`reverseGlobalLaw` is the forward-chronology chart of the reverse experiment,
+consistent with how `reverseWork` is presented elsewhere in this document.
+The intrinsic reverse-experiment work is available on this chart as
+`globalReverseWork`. Its law under `reverseGlobalLaw` agrees with the marked
+`reverseWork` law, and the conventional atomwise ratio
+`P_F(W=w) = e^{β(w-ΔF)} P_R(W_R=-w)` holds directly for the global laws.
+Under both marked laws, the concatenated trajectory recovers the stored
+endpoint at every boundary and `globalWork` recovers `work` almost surely.
+Consequently the marked Crooks theorem, its work-distribution form, the
+Jarzynski equality, and the average-work second law transport to the global
+path laws:
+
+```lean
+Driven.map_globalWork_forwardGlobalLaw
+Driven.map_globalWork_reverseGlobalLaw
+Driven.map_globalReverseWork_reverseGlobalLaw
+Driven.global_crooks_of_gibbsDetailedBalance
+Driven.global_work_distribution_crooks_of_gibbsDetailedBalance
+Driven.global_work_distribution_crooks_reverseWork_of_gibbsDetailedBalance
+Driven.global_crooks_work_atom_of_gibbsDetailedBalance
+Driven.global_jarzynski_of_gibbsDetailedBalance
+Driven.global_second_law_of_gibbsDetailedBalance
+```
 
 ## Deferred extensions
 

@@ -111,8 +111,11 @@ change-of-variables lemmas above expose this as a reusable public API in
 | Complete-path reversal on the all-jump-count path space | `MeasureProtocol.ContinuousTimeJump.FullPath.reverse` |
 | Pointwise concatenation of finite-jump charts, with the seam holding intervals merged | `MeasureProtocol.ContinuousTimeJump.JumpPath.concat` |
 | Real-time left/right gluing laws for concatenated charts | `MeasureProtocol.ContinuousTimeJump.JumpPath.trajectory_concat_left`, `MeasureProtocol.ContinuousTimeJump.JumpPath.trajectory_concat_right` |
+| Zero-time trajectory recovery away from a jump, and exclusion of a zero-time jump for valid charts | `MeasureProtocol.ContinuousTimeJump.JumpPath.trajectory_zero_of_not_hasJumpAt_zero`, `MeasureProtocol.ContinuousTimeJump.JumpPath.not_hasJumpAt_zero_of_isValid`, `MeasureProtocol.ContinuousTimeJump.FullPath.trajectory_zero_of_not_hasJumpAt_zero`, `MeasureProtocol.ContinuousTimeJump.FullPath.not_hasJumpAt_zero_of_isValid` |
+| A complete trajectory at its total holding time is in its terminal state | `MeasureProtocol.ContinuousTimeJump.FullPath.trajectory_total_eq_terminal` |
 | Validity of concatenated charts over the summed horizon | `MeasureProtocol.ContinuousTimeJump.JumpPath.isValid_concat` |
 | Complete-path concatenation and measurability in the suffix | `MeasureProtocol.ContinuousTimeJump.FullPath.concat`, `MeasureProtocol.ContinuousTimeJump.FullPath.measurable_concat` |
+| Joint measurability of complete-path concatenation | `MeasureProtocol.ContinuousTimeJump.FullPath.measurable_concat_prod` |
 | One forward window built from the actual fixed-initial path law | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.forwardWindowKernel` |
 | Forward-aligned reverse window | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.reverseWindowKernel` |
 | Forward law obtained by recursively binding window endpoints | `MeasureProtocol.ContinuousTimeJump.Driven.forwardDrivenLaw` |
@@ -122,6 +125,19 @@ change-of-variables lemmas above expose this as a reusable public API in
 | All-window physical support of the forward/reverse laws | `MeasureProtocol.ContinuousTimeJump.Driven.forwardDrivenLaw_ae_isProtocolValid`, `MeasureProtocol.ContinuousTimeJump.Driven.reverseDrivenLaw_ae_isProtocolValid` |
 | Chronological concatenation of every complete window mark | `MeasureProtocol.ContinuousTimeJump.Driven.concatenateWindows` |
 | Total holding time and summed-duration validity of the concatenated window chart | `MeasureProtocol.ContinuousTimeJump.Driven.totalHoldingTime_concatenateWindows`, `MeasureProtocol.ContinuousTimeJump.Driven.isValid_concatenateWindows` |
+| Terminal-state recovery for a boundary-consistent concatenation | `MeasureProtocol.ContinuousTimeJump.Driven.terminalState_concatenateWindows` |
+| Measurability of chronological window concatenation | `MeasureProtocol.ContinuousTimeJump.Driven.measurable_concatenateWindows` |
+| Forward and reverse laws on one concatenated `FullPath` chart | `MeasureProtocol.ContinuousTimeJump.Driven.forwardGlobalLaw`, `MeasureProtocol.ContinuousTimeJump.Driven.reverseGlobalLaw` |
+| Elapsed protocol time at each window boundary | `MeasureProtocol.ContinuousTimeJump.Driven.boundaryTime`, `MeasureProtocol.ContinuousTimeJump.Driven.boundaryTime_zero`, `MeasureProtocol.ContinuousTimeJump.Driven.boundaryTime_last`, `MeasureProtocol.ContinuousTimeJump.Driven.boundaryTime_succ` |
+| Work read from the global trajectory at window boundaries | `MeasureProtocol.ContinuousTimeJump.Driven.globalWork`, `MeasureProtocol.ContinuousTimeJump.Driven.measurable_globalWork` |
+| Intrinsic reverse-experiment work on the chronology-aligned global chart | `MeasureProtocol.ContinuousTimeJump.Driven.globalReverseWork`, `MeasureProtocol.ContinuousTimeJump.Driven.measurable_globalReverseWork` |
+| Exact horizons and regular local seams under the forward and reverse marked laws | `MeasureProtocol.ContinuousTimeJump.Driven.forwardDrivenLaw_ae_windowRegular`, `MeasureProtocol.ContinuousTimeJump.Driven.reverseDrivenLaw_ae_windowRegular` |
+| Recovery of marked endpoints from the concatenated trajectory at protocol boundaries | `MeasureProtocol.ContinuousTimeJump.Driven.trajectory_concatenateWindows_boundary_ae`, `MeasureProtocol.ContinuousTimeJump.Driven.trajectory_concatenateWindows_boundary_ae_reverse` |
+| Almost-sure recovery of marked work from global work | `MeasureProtocol.ContinuousTimeJump.Driven.work_comp_concatenateWindows_ae`, `MeasureProtocol.ContinuousTimeJump.Driven.work_comp_concatenateWindows_ae_reverse` |
+| Equality of global-chart and marked-carrier work distributions | `MeasureProtocol.ContinuousTimeJump.Driven.map_globalWork_forwardGlobalLaw`, `MeasureProtocol.ContinuousTimeJump.Driven.map_globalWork_reverseGlobalLaw` |
+| Equality of global-chart and marked-carrier reverse-work distributions | `MeasureProtocol.ContinuousTimeJump.Driven.map_globalReverseWork_reverseGlobalLaw` |
+| Integrability of global work under the forward and reverse global laws | `MeasureProtocol.ContinuousTimeJump.Driven.integrable_globalWork`, `MeasureProtocol.ContinuousTimeJump.Driven.integrable_globalWork_reverse` |
+| Validity and exact total duration of the forward and reverse global laws | `MeasureProtocol.ContinuousTimeJump.Driven.forwardGlobalLaw_ae_isValid`, `MeasureProtocol.ContinuousTimeJump.Driven.forwardGlobalLaw_ae_totalHoldingTime`, `MeasureProtocol.ContinuousTimeJump.Driven.reverseGlobalLaw_ae_isValid`, `MeasureProtocol.ContinuousTimeJump.Driven.reverseGlobalLaw_ae_totalHoldingTime` |
 | Division-free finite-generator detailed balance | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.IsDetailedBalanceWeight` |
 | Instantaneous Gibbs detailed balance | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.IsGibbsDetailedBalance` |
 | Gibbs-weighted jump products telescope under reversal | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.gibbsWeight_mul_jumpProduct_eq_reverse` |
@@ -134,12 +150,19 @@ change-of-variables lemmas above expose this as a reusable public API in
 | Crooks relation on the constructed driven path laws | `MeasureProtocol.ContinuousTimeJump.Driven.crooks_of_gibbsDetailedBalance` |
 | Jarzynski equality on the constructed forward driven law | `MeasureProtocol.ContinuousTimeJump.Driven.jarzynski_of_gibbsDetailedBalance` |
 | Average-work second law for the constructed driven law | `MeasureProtocol.ContinuousTimeJump.Driven.second_law_of_gibbsDetailedBalance` |
+| Crooks relation on the forward and reverse global path laws | `MeasureProtocol.ContinuousTimeJump.Driven.global_crooks_of_gibbsDetailedBalance` |
+| Work-distribution Crooks relation for global charts | `MeasureProtocol.ContinuousTimeJump.Driven.global_work_distribution_crooks_of_gibbsDetailedBalance` |
+| Global work-distribution Crooks relation using intrinsic reverse work | `MeasureProtocol.ContinuousTimeJump.Driven.global_work_distribution_crooks_reverseWork_of_gibbsDetailedBalance` |
+| Conventional global atomwise ratio `P_F(W=w) = e^{β(w-ΔF)} P_R(W_R=-w)` | `MeasureProtocol.ContinuousTimeJump.Driven.global_crooks_work_atom_of_gibbsDetailedBalance` |
+| Jarzynski equality for global trajectory work | `MeasureProtocol.ContinuousTimeJump.Driven.global_jarzynski_of_gibbsDetailedBalance` |
+| Average-work second law for global trajectory work | `MeasureProtocol.ContinuousTimeJump.Driven.global_second_law_of_gibbsDetailedBalance` |
 | One-window work is the terminal energy quench | `MeasureProtocol.ContinuousTimeJump.Driven.work_one` |
 | Reverse work observable is the negated forward work | `MeasureProtocol.ContinuousTimeJump.Driven.reverseWork_eq_neg` |
 | Work-distribution Crooks relation for driven protocols | `MeasureProtocol.ContinuousTimeJump.Driven.work_distribution_crooks_of_gibbsDetailedBalance` |
 | Measure-level work-distribution Crooks theorem using intrinsic reverse work | `MeasureProtocol.ContinuousTimeJump.Driven.work_distribution_crooks_reverseWork_of_gibbsDetailedBalance` |
 | Conventional atomwise ratio `P_F(W=w) = e^{β(w-ΔF)} P_R(W_R=-w)` | `MeasureProtocol.ContinuousTimeJump.Driven.crooks_work_atom_of_gibbsDetailedBalance` |
 | Two-window three-state protocol with positive-probability `0` and `log 2` work atoms for positive windows | `MeasureProtocol.ContinuousTimeJump.Driven.ThreeStateTwoWindow.work_zero_atom_pos`, `MeasureProtocol.ContinuousTimeJump.Driven.ThreeStateTwoWindow.work_log_two_atom_pos` |
+| The same positive work atoms under the forward global path law | `MeasureProtocol.ContinuousTimeJump.Driven.ThreeStateTwoWindow.global_work_zero_atom_pos`, `MeasureProtocol.ContinuousTimeJump.Driven.ThreeStateTwoWindow.global_work_log_two_atom_pos` |
 | Erasing marks commutes with the marked path construction, yielding the endpoint-marginal Markov law | `MeasureProtocol.Marked.map_reversedForwardPathMeasure_eraseMarks` |
 | Endpoint marginal of one forward window kernel is the finite generator's transition kernel | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.endpointMarginal_forwardWindowKernel` |
 | Erasing all marks from the forward driven law gives the endpoint Markov chain of the window transition kernels | `MeasureProtocol.ContinuousTimeJump.Driven.map_forwardDrivenLaw_endpoints` |
@@ -154,8 +177,10 @@ fixed-horizon real-time charts almost surely. The
 headline Crooks and Jarzynski statements are about these constructed measures,
 not about an intermediate sector sum. The reverse-oriented carrier is read by
 `windowAt` in chronological order, and `concatenateWindows` glues those marks
-into one pointwise global real-time chart. No measure-level law for that global
-chart is asserted.
+into one global real-time chart. Pushing the marked laws through this measurable
+map gives `forwardGlobalLaw` and `reverseGlobalLaw`; the global work observable
+recovers marked endpoint work almost surely, transporting the Crooks,
+Jarzynski, second-law, and work-distribution statements to these global laws.
 
 ## Concrete specializations
 
@@ -294,8 +319,10 @@ reversed paths is itself a theorem.
 - The stepwise driving layer covers a fixed finite family of piecewise-constant
   finite-state windows, with one complete path mark per window. Boundary
   matching is proved almost surely, and the reverse-oriented marks can be read
-  chronologically and concatenated into a single pointwise global real-time
-  trajectory. A measure-level law for the concatenated chart is not asserted.
+  chronologically and concatenated into a single global real-time trajectory.
+  The forward and reverse marked laws are pushed through this concatenation,
+  and their fluctuation relations are transported to the resulting global
+  path laws.
 - A normalized, non-explosive path law is constructed for the symmetric
   unit-rate two-state CTMC. Its normalized fixed-initial terminal laws form a
   Markov kernel with matrix-exponential entries and Chapman--Kolmogorov.

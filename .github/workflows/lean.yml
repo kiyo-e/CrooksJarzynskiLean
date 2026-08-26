@@ -19,6 +19,14 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - name: Free runner disk space
+        # The Lake package cache save needs several GB of headroom; without
+        # this the post-job cache tarball can exhaust the runner disk and fail
+        # the job even though every verification step succeeded.
+        shell: bash
+        run: |
+          sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/ghc /usr/local/.ghcup
+          df -h /
       - name: Restore Elan toolchain cache
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:

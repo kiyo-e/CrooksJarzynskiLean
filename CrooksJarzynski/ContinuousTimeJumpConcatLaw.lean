@@ -209,6 +209,43 @@ theorem measurableSet_hasJumpAt [MeasurableSpace Ω] {n : ℕ} (S : NNReal) :
   exact MeasurableSet.iUnion fun i =>
     ((measurable_jumpTimes i.succ).eq_const (S : ℝ)).setOf
 
+/-- If no recorded jump occurs at time zero, the right-continuous trajectory
+starts at the chart's initial state. -/
+theorem trajectory_zero_of_not_hasJumpAt_zero :
+    ∀ {n : ℕ} (γ : JumpPath Ω n),
+      ¬ HasJumpAt 0 γ → trajectory γ 0 = γ.1 0
+  | 0, γ, _ => rfl
+  | n + 1, γ, hγ => by
+      rw [trajectory]
+      have hlast : ¬jumpTimes γ (Fin.last (n + 1)) ≤ 0 := by
+        intro hle
+        have heq : jumpTimes γ (Fin.last (n + 1)) = 0 :=
+          le_antisymm hle (jumpTimes_nonneg γ _)
+        apply hγ
+        refine ⟨Fin.last n, ?_⟩
+        simpa using heq
+      rw [if_neg hlast]
+      apply trajectory_zero_of_not_hasJumpAt_zero
+      intro hdrop
+      apply hγ
+      obtain ⟨i, hi⟩ := hdrop
+      refine ⟨i.castSucc, ?_⟩
+      have hidx : i.castSucc.succ = i.succ.castSucc := by
+        apply Fin.ext
+        rfl
+      rw [hidx, ← jumpTimes_dropLast γ i.succ]
+      exact hi
+
+/-- A valid chart cannot have a jump at time zero because every holding
+interval preceding a jump is strictly positive. -/
+theorem not_hasJumpAt_zero_of_isValid {n : ℕ} {T : NNReal}
+    (γ : JumpPath Ω n) (hγ : IsValid T γ) : ¬HasJumpAt 0 γ := by
+  rintro ⟨i, hi⟩
+  have hlt : jumpTimes γ 0 < jumpTimes γ i.succ :=
+    (jumpTimes_strictMono_of_isValid γ hγ) (by simp)
+  rw [jumpTimes_zero, hi] at hlt
+  exact lt_irrefl 0 hlt
+
 /-- At fixed jump counts, the exact prefix horizon and the matched seam recover
 both inputs from their concatenation. -/
 theorem concat_injective_of_exact_prefix
@@ -391,6 +428,30 @@ theorem measurableSet_hasJumpAt (S : NNReal) :
   exact JumpPath.measurableSet_hasJumpAt S
 
 omit [MeasurableSpace Ω] in
+/-- A complete chart without a jump at time zero starts at its recorded
+initial state under the right-continuous trajectory convention. -/
+theorem trajectory_zero_of_not_hasJumpAt_zero (γ : FullPath Ω)
+    (hγ : ¬HasJumpAt 0 γ) : trajectory γ 0 = initialState γ := by
+  rcases γ with ⟨n, γ⟩
+  exact JumpPath.trajectory_zero_of_not_hasJumpAt_zero γ hγ
+
+omit [MeasurableSpace Ω] in
+/-- A valid complete chart has no jump at time zero. -/
+theorem not_hasJumpAt_zero_of_isValid {T : NNReal} (γ : FullPath Ω)
+    (hγ : IsValid T γ) : ¬HasJumpAt 0 γ := by
+  rcases γ with ⟨n, γ⟩
+  exact JumpPath.not_hasJumpAt_zero_of_isValid γ hγ
+
+omit [MeasurableSpace Ω] in
+/-- At the end of its full holding time, a complete chart is in its terminal
+state. Coincident final jump times are resolved to the right. -/
+theorem trajectory_total_eq_terminal (γ : FullPath Ω) :
+    trajectory γ (totalHoldingTime γ : ℝ) = terminalState γ := by
+  rcases γ with ⟨n, γ⟩
+  exact JumpPath.trajectory_eq_terminal_of_last_le γ γ.totalHoldingTime
+    (JumpPath.jumpTimes_le_totalHoldingTime γ (Fin.last n))
+
+omit [MeasurableSpace Ω] in
 /-- Number of jumps strictly before `S`, lifted to complete paths. -/
 noncomputable def jumpsBefore (S : NNReal) : FullPath Ω → ℕ
   | ⟨_, γ⟩ => JumpPath.jumpsBefore S γ
@@ -526,6 +587,19 @@ theorem measurable_concat_prod_of_point (x : Ω) :
       (JumpPath.measurable_concat_prod.comp
         ((measurable_sectorProjection x n).comp measurable_fst |>.prodMk
           ((measurable_sectorProjection x m).comp measurable_snd)))) hs
+
+/-- Complete-path concatenation is jointly measurable. -/
+@[fun_prop]
+theorem measurable_concat_prod :
+    Measurable (fun p : FullPath Ω × FullPath Ω => concat p.1 p.2) := by
+  cases isEmpty_or_nonempty Ω with
+  | inl hΩ =>
+      intro s hs
+      convert MeasurableSet.empty
+      ext p
+      exact isEmptyElim p.1.2.1 0
+  | inr hΩ =>
+      exact measurable_concat_prod_of_point (Classical.choice hΩ)
 
 end FullPath
 
