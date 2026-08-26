@@ -527,6 +527,19 @@ theorem measurable_concat_prod_of_point (x : Ω) :
         ((measurable_sectorProjection x n).comp measurable_fst |>.prodMk
           ((measurable_sectorProjection x m).comp measurable_snd)))) hs
 
+/-- Complete-path concatenation is jointly measurable. -/
+@[fun_prop]
+theorem measurable_concat_prod :
+    Measurable (fun p : FullPath Ω × FullPath Ω => concat p.1 p.2) := by
+  cases isEmpty_or_nonempty Ω with
+  | inl hΩ =>
+      intro s hs
+      convert MeasurableSet.empty
+      ext p
+      exact isEmptyElim p.1.2.1 0
+  | inr hΩ =>
+      exact measurable_concat_prod_of_point (Classical.choice hΩ)
+
 end FullPath
 
 /-- Move a measurable map of the first marginal through a composition-product
