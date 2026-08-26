@@ -72,10 +72,12 @@ The library proves:
   instantaneous finite-state Gibbs detailed balance;
 - forward and reverse global path laws on `FullPath`, obtained by measurably
   concatenating the chronological window charts;
-- a global work observable read from the real-time trajectory at window
-  boundaries, almost surely equal to the marked-carrier endpoint work; and
+- global work observables read from the real-time trajectory at window
+  boundaries, including intrinsic reverse-experiment work whose law agrees
+  with the marked reverse-work law; and
 - Crooks, Jarzynski, average-work second-law, and work-distribution Crooks
-  statements transported to the global path laws;
+  statements, including the conventional atomwise ratio, on the global path
+  laws;
 - the work-distribution form of the driven Crooks relation, the intrinsic
   reverse work observable with its sign convention `W_R = -W`, the
   conventional atomwise ratio `P_F(W=w) = e^{β(w-ΔF)} P_R(W_R=-w)`, and a
