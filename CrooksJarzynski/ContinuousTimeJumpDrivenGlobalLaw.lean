@@ -111,6 +111,13 @@ noncomputable def globalWork {M : ℕ} (energy : Fin (M + 1) → Ω → ℝ)
       energy i.castSucc
         (FullPath.trajectory γ ((boundaryTime duration i.succ : NNReal) : ℝ)))
 
+/-- The reverse experiment's own work, read on the chronology-aligned global
+chart: the negated aligned work coordinate. -/
+noncomputable def globalReverseWork {M : ℕ}
+    (energy : Fin (M + 1) → Ω → ℝ)
+    (duration : Fin M → NNReal) (γ : FullPath Ω) : ℝ :=
+  -(globalWork energy duration γ)
+
 /-- The work observable read from a global chart is measurable. -/
 theorem measurable_globalWork {M : ℕ}
     (energy : Fin (M + 1) → Ω → ℝ) (duration : Fin M → NNReal)
@@ -118,6 +125,14 @@ theorem measurable_globalWork {M : ℕ}
     Measurable (globalWork energy duration) := by
   unfold globalWork
   fun_prop
+
+/-- The reverse experiment's work observable on a global chart is
+measurable. -/
+theorem measurable_globalReverseWork {M : ℕ}
+    (energy : Fin (M + 1) → Ω → ℝ) (duration : Fin M → NNReal)
+    (henergy : ∀ i, Measurable (energy i)) :
+    Measurable (globalReverseWork energy duration) := by
+  exact (measurable_globalWork energy duration henergy).neg
 
 /-- A boundary-consistent concatenation ends at the carrier's current
 endpoint. -/
