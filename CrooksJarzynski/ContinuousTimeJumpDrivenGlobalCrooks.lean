@@ -28,6 +28,16 @@ variable {Ω : Type u} [Fintype Ω]
 variable [MeasurableSpace Ω] [MeasurableSingletonClass Ω]
 variable [DecidableEq Ω] [Nonempty Ω]
 
+omit [DecidableEq Ω] [Nonempty Ω] in
+private theorem integrable_count_fintype_global (f : Ω → ℝ) :
+    Integrable f (Measure.count : Measure Ω) := by
+  apply Integrable.of_bound
+    (Measurable.of_discrete : Measurable f).aestronglyMeasurable
+    (∑ x : Ω, ‖f x‖)
+  filter_upwards [] with x
+  exact Finset.single_le_sum (f := fun y : Ω => ‖f y‖)
+    (fun _ _ => norm_nonneg _) (Finset.mem_univ x)
+
 omit [Nonempty Ω] in
 /-- The global reverse-experiment work distribution is the intrinsic marked
 reverse-work distribution. -/
@@ -236,28 +246,19 @@ theorem global_jarzynski_of_gibbsDetailedBalance
           generator duration =
       Real.exp (-β *
         deltaFreeEnergy (Measure.count : Measure Ω) β energy) := by
-  let initial := Gibbs.measure (Measure.count : Measure Ω) β (energy 0)
-  let forward := forwardDrivenLaw initial generator duration
-  calc
-    ∫ γ, Real.exp (-β * globalWork energy duration γ)
-        ∂forwardGlobalLaw initial generator duration =
-        ∫ γ, Real.exp (-β *
-          globalWork energy duration (concatenateWindows γ)) ∂forward := by
-      unfold forwardGlobalLaw
-      exact MeasureTheory.integral_map measurable_concatenateWindows.aemeasurable
-        ((Real.measurable_exp.comp
-          (measurable_const.mul
-            (measurable_globalWork energy duration
-              fun _ => Measurable.of_discrete))).aestronglyMeasurable)
-    _ = ∫ γ, Real.exp (-β * work energy γ) ∂forward := by
-      apply integral_congr_ae
-      filter_upwards
-        [work_comp_concatenateWindows_ae initial energy generator duration] with γ hγ
-      rw [hγ]
-    _ = Real.exp (-β *
-        deltaFreeEnergy (Measure.count : Measure Ω) β energy) := by
-      simpa [initial, forward] using
-        jarzynski_of_gibbsDetailedBalance β hβ energy generator duration hbalance
+  letI : IsProbabilityMeasure
+      (Gibbs.measure (Measure.count : Measure Ω) β
+        (energy (Fin.last M))) :=
+    Gibbs.isProbabilityMeasure_measure
+      (Measure.count : Measure Ω) β (energy (Fin.last M))
+      (integrable_count_fintype_global
+        (fun x => Real.exp (-β * energy (Fin.last M) x)))
+  exact jarzynski_integral _ _ β
+    (deltaFreeEnergy (Measure.count : Measure Ω) β energy)
+    (globalWork energy duration)
+    (measurable_globalWork energy duration fun _ => Measurable.of_discrete)
+    (global_crooks_of_gibbsDetailedBalance
+      β hβ energy generator duration hbalance)
 
 /-- **Average-work second law on concatenated global charts.** -/
 theorem global_second_law_of_gibbsDetailedBalance
@@ -272,26 +273,35 @@ theorem global_second_law_of_gibbsDetailedBalance
         ∂forwardGlobalLaw
           (Gibbs.measure (Measure.count : Measure Ω) β (energy 0))
           generator duration := by
-  let initial := Gibbs.measure (Measure.count : Measure Ω) β (energy 0)
-  let forward := forwardDrivenLaw initial generator duration
-  calc
-    deltaFreeEnergy (Measure.count : Measure Ω) β energy ≤
-        ∫ γ, work energy γ ∂forward := by
-      simpa [initial, forward] using
-        second_law_of_gibbsDetailedBalance β hβ energy generator duration hbalance
-    _ = ∫ γ, globalWork energy duration (concatenateWindows γ) ∂forward := by
-      apply integral_congr_ae
-      filter_upwards
-        [work_comp_concatenateWindows_ae
-          initial energy generator duration] with γ hγ
-      exact hγ.symm
-    _ = ∫ γ, globalWork energy duration γ
-        ∂forwardGlobalLaw initial generator duration := by
-      unfold forwardGlobalLaw
-      exact (MeasureTheory.integral_map
-        measurable_concatenateWindows.aemeasurable
-        (measurable_globalWork energy duration
-          fun _ => Measurable.of_discrete).aestronglyMeasurable).symm
+  letI : IsProbabilityMeasure
+      (Gibbs.measure (Measure.count : Measure Ω) β (energy 0)) :=
+    Gibbs.isProbabilityMeasure_measure
+      (Measure.count : Measure Ω) β (energy 0)
+      (integrable_count_fintype_global
+        (fun x => Real.exp (-β * energy 0 x)))
+  letI : IsProbabilityMeasure
+      (Gibbs.measure (Measure.count : Measure Ω) β
+        (energy (Fin.last M))) :=
+    Gibbs.isProbabilityMeasure_measure
+      (Measure.count : Measure Ω) β (energy (Fin.last M))
+      (integrable_count_fintype_global
+        (fun x => Real.exp (-β * energy (Fin.last M) x)))
+  exact second_law_of_crooks
+    (forwardGlobalLaw
+      (Gibbs.measure (Measure.count : Measure Ω) β (energy 0))
+      generator duration)
+    (reverseGlobalLaw
+      (Gibbs.measure (Measure.count : Measure Ω) β
+        (energy (Fin.last M)))
+      generator duration)
+    β (deltaFreeEnergy (Measure.count : Measure Ω) β energy)
+    (globalWork energy duration) hβ
+    (measurable_globalWork energy duration fun _ => Measurable.of_discrete)
+    (integrable_globalWork
+      (Gibbs.measure (Measure.count : Measure Ω) β (energy 0))
+      energy generator duration)
+    (global_crooks_of_gibbsDetailedBalance
+      β hβ.ne' energy generator duration hbalance)
 
 namespace ThreeStateTwoWindow
 
