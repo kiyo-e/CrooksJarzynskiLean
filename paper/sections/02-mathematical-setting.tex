@@ -1,0 +1,66 @@
+\section{Mathematical setting}
+\label{sec:setting}
+
+Let $\Omega$ be a nonempty finite state space. A finite jump generator is specified by rates
+\[
+  k(x,y) \ge 0 \qquad (x\ne y),
+\]
+with escape rate
+\[
+  \lambda(x)=\sum_{y\ne x} k(x,y)
+\]
+and conservative generator matrix
+\[
+  Q(x,y)=
+  \begin{cases}
+    k(x,y), & x\ne y,\\
+    -\lambda(x), & x=y.
+  \end{cases}
+\]
+The formal structure \lean{FiniteJumpGenerator} packages the nonnegative rates, the induced escape rates and real generator, and the reference measures used below. Conservation is proved as the row-sum identity $\sum_y Q(x,y)=0$.
+
+\subsection{Fixed-jump-count charts}
+
+A path with exactly $n$ jumps is represented by a state sequence and a holding-time sequence,
+\[
+  \gamma=((x_0,\ldots,x_n),(\tau_0,\ldots,\tau_n)).
+\]
+The final holding interval $\tau_n$ records the no-jump remainder after the last jump. In Lean the type is
+\[
+  \lean{JumpPath Omega n}
+  = (\lean{Fin (n+1) -> Omega})\times
+    (\lean{Fin (n+1) -> NNReal}).
+\]
+All finite jump counts are assembled into the dependent sum
+\[
+  \lean{FullPath Omega}=\sum_{n:\mathbb{N}} \lean{JumpPath Omega n}.
+\]
+The development defines measurable terminal-state, jump-time, and right-continuous trajectory maps on this carrier.
+
+For a fixed horizon $T\ge 0$, the holding times should satisfy $\sum_{i=0}^{n}\tau_i=T$. Restricting an ambient $(n+1)$-dimensional product Lebesgue measure to this equality slice would give the zero measure. The formalization therefore uses the free simplex
+\[
+  \Delta_n=\left\{u\in[0,1]^n:\sum_{i<n}u_i\le 1\right\},
+\]
+sets
+\[
+  \tau_i=T u_i \quad (i<n),
+  \qquad
+  \tau_n=T-\sum_{i<n}\tau_i,
+\]
+and proves
+\[
+  \operatorname{vol}(\Delta_n)=\frac{1}{n!}.
+\]
+The $T^n$ scaling of the free coordinates therefore gives the familiar simplex mass $T^n/n!$. Time reversal acts on the completed holding-time vector by an affine involution of the free chart, enabling a reusable change-of-variables theorem. The construction uses the free-coordinate product-volume convention; it does not claim the intrinsic Hausdorff normalization of the embedded equality slice.
+
+\subsection{Sector density}
+
+For a path started from a fixed state $x$, the $n$-jump density has the standard jump-process form
+\begin{equation}
+\label{eq:sector-density}
+  \mathbf{1}_{\{x_0=x\}}
+  \left(\prod_{i=0}^{n-1} k(x_i,x_{i+1})\right)
+  \exp\left(-\sum_{i=0}^{n}\lambda(x_i)\tau_i\right).
+\end{equation}
+The density is integrated against counting measure on state sequences and the scaled free-simplex reference. The resulting measure is \lean{sectorLawFrom T x n}; its mass is \lean{sectorMassFrom T x n}. Equation~\eqref{eq:sector-density} is standard. The mechanized contribution is the construction, normalization, and subsequent identification of the pushforwards of the countable sector sum.
+

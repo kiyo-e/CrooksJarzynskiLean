@@ -1,0 +1,65 @@
+\documentclass[11pt]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,mathtools}
+\usepackage{amsthm}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{xurl}
+\usepackage{hyperref}
+\usepackage[backend=biber,style=authoryear,maxcitenames=2,maxbibnames=99,doi=true,isbn=false,url=true]{biblatex}
+\addbibresource{references.bib}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue,
+  citecolor=blue,
+  urlcolor=blue,
+  pdftitle={Machine-Checked Path Measures and Fluctuation Relations for Finite-State Continuous-Time Jump Processes in Lean 4},
+  pdfauthor={kiyo-e}
+}
+
+\newcommand{\Lean}{Lean~4}
+\newcommand{\CJ}{CrooksJarzynskiLean}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\Pp}{\mathbb{P}}
+\newcommand{\dd}{\,\mathrm{d}}
+\newcommand{\lean}[1]{\ifmmode\text{\ttfamily\detokenize{#1}}\else\nolinkurl{#1}\fi}
+\newcommand{\file}[1]{\ifmmode\text{\ttfamily\detokenize{#1}}\else\nolinkurl{#1}\fi}
+\newcommand{\artifactbase}{\texttt{f96e380}}
+
+\title{Machine-Checked Path Measures and Fluctuation Relations\\
+for Finite-State Continuous-Time Jump Processes in Lean 4}
+\author{kiyo-e\\
+\small \url{https://github.com/kiyo-e/CrooksJarzynskiLean}}
+\date{Draft of 27 August 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+We formalize finite-state continuous-time jump processes and their nonequilibrium work relations in Lean~4. Starting from a conservative finite-state generator, we construct normalized fixed-horizon path measures by summing explicit jump-count sectors and prove that no probability mass escapes to infinitely many jumps within the horizon. We identify the terminal marginal of the constructed law with the corresponding row of $\exp(TQ)$, derive its finite-dimensional distributions as chronological transition-kernel chains, and measurably concatenate finitely many piecewise-constant protocol windows into a global real-time path law. Under local Gibbs detailed balance, the same global law carries Crooks, Jarzynski, average-work second-law, and work-distribution relations. The contribution is the machine-checked connection from generators to physical fluctuation relations, rather than new fluctuation identities.
+\end{abstract}
+
+
+\input{sections/01-introduction.tex}
+\input{sections/02-mathematical-setting.tex}
+\input{sections/03-normalized-path-measure.tex}
+\input{sections/04-matrix-exponential-semigroup.tex}
+\input{sections/05-driven-global-laws.tex}
+\input{sections/06-formalization-architecture.tex}
+\input{sections/07-examples.tex}
+\input{sections/08-related-work.tex}
+\input{sections/09-limitations.tex}
+\input{sections/10-artifact.tex}
+\input{sections/11-conclusion.tex}
+
+\printbibliography
+
+\end{document}

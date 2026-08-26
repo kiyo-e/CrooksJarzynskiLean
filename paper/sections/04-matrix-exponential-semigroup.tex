@@ -1,0 +1,61 @@
+\section{From the constructed law to the matrix-exponential semigroup}
+\label{sec:semigroup}
+
+\subsection{The terminal marginal is a genuine pushforward}
+
+For arithmetic convenience, the development first defines the sector mass that ends at $y$ and sums it over $n$ to obtain a transition mass $p_T(x,y)$. A separate bridge theorem proves that this sum is the terminal marginal of the actual path law:
+\begin{equation}
+\label{eq:terminal-push}
+  (\Pp_{T,x}\circ X_T^{-1})(\{y\})=p_T(x,y),
+\end{equation}
+where $X_T$ is the terminal-state coordinate. This step matters in a proof assistant: without it, a calculation about $p_T$ would not automatically be a statement about \lean{pathLawFrom}.
+
+\subsection{Renewal equation and uniqueness}
+
+The path construction satisfies a first-jump renewal equation. The Lean proof is formulated in a residual fraction $\rho\in[0,1]$ of a fixed horizon. Peeling the first free simplex coordinate leaves the remaining coordinates in a simplex at fraction $\rho-u_0$ without rescaling the chart. After summing over the first successor state, the transition mass satisfies the same entrywise renewal equation as the matrix exponential.
+
+On the analytic side, the development proves that
+\[
+  \rho\longmapsto \exp((T\rho)Q)(x,y)
+\]
+is a continuous solution of that renewal equation and that bounded continuous solutions are unique. Matching the path-side solution to the matrix-exponential solution gives
+\begin{equation}
+\label{eq:terminal-exp}
+  (\Pp_{T,x}\circ X_T^{-1})_{\R}(\{y\})
+  = \exp(TQ)(x,y),
+\end{equation}
+where the subscript indicates conversion from an extended-nonnegative-real measure to its real-valued mass.
+
+The terminal laws are packaged as a Mathlib Markov kernel
+\[
+  K_T(x,\cdot)=\Pp_{T,x}\circ X_T^{-1}.
+\]
+Equation~\eqref{eq:terminal-exp} turns the matrix-exponential semigroup identity into Chapman--Kolmogorov:
+\[
+  K_{S+T}=K_T\circ K_S.
+\]
+The repository also proves a stronger path-level identity. Cutting a constructed path at an intermediate horizon and concatenating an independent continuation started at the cut state recovers \lean{pathLawFrom (S+T) x}. Taking the terminal pushforward of this path-level theorem yields the kernel semigroup law as a shadow.
+
+\subsection{Finite-dimensional distributions}
+
+Let
+\[
+  0=t_0\le t_1\le\cdots\le t_n\le T
+\]
+be a finite monotone family of observation times. The measurable sampling map reads the right-continuous trajectory at these times. The formalization proves
+\begin{equation}
+\label{eq:fdd}
+  \Pp_{T,x}\circ (X_{t_0},\ldots,X_{t_n})^{-1}
+  = \delta_x K_{t_1-t_0}\cdots K_{t_n-t_{n-1}},
+\end{equation}
+where the right-hand side is Mathlib's chronological finite path measure. For a state sequence $(x_0,\ldots,x_n)$, the atom formula is
+\begin{equation}
+\label{eq:fdd-atom}
+  \mathbf{1}_{\{x_0=x\}}
+  \prod_{i=0}^{n-1}
+  \exp((t_{i+1}-t_i)Q)(x_i,x_{i+1}).
+\end{equation}
+Thus the semigroup is not merely an API defined beside the path construction: it is identified with the actual terminal and finite-dimensional laws of that construction.
+
+A branching three-state Y-shaped chain instantiates the general theorem. This example is useful because its path law cannot be reduced to the parity-of-jump-count argument available for a two-state alternating chain.
+

@@ -1,0 +1,14 @@
+\section{Artifact and reproducibility}
+\label{sec:artifact}
+
+This draft was prepared against repository \lean{main} at base commit \artifactbase. The manuscript source, bibliography, reader-facing related-work review, theorem map, and artifact guide live in the same repository. A release version should replace the base-commit statement with a versioned tag and archival DOI.
+
+The principal verification commands are:
+\begin{verbatim}
+lake exe cache get
+lake build
+lake env lean CrooksJarzynski/AxiomAudit.lean
+lake env lean CrooksJarzynski/AxiomAuditDriven.lean
+\end{verbatim}
+The project is pinned by \file{lean-toolchain}, \file{lakefile.lean}, and \file{lake-manifest.json}. The detailed paper-to-declaration map is in \file{FORMALIZATION.md}; driven-layer design notes are in \file{DRIVEN_PROTOCOL.md}; and \file{ARTIFACT.md} gives a reviewer-oriented route through the six-stage theorem spine.
+

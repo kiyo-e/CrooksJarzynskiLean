@@ -1,0 +1,42 @@
+\section{Formalization architecture}
+\label{sec:architecture}
+
+The proof is intentionally presented as a six-stage spine rather than as a catalogue of every repository feature. Table~\ref{tab:spine} maps each paper-level step to the principal Lean module and declarations.
+
+\begin{table}[ht]
+\centering
+\small
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.07\linewidth}>{\raggedright\arraybackslash}p{0.31\linewidth}>{\raggedright\arraybackslash}p{0.54\linewidth}@{}}
+\toprule
+Stage & Paper-level role & Principal module and declarations \\
+\midrule
+1 & Nonzero fixed-horizon reference and simplex volume & \file{ContinuousTimeJumpSimplex.lean}: \lean{Simplex.volume_freeSimplexSet}, \lean{Simplex.sum_holdingTimesOfFree} \\
+\addlinespace
+2 & Sector masses, tail disappearance, and normalization & \file{ContinuousTimeJumpFiniteGeneratorPathLaw.lean}: \lean{tendsto_arrivalMassFrom}, \lean{tsum_sectorMassFrom} \\
+\addlinespace
+3 & Actual probability measure and terminal-coordinate bridge & \file{ContinuousTimeJumpFiniteGeneratorFullPath.lean}: \lean{pathLawFrom}, \lean{instIsProbabilityMeasurePathLawFrom}, \lean{pathLawFrom_terminalState_singleton} \\
+\addlinespace
+4 & Matrix-exponential terminal law and Markov semigroup & \file{ContinuousTimeJumpFiniteGeneratorBridge.lean}: \lean{pathLawFrom_terminalState_eq_exp_generator}, \lean{transitionKernel_add} \\
+\addlinespace
+5 & Finite-dimensional distributions & \file{ContinuousTimeJumpFiniteDimensional.lean}: \lean{pathLawFrom_finiteDimensional_eq}, \lean{pathLawFrom_sampleAt_real_singleton_eq_exp_product} \\
+\addlinespace
+6 & Global driven path law and fluctuation relations & \file{ContinuousTimeJumpDrivenConcat.lean}, \file{ContinuousTimeJumpDrivenGlobalLaw.lean}, \file{ContinuousTimeJumpDrivenGlobalCrooks.lean}: \lean{concatenateWindows}, \lean{forwardGlobalLaw}, \lean{global_crooks_of_gibbsDetailedBalance}, \lean{global_jarzynski_of_gibbsDetailedBalance} \\
+\bottomrule
+\end{tabular}
+\caption{The paper theorem spine. All modules live under \file{CrooksJarzynski/}.}
+\label{tab:spine}
+\end{table}
+
+Three design choices are especially important.
+
+\paragraph{Measure identities rather than path-probability ratios.}
+The abstract relation is an equality of measures after \lean{withDensity}. This avoids division by zero and lets the same API support discrete, continuous, and pushed-forward work laws.
+
+\paragraph{Explicit bridges between arithmetic and measures.}
+Sector sums, renewal functions, and matrix entries are useful intermediate objects, but every headline theorem is phrased against the constructed path law or one of its pushforwards. Dedicated bridge lemmas prevent an accidental gap between a numerical calculation and a statement about the probability measure.
+
+\paragraph{Marked construction before global projection.}
+Window marks retain enough structure to prove boundary matching and local balance. Only after those facts are available are the marks measurably concatenated into a global path. This separates recursive probability construction from real-time observation while proving that their work observables agree almost surely.
+
+The implementation uses \Lean, Mathlib, and Physlib. The snapshot underlying this draft pins Lean and Mathlib to version 4.32.0 and pins Physlib by commit. The CI workflow builds the project, rejects proof placeholders and custom axiom declarations, and audits the kernel axioms of selected headline theorems. The accepted foundational axioms are the standard \lean{propext}, \lean{Classical.choice}, and \lean{Quot.sound} used by the Lean/Mathlib environment.
+

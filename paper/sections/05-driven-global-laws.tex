@@ -1,0 +1,90 @@
+\section{Piecewise-constant driving and global path laws}
+\label{sec:driven}
+
+\subsection{Marked window laws}
+
+Consider $M$ protocol windows with durations $T_i$, energy landscapes
+\[
+  E_0,E_1,\ldots,E_M:\Omega\to\R,
+\]
+and generators $G_i$ for $i=0,\ldots,M-1$. Within window $i$, the generator is constant and the complete path is sampled from the normalized fixed-initial law already constructed. The next window starts at the recorded terminal state. The marked carrier therefore retains one complete \lean{FullPath} object per window rather than only its endpoints.
+
+The reverse experiment begins from the final Gibbs state, traverses the windows in reverse order, and stores reversed complete paths. The development proves almost-sure boundary matching and fixed-horizon validity for both forward and reverse marked laws. A structurally boundary-consistent subtype is also available for deterministic reasoning.
+
+\subsection{Measurable global concatenation}
+
+The marked representation is convenient for recursive measure construction, but physical work should also be readable on a single real-time trajectory. The function \lean{concatenateWindows} restores chronological order and glues every window chart into one \lean{FullPath}. The seam holding intervals are merged by the lower-level concatenation operation. The formalization proves:
+
+\begin{itemize}[leftmargin=*]
+  \item measurability of the global concatenation map;
+  \item addition of total holding times;
+  \item preservation of validity over the summed horizon;
+  \item right-continuous left and right trajectory gluing laws; and
+  \item recovery of marked boundary states from the global trajectory almost surely.
+\end{itemize}
+
+The global laws are the pushforwards
+\[
+  \Pp_F^{\mathrm{glob}}
+  =\Pp_F^{\mathrm{marked}}\circ C^{-1},
+  \qquad
+  \Pp_R^{\mathrm{glob}}
+  =\Pp_R^{\mathrm{marked}}\circ C^{-1},
+\]
+where $C$ is chronological concatenation. Both are probability measures.
+
+\subsection{Work and detailed balance}
+
+Let $s_i=\sum_{j<i}T_j$ be the boundary times. Work is read from the global right-continuous trajectory at the end of each window:
+\begin{equation}
+\label{eq:work}
+  W(\gamma)=\sum_{i=0}^{M-1}
+  \left(E_{i+1}(X_{s_{i+1}})-E_i(X_{s_{i+1}})\right).
+\end{equation}
+For finite $\Omega$, this observable is bounded and therefore integrable under the constructed laws. The formalization proves that~\eqref{eq:work} agrees almost surely with the recursively defined marked work.
+
+For inverse temperature $\beta\ne 0$, assume division-free local Gibbs detailed balance in every window, equivalently
+\begin{equation}
+\label{eq:gibbs-db}
+  e^{-\beta E_i(x)} k_i(x,y)
+  = e^{-\beta E_i(y)} k_i(y,x)
+  \qquad (x\ne y).
+\end{equation}
+Let
+\[
+  Z_i=\sum_{x\in\Omega}e^{-\beta E_i(x)},
+  \qquad
+  F_i=-\beta^{-1}\log Z_i,
+  \qquad
+  \Delta F=F_M-F_0.
+\]
+The path-density proof first establishes a window balance for mixtures of the actual fixed-initial laws, then lifts it through the recursive marked construction, and finally maps it through global concatenation.
+
+\subsection{Global fluctuation relations}
+
+The central measure identity on the global chart is
+\begin{equation}
+\label{eq:global-crooks}
+  \Pp_F^{\mathrm{glob}}.\operatorname{withDensity}
+  \left(e^{-\beta W}\right)
+  = e^{-\beta\Delta F}\,\Pp_R^{\mathrm{glob}}.
+\end{equation}
+This division-free form avoids ratios on zero-probability trajectories. Evaluating~\eqref{eq:global-crooks} on the whole path space yields Jarzynski's equality
+\begin{equation}
+\label{eq:jarzynski}
+  \E_F\left[e^{-\beta W}\right]=e^{-\beta\Delta F}.
+\end{equation}
+For $\beta>0$, Jensen's inequality and integrability of $W$ give the average-work second law
+\begin{equation}
+\label{eq:second-law}
+  \Delta F\le \E_F[W].
+\end{equation}
+
+The development also maps~\eqref{eq:global-crooks} to the work coordinate. On the chronology-aligned global reverse chart, the intrinsic reverse-experiment work is defined by $W_R=-W$. The conventional atomwise statement is
+\begin{equation}
+\label{eq:atom-crooks}
+  \Pp_F(W=w)
+  =e^{\beta(w-\Delta F)}\Pp_R(W_R=-w).
+\end{equation}
+All of these theorems are stated on the global pushforward laws constructed from the generators, rather than on abstract work distributions supplied as assumptions.
+

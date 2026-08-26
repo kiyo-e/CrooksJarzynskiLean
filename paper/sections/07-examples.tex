@@ -1,0 +1,16 @@
+\section{Examples and validation targets}
+\label{sec:examples}
+
+The repository contains several concrete instances that exercise distinct parts of the general construction.
+
+\paragraph{Symmetric two-state chain.}
+For the unit-rate alternating chain, the $n$-jump sector has mass $e^{-T}T^n/n!$. The sector masses sum to one, the jump-count law is Poisson, and the terminal distribution is the parity-filtered row of $\exp(TQ)$. This example checks normalization and the semigroup bridge against an explicit calculation.
+
+\paragraph{Asymmetric reversible two-state quench.}
+The rates $q(0,1)=2$ and $q(1,0)=1$ have equilibrium probabilities $(1/3,2/3)$. An explicit final energy quench has partition functions $Z_0=3$ and $Z_1=6$, hence $\Delta F=-\log 2$ at $\beta=1$. The formalization obtains exact two-atom work probabilities, the exact mean work, a strict second law, physical Crooks and Jarzynski relations, and an entropy-production integral fluctuation theorem. The same model is recovered as a one-window instance of the general driven construction.
+
+\paragraph{Branching and history-dependent work.}
+A three-state Y-shaped generator validates the general terminal-law theorem beyond two-state parity arguments. A separate two-window three-state protocol has positive-probability work atoms $0$ and $\log 2$. More strongly, positive-measure events realize both values while sharing the endpoint pair $(0,0)$. Thus the driven work is not almost surely a function of the initial and final states alone; retaining and concatenating full window paths is mathematically substantive rather than merely an implementation choice.
+
+These examples are not used to claim new stochastic-thermodynamic phenomena. They act as regression targets for normalization, branching, physical parameterization, work sign conventions, and the distinction between endpoint and path information.
+
