@@ -4,7 +4,8 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: kiyo-e
 -/
 import CrooksJarzynski.ContinuousTimeJumpFiniteGenerator
-import CrooksJarzynski.ContinuousTimeJumpTwoStateAsymmetricNormalization
+import CrooksJarzynski.ContinuousTimeJumpLocalBalance
+import CrooksJarzynski.ContinuousTimeJumpRenewalIntegrals
 
 /-!
 # Fixed-initial sector laws for a general finite-state jump generator
@@ -36,7 +37,7 @@ namespace ContinuousTimeJump
 -- `residual` is deliberately left qualified: `_root_.residual` is Mathlib's
 -- topological residual filter, so opening the name here would be ambiguous.
 open Simplex (cubeExpWeight)
-open TwoState.AsymmetricExample (ratePrefixProduct)
+open Renewal (ratePrefixProduct)
 
 universe u
 
@@ -46,8 +47,8 @@ These are statements about a bare rate vector, with none of the jump-rate or
 escape-rate prefactors the sector integrals carry.  Keeping them prefactor-free
 is what lets the general generator use them: its density carries a product of
 jump rates, not of escape rates, so the two cannot be matched under a common
-prefactor.  They belong with `cubeExpWeight` in a neutral renewal namespace once
-that refactor happens. -/
+prefactor.  The shared rate-vector lemmas live in the neutral `Renewal`
+namespace. -/
 
 /-- Survival integral of the free coordinates alone: the mass of paths whose
 first `n` holding intervals fit inside the horizon. -/
@@ -70,7 +71,7 @@ theorem sectorOn_add_arrivalOn_succ
         ((r (Fin.last n) : ℝ≥0∞) * (T : ℝ≥0∞)) * arrivalOn r T =
       arrivalOn (fun i : Fin n => r i.castSucc) T := by
   unfold sectorOn arrivalOn
-  rw [TwoState.AsymmetricExample.lintegral_cubeExpWeight_succ r T,
+  rw [Renewal.lintegral_cubeExpWeight_succ r T,
     ← lintegral_add_left (by fun_prop)]
   apply setLIntegral_congr_fun (Simplex.measurableSet_freeSimplexSet n)
   intro v hv
@@ -610,7 +611,7 @@ theorem tendsto_arrivalMassFrom
       ((G.rateBound : ℝ≥0∞) * (T : ℝ≥0∞)) ^ n *
         ENNReal.ofReal (1 / (n.factorial : ℝ)))
     tendsto_const_nhds
-    (TwoState.AsymmetricExample.tendsto_pow_mul_factorial_inv T G.rateBound)
+    (Renewal.tendsto_pow_mul_factorial_inv T G.rateBound)
     (fun n => bot_le)
     (fun n => G.arrivalMassFrom_le T x n)
 
