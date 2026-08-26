@@ -111,6 +111,13 @@ noncomputable def globalWork {M : ℕ} (energy : Fin (M + 1) → Ω → ℝ)
       energy i.castSucc
         (FullPath.trajectory γ ((boundaryTime duration i.succ : NNReal) : ℝ)))
 
+/-- The reverse experiment's own work, read on the chronology-aligned global
+chart: the negated aligned work coordinate. -/
+noncomputable def globalReverseWork {M : ℕ}
+    (energy : Fin (M + 1) → Ω → ℝ)
+    (duration : Fin M → NNReal) (γ : FullPath Ω) : ℝ :=
+  -(globalWork energy duration γ)
+
 /-- The work observable read from a global chart is measurable. -/
 theorem measurable_globalWork {M : ℕ}
     (energy : Fin (M + 1) → Ω → ℝ) (duration : Fin M → NNReal)
@@ -118,6 +125,14 @@ theorem measurable_globalWork {M : ℕ}
     Measurable (globalWork energy duration) := by
   unfold globalWork
   fun_prop
+
+/-- The reverse experiment's work observable on a global chart is
+measurable. -/
+theorem measurable_globalReverseWork {M : ℕ}
+    (energy : Fin (M + 1) → Ω → ℝ) (duration : Fin M → NNReal)
+    (henergy : ∀ i, Measurable (energy i)) :
+    Measurable (globalReverseWork energy duration) := by
+  exact (measurable_globalWork energy duration henergy).neg
 
 /-- A boundary-consistent concatenation ends at the carrier's current
 endpoint. -/
@@ -495,6 +510,46 @@ theorem map_globalWork_reverseGlobalLaw
   apply Measure.map_congr
   exact work_comp_concatenateWindows_ae_reverse
     final energy generator duration
+
+/-- Global work is integrable under every constructed finite-state forward
+global law with a probability initial state. -/
+theorem integrable_globalWork
+    {M : ℕ} (initial : Measure Ω) [IsProbabilityMeasure initial]
+    (energy : Fin (M + 1) → Ω → ℝ)
+    (generator : Fin M → FiniteJumpGenerator Ω)
+    (duration : Fin M → NNReal) :
+    Integrable (globalWork energy duration)
+      (forwardGlobalLaw initial generator duration) := by
+  unfold forwardGlobalLaw
+  apply (integrable_map_measure
+    (measurable_globalWork energy duration
+      fun _ => Measurable.of_discrete).aestronglyMeasurable
+    measurable_concatenateWindows.aemeasurable).2
+  apply (integrable_work initial energy generator duration).congr
+  filter_upwards
+    [work_comp_concatenateWindows_ae
+      initial energy generator duration] with γ hγ
+  exact hγ.symm
+
+/-- Global work is likewise integrable under every constructed finite-state
+reverse global law with a probability final state. -/
+theorem integrable_globalWork_reverse
+    {M : ℕ} (final : Measure Ω) [IsProbabilityMeasure final]
+    (energy : Fin (M + 1) → Ω → ℝ)
+    (generator : Fin M → FiniteJumpGenerator Ω)
+    (duration : Fin M → NNReal) :
+    Integrable (globalWork energy duration)
+      (reverseGlobalLaw final generator duration) := by
+  unfold reverseGlobalLaw
+  apply (integrable_map_measure
+    (measurable_globalWork energy duration
+      fun _ => Measurable.of_discrete).aestronglyMeasurable
+    measurable_concatenateWindows.aemeasurable).2
+  apply (integrable_work_reverse final energy generator duration).congr
+  filter_upwards
+    [work_comp_concatenateWindows_ae_reverse
+      final energy generator duration] with γ hγ
+  exact hγ.symm
 
 /-- The forward global law is concentrated on valid concatenated charts. -/
 theorem forwardGlobalLaw_ae_isValid

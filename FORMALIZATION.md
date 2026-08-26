@@ -130,10 +130,13 @@ change-of-variables lemmas above expose this as a reusable public API in
 | Forward and reverse laws on one concatenated `FullPath` chart | `MeasureProtocol.ContinuousTimeJump.Driven.forwardGlobalLaw`, `MeasureProtocol.ContinuousTimeJump.Driven.reverseGlobalLaw` |
 | Elapsed protocol time at each window boundary | `MeasureProtocol.ContinuousTimeJump.Driven.boundaryTime`, `MeasureProtocol.ContinuousTimeJump.Driven.boundaryTime_zero`, `MeasureProtocol.ContinuousTimeJump.Driven.boundaryTime_last`, `MeasureProtocol.ContinuousTimeJump.Driven.boundaryTime_succ` |
 | Work read from the global trajectory at window boundaries | `MeasureProtocol.ContinuousTimeJump.Driven.globalWork`, `MeasureProtocol.ContinuousTimeJump.Driven.measurable_globalWork` |
+| Intrinsic reverse-experiment work on the chronology-aligned global chart | `MeasureProtocol.ContinuousTimeJump.Driven.globalReverseWork`, `MeasureProtocol.ContinuousTimeJump.Driven.measurable_globalReverseWork` |
 | Exact horizons and regular local seams under the forward and reverse marked laws | `MeasureProtocol.ContinuousTimeJump.Driven.forwardDrivenLaw_ae_windowRegular`, `MeasureProtocol.ContinuousTimeJump.Driven.reverseDrivenLaw_ae_windowRegular` |
 | Recovery of marked endpoints from the concatenated trajectory at protocol boundaries | `MeasureProtocol.ContinuousTimeJump.Driven.trajectory_concatenateWindows_boundary_ae`, `MeasureProtocol.ContinuousTimeJump.Driven.trajectory_concatenateWindows_boundary_ae_reverse` |
 | Almost-sure recovery of marked work from global work | `MeasureProtocol.ContinuousTimeJump.Driven.work_comp_concatenateWindows_ae`, `MeasureProtocol.ContinuousTimeJump.Driven.work_comp_concatenateWindows_ae_reverse` |
 | Equality of global-chart and marked-carrier work distributions | `MeasureProtocol.ContinuousTimeJump.Driven.map_globalWork_forwardGlobalLaw`, `MeasureProtocol.ContinuousTimeJump.Driven.map_globalWork_reverseGlobalLaw` |
+| Equality of global-chart and marked-carrier reverse-work distributions | `MeasureProtocol.ContinuousTimeJump.Driven.map_globalReverseWork_reverseGlobalLaw` |
+| Integrability of global work under the forward and reverse global laws | `MeasureProtocol.ContinuousTimeJump.Driven.integrable_globalWork`, `MeasureProtocol.ContinuousTimeJump.Driven.integrable_globalWork_reverse` |
 | Validity and exact total duration of the forward and reverse global laws | `MeasureProtocol.ContinuousTimeJump.Driven.forwardGlobalLaw_ae_isValid`, `MeasureProtocol.ContinuousTimeJump.Driven.forwardGlobalLaw_ae_totalHoldingTime`, `MeasureProtocol.ContinuousTimeJump.Driven.reverseGlobalLaw_ae_isValid`, `MeasureProtocol.ContinuousTimeJump.Driven.reverseGlobalLaw_ae_totalHoldingTime` |
 | Division-free finite-generator detailed balance | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.IsDetailedBalanceWeight` |
 | Instantaneous Gibbs detailed balance | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.IsGibbsDetailedBalance` |
@@ -149,6 +152,8 @@ change-of-variables lemmas above expose this as a reusable public API in
 | Average-work second law for the constructed driven law | `MeasureProtocol.ContinuousTimeJump.Driven.second_law_of_gibbsDetailedBalance` |
 | Crooks relation on the forward and reverse global path laws | `MeasureProtocol.ContinuousTimeJump.Driven.global_crooks_of_gibbsDetailedBalance` |
 | Work-distribution Crooks relation for global charts | `MeasureProtocol.ContinuousTimeJump.Driven.global_work_distribution_crooks_of_gibbsDetailedBalance` |
+| Global work-distribution Crooks relation using intrinsic reverse work | `MeasureProtocol.ContinuousTimeJump.Driven.global_work_distribution_crooks_reverseWork_of_gibbsDetailedBalance` |
+| Conventional global atomwise ratio `P_F(W=w) = e^{β(w-ΔF)} P_R(W_R=-w)` | `MeasureProtocol.ContinuousTimeJump.Driven.global_crooks_work_atom_of_gibbsDetailedBalance` |
 | Jarzynski equality for global trajectory work | `MeasureProtocol.ContinuousTimeJump.Driven.global_jarzynski_of_gibbsDetailedBalance` |
 | Average-work second law for global trajectory work | `MeasureProtocol.ContinuousTimeJump.Driven.global_second_law_of_gibbsDetailedBalance` |
 | One-window work is the terminal energy quench | `MeasureProtocol.ContinuousTimeJump.Driven.work_one` |
