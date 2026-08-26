@@ -104,11 +104,10 @@ with the residual coordinate, followed by a coordinate permutation. The
 change-of-variables lemmas above expose this as a reusable public API in
 `ContinuousTimeJumpSimplexReversal.lean`.
 
-## Stepwise driven finite-state protocols
+## Path concatenation and general finite-state jump generators
 
 | Informal statement | Lean declaration |
 | --- | --- |
-| Complete-path reversal on the all-jump-count path space | `MeasureProtocol.ContinuousTimeJump.FullPath.reverse` |
 | Pointwise concatenation of finite-jump charts, with the seam holding intervals merged | `MeasureProtocol.ContinuousTimeJump.JumpPath.concat` |
 | Real-time left/right gluing laws for concatenated charts | `MeasureProtocol.ContinuousTimeJump.JumpPath.trajectory_concat_left`, `MeasureProtocol.ContinuousTimeJump.JumpPath.trajectory_concat_right` |
 | Zero-time trajectory recovery away from a jump, and exclusion of a zero-time jump for valid charts | `MeasureProtocol.ContinuousTimeJump.JumpPath.trajectory_zero_of_not_hasJumpAt_zero`, `MeasureProtocol.ContinuousTimeJump.JumpPath.not_hasJumpAt_zero_of_isValid`, `MeasureProtocol.ContinuousTimeJump.FullPath.trajectory_zero_of_not_hasJumpAt_zero`, `MeasureProtocol.ContinuousTimeJump.FullPath.not_hasJumpAt_zero_of_isValid` |
@@ -116,6 +115,46 @@ change-of-variables lemmas above expose this as a reusable public API in
 | Validity of concatenated charts over the summed horizon | `MeasureProtocol.ContinuousTimeJump.JumpPath.isValid_concat` |
 | Complete-path concatenation and measurability in the suffix | `MeasureProtocol.ContinuousTimeJump.FullPath.concat`, `MeasureProtocol.ContinuousTimeJump.FullPath.measurable_concat` |
 | Joint measurability of complete-path concatenation | `MeasureProtocol.ContinuousTimeJump.FullPath.measurable_concat_prod` |
+| Concatenation multiplies segmentwise rate densities across the seam | `MeasureProtocol.ContinuousTimeJump.JumpPath.rateDensity_concat`, `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.rateDensity_concat` |
+| The finite-generator counting reference carries the physical mass `T^n / n!` | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.simplexSectorMass_eq` |
+| The general fixed-initial path law is a probability measure (non-explosion) | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.tsum_sectorMassFrom`, `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.instIsProbabilityMeasurePathLawFrom` |
+| Poisson-type tail bound for an arbitrary rate cap `R` | `MeasureProtocol.ContinuousTimeJump.Renewal.arrivalIntegral_le` |
+| Entrywise first-jump renewal equation for `exp (TQ)` | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.exp_smul_apply_renewal` |
+| Continuous solutions of the renewal equation are unique | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.eq_exp_smul_apply_of_renewal` |
+| The general terminal marginal equals the row of `exp (TQ)` | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.pathLawFrom_terminalState_eq_exp_generator` |
+| The general terminal marginals form a Markov kernel | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.transitionKernel`, `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.instIsMarkovKernelTransitionKernel` |
+| Chapman--Kolmogorov for the general transition kernel | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.transitionKernel_chapman_kolmogorov` |
+| The identification specialized to the branching three-state Y chain | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.ThreeStateBranching.pathLawFrom_terminalState_eq_exp_generator` |
+| Almost every path is a valid real-time trajectory (positive waits, horizon) | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.pathLawFrom_ae_isValid` |
+| The real-time trajectory starts at the prescribed state and ends at the recorded terminal state | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.pathLawFrom_ae_trajectory_endpoints` |
+| Path-level Chapman--Kolmogorov for the fixed-initial path law | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.pathLawFrom_add` |
+| Path-level Chapman--Kolmogorov in kernel form | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.pathKernel_add` |
+| The transition-kernel semigroup law recovered from path-level concatenation | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.transitionKernel_add_from_pathLawFrom_add` |
+| Every finite-dimensional marginal is the chronological path measure of the transition kernels | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.pathLawFrom_finiteDimensional_eq` |
+| Every single-time marginal is the corresponding transition-kernel row | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.map_pathLawFrom_trajectory_eq_transitionKernel` |
+| Every finite-dimensional atom is a product of matrix-exponential entries | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.pathLawFrom_sampleAt_real_singleton_eq_exp_product` |
+| Every single-time atom is the corresponding matrix-exponential entry | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.pathLawFrom_trajectory_real_singleton_eq_exp_generator` |
+
+A `FiniteJumpGenerator` packages nonnegative finite-state jump rates into a
+conservative real generator with a fixed-horizon counting reference, and its
+fixed-initial sector laws assemble into a probability measure on the disjoint
+union of all jump-count sectors. The one-variable exponential simplex integrals
+and Poisson-type tail bounds that drive every renewal argument live in the
+neutral module `ContinuousTimeJumpRenewalIntegrals.lean` (namespace
+`MeasureProtocol.ContinuousTimeJump.Renewal`); they are shared by the general
+generator layer and the two-state examples. Concatenating charts at a seam
+multiplies their rate densities, which upgrades the pointwise concatenation to
+a path-level Chapman--Kolmogorov identity for the fixed-initial path laws and
+recovers the transition-kernel semigroup law as its terminal shadow. Sampling a
+path at finitely many times identifies every finite-dimensional marginal with
+the chronological chain of the transition kernels, and every finite-dimensional
+atom with a product of matrix-exponential entries.
+
+## Stepwise driven finite-state protocols
+
+| Informal statement | Lean declaration |
+| --- | --- |
+| Complete-path reversal on the all-jump-count path space | `MeasureProtocol.ContinuousTimeJump.FullPath.reverse` |
 | One forward window built from the actual fixed-initial path law | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.forwardWindowKernel` |
 | Forward-aligned reverse window | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.reverseWindowKernel` |
 | Forward law obtained by recursively binding window endpoints | `MeasureProtocol.ContinuousTimeJump.Driven.forwardDrivenLaw` |
@@ -144,6 +183,9 @@ change-of-variables lemmas above expose this as a reusable public API in
 | Weighted mixture of actual fixed-initial full path laws | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.sum_smul_pathLawFrom` |
 | Reversal invariance of the weighted full path law | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.map_weightedFullPathLaw_reverse` |
 | Path-level window balance from instantaneous Gibbs detailed balance | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.windowBalance_of_gibbsDetailedBalance` |
+| Gibbs detailed balance identifies forward and aligned-reverse sector densities pointwise | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.rateDensity_gibbs_eq_alignedReverse` |
+| Unit-weight Crooks relations for the unnormalized Gibbs-weighted sector and full-path laws | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.gibbsSector_crooks`, `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.gibbsFullPath_crooks` |
+| Chronological reading of the reverse-oriented window carrier | `MeasureProtocol.ContinuousTimeJump.Driven.windowAt` |
 | Endpoint-switch work `Σₖ(Eₖ₊₁-Eₖ)(xₖ,end)` | `MeasureProtocol.ContinuousTimeJump.Driven.work` |
 | Explicit finite-state partition function | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.finitePartitionFunction` |
 | Explicit finite-state free energy | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.finiteFreeEnergy` |
@@ -235,7 +277,6 @@ Jarzynski, second-law, and work-distribution statements to these global laws.
 | Strict second law `ΔF < ⟨W⟩`, reducing to `27 < 32` | `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.full_second_law_strict` |
 | Reverse work sign convention `W_rev = -W` on reversed paths | `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.reverseThermodynamicWork_eq_neg` |
 | Conventional atomwise Crooks ratio `P_F(W=w) = e^{β(w-ΔF)} P_R(W_rev=-w)` | `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.crooks_work_atom` |
-| Poisson-type tail bound for an arbitrary rate cap `R` | `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.arrivalIntegral_le` |
 | The fixed-initial asymmetric path law is a probability measure | `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.tsum_asymmetricSectorLawFrom_univ` |
 | Its terminal marginal is a parity-filtered sector-mass sum | `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.map_asymmetricPathLawFrom_terminalState_apply` |
 | Chapman--Kolmogorov for the explicit asymmetric transition matrix | `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.asymmetricTransitionProbability_chapman_kolmogorov` |
@@ -243,23 +284,8 @@ Jarzynski, second-law, and work-distribution statements to these global laws.
 | Renewal evaluation of the parity-filtered sector-mass sums | `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.tsum_sectorMass_parity` |
 | The fixed-initial asymmetric terminal marginal is the explicit matrix row | `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.asymmetricPathLawFrom_terminalState_real_singleton` |
 | The fixed-initial asymmetric terminal marginal equals `exp (TQ)` | `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.asymmetricPathLawFrom_terminalState_eq_exp_generator` |
-| The finite-generator counting reference carries the physical mass `T^n / n!` | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.simplexSectorMass_eq` |
-| The general fixed-initial path law is a probability measure (non-explosion) | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.tsum_sectorMassFrom`, `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.instIsProbabilityMeasurePathLawFrom` |
-| Entrywise first-jump renewal equation for `exp (TQ)` | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.exp_smul_apply_renewal` |
-| Continuous solutions of the renewal equation are unique | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.eq_exp_smul_apply_of_renewal` |
-| The general terminal marginal equals the row of `exp (TQ)` | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.pathLawFrom_terminalState_eq_exp_generator` |
-| The general terminal marginals form a Markov kernel | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.transitionKernel`, `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.instIsMarkovKernelTransitionKernel` |
-| Chapman--Kolmogorov for the general transition kernel | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.transitionKernel_chapman_kolmogorov` |
-| The identification specialized to the branching three-state Y chain | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.ThreeStateBranching.pathLawFrom_terminalState_eq_exp_generator` |
-| Almost every path is a valid real-time trajectory (positive waits, horizon) | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.pathLawFrom_ae_isValid` |
-| The real-time trajectory starts at the prescribed state and ends at the recorded terminal state | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.pathLawFrom_ae_trajectory_endpoints` |
-| Path-level Chapman--Kolmogorov for the fixed-initial path law | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.pathLawFrom_add` |
-| Path-level Chapman--Kolmogorov in kernel form | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.pathKernel_add` |
-| The transition-kernel semigroup law recovered from path-level concatenation | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.transitionKernel_add_from_pathLawFrom_add` |
-| Every finite-dimensional marginal is the chronological path measure of the transition kernels | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.pathLawFrom_finiteDimensional_eq` |
-| Every single-time marginal is the corresponding transition-kernel row | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.map_pathLawFrom_trajectory_eq_transitionKernel` |
-| Every finite-dimensional atom is a product of matrix-exponential entries | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.pathLawFrom_sampleAt_real_singleton_eq_exp_product` |
-| Every single-time atom is the corresponding matrix-exponential entry | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.pathLawFrom_trajectory_real_singleton_eq_exp_generator` |
+| Physical Crooks, Jarzynski, and second law recovered as a one-window driven protocol | `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.driven_oneWindow_crooks_physical`, `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.driven_oneWindow_jarzynski_physical`, `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.driven_oneWindow_second_law` |
+| The generic and legacy fixed-initial constructions have the same terminal law | `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.physicalFiniteGenerator_terminalState_real_singleton_eq_legacy`, `MeasureProtocol.ContinuousTimeJump.TwoState.AsymmetricExample.map_physicalFiniteGenerator_pathLawFrom_terminalState_eq_legacy` |
 | Original finite protocol satisfies measure Crooks | `Protocol.measure_crooks` |
 | Original finite protocol satisfies real-integral Jarzynski | `Protocol.measure_jarzynski_integral` |
 | General forward path singleton mass equals legacy `forwardWeight` | `Protocol.measure_forwardWeight_singleton` |
@@ -302,6 +328,17 @@ is `log 27 < log 32`. The conventional Crooks ratio
 experiment's own work observable, whose sign reversal on chronologically
 reversed paths is itself a theorem.
 
+## Discrete-time work conventions and their continuous-time limit
+
+| Informal statement | Lean declaration |
+| --- | --- |
+| The two standard discrete-time work conventions and their discrepancy | `WorkConvention.quenchThenTransitionWork`, `WorkConvention.transitionThenQuenchWork`, `WorkConvention.discrepancy` |
+| The discrepancy is an explicit telescoping sum | `WorkConvention.discrepancy_eq_sum` |
+| Summation-by-parts form of the discrepancy | `WorkConvention.discrepancy_summation_by_parts` |
+| Path-uniform bound by energy increments | `WorkConvention.discrepancy_abs_le`, `WorkConvention.discrepancy_abs_le_of_mesh` |
+| Path-uniform `O(1/N)` vanishing on uniform grids | `WorkConvention.discrepancy_uniform_tendsto_zero` |
+| The conventions instantiated on the original finite protocol | `WorkConvention.ofProtocol`, `WorkConvention.discrepancy_ofProtocol` |
+
 ## Explicit scope boundaries
 
 - The discrete-time theorem permits arbitrary measurable state spaces and has a
@@ -315,7 +352,13 @@ reversed paths is itself a theorem.
 - A nonzero reversal-invariant fixed-horizon simplex reference is constructed,
   rather than assumed.
 - A normalized fixed-initial path law and a non-explosion theorem are proved for
-  every `FiniteJumpGenerator` on a finite state space.
+  every `FiniteJumpGenerator` on a finite state space. Its terminal marginals
+  are the rows of `exp (TQ)` and form a Markov kernel satisfying
+  Chapman--Kolmogorov; the path laws themselves satisfy a path-level
+  Chapman--Kolmogorov identity under chart concatenation; and every
+  finite-dimensional marginal is identified with the chronological
+  transition-kernel chain, with atoms given by products of matrix-exponential
+  entries.
 - The stepwise driving layer covers a fixed finite family of piecewise-constant
   finite-state windows, with one complete path mark per window. Boundary
   matching is proved almost surely, and the reverse-oriented marks can be read
@@ -341,5 +384,5 @@ reversed paths is itself a theorem.
   equilibrium measure satisfies that hypothesis with itself as the reverse
   kernel.
 
-`CrooksJarzynski/AxiomAudit.lean` lists the declarations whose kernel axioms are
-checked in CI.
+`CrooksJarzynski/AxiomAudit.lean` and `CrooksJarzynski/AxiomAuditDriven.lean`
+list the declarations whose kernel axioms are checked in CI.

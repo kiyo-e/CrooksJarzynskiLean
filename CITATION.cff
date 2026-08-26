@@ -6,8 +6,8 @@ authors:
   - name: "kiyo-e"
 repository-code: "https://github.com/kiyo-e/CrooksJarzynskiLean"
 license: Apache-2.0
-version: "0.1.0"
-date-released: "2026-07-31"
+version: "0.2.0"
+date-released: "2026-08-26"
 keywords:
   - Lean 4
   - Mathlib
@@ -42,5 +42,13 @@ abstract: >-
   Jarzynski relations, work-distribution Crooks, a strict second law, and the
   entropy-production integral fluctuation theorem. A general finite-state jump
   generator layer packages nonnegative rates into a conservative generator with a
-  fixed-horizon counting reference, instantiated on a branching three-state
-  chain. No sorry placeholders or custom axioms.
+  fixed-horizon counting reference; its fixed-initial path laws are proved
+  non-explosive, their terminal marginals are identified with the rows of exp(TQ)
+  and packaged as a Chapman–Kolmogorov Markov kernel, path concatenation gives a
+  path-level Chapman–Kolmogorov identity, and every finite-dimensional marginal
+  is identified with the chronological transition-kernel chain with
+  matrix-exponential product atoms, instantiated on a branching three-state
+  chain. A finite-window piecewise-constant driven protocol built from these
+  path laws is concatenated into global real-time path laws carrying physical
+  Crooks, Jarzynski, work-distribution, and average-work second-law theorems.
+  No sorry placeholders or custom axioms.

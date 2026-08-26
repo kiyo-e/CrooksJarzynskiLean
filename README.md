@@ -8,8 +8,15 @@ library contains:
   spaces;
 - a finite-jump continuous-time path-space theory with fixed-horizon Crooks and
   Jarzynski statements for segmentwise jump rates;
+- a general finite-state jump-generator layer whose fixed-initial path laws
+  are non-explosive probability measures with terminal marginals `exp (TQ)`,
+  path-level Chapman--Kolmogorov under chart concatenation, and
+  finite-dimensional marginals identified with transition-kernel chains,
+  instantiated on a genuinely branching three-state chain;
 - a finite-state stepwise driven continuous-time protocol whose window laws are
-  built from normalized fixed-initial jump-path laws;
+  built from normalized fixed-initial jump-path laws, together with global
+  concatenated real-time path laws carrying the Crooks, Jarzynski,
+  second-law, and work-distribution statements;
 - a fixed-horizon simplex reference with derived free-coordinate Lebesgue
   volume `1 / n!`;
 - a normalized, non-explosive two-state continuous-time Markov chain whose
@@ -323,6 +330,32 @@ MeasureProtocol.ContinuousTimeJump.FullPath.crooks_restrict_horizon_of_rate_loca
 MeasureProtocol.ContinuousTimeJump.FullPath.jarzynski_restrict_horizon_of_rate_local_balance
 ```
 
+### General finite-state jump generators
+
+A `FiniteJumpGenerator` packages nonnegative jump rates on a finite state space
+into a conservative real generator and a fixed-horizon counting reference. Its
+fixed-initial sector laws are proved non-explosive and assembled into a
+probability measure `pathLawFrom` on the disjoint union of all jump-count
+sectors. A renewal equation and its uniqueness identify the actual
+terminal-state marginal with the corresponding row of `exp (TQ)`; the terminal
+laws form a Mathlib Markov kernel satisfying Chapman--Kolmogorov. Cutting a
+path at an intermediate horizon gives a path-level Chapman--Kolmogorov
+identity, and sampling at finitely many times identifies every
+finite-dimensional marginal with the chronological transition-kernel chain,
+with atoms given by products of matrix-exponential entries. The identification
+is specialized to a branching three-state Y chain that no two-state parity
+argument reaches. The principal declarations are:
+
+```lean
+MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.tsum_sectorMassFrom
+MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.pathLawFrom_terminalState_eq_exp_generator
+MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.transitionKernel_chapman_kolmogorov
+MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.pathLawFrom_add
+MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.pathLawFrom_finiteDimensional_eq
+MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.pathLawFrom_sampleAt_real_singleton_eq_exp_product
+MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.ThreeStateBranching.pathLawFrom_terminalState_eq_exp_generator
+```
+
 ### Stepwise driven finite-state protocols
 
 A protocol with `M` windows supplies an energy landscape and a
@@ -355,6 +388,27 @@ MeasureProtocol.ContinuousTimeJump.Driven.work_one
 
 For one window, `Driven.work_one` identifies the accumulated work with the
 terminal energy quench.
+
+Reading the reverse-oriented window marks in chronological order and
+concatenating them produces one global real-time `FullPath` chart. Pushing the
+marked forward and reverse laws through this measurable concatenation gives
+global path laws; the global work observable, read from the trajectory at the
+window boundaries, recovers the marked work almost surely, so the fluctuation
+relations transport to the global laws:
+
+```lean
+MeasureProtocol.ContinuousTimeJump.Driven.forwardGlobalLaw
+MeasureProtocol.ContinuousTimeJump.Driven.reverseGlobalLaw
+MeasureProtocol.ContinuousTimeJump.Driven.globalWork
+MeasureProtocol.ContinuousTimeJump.Driven.global_crooks_of_gibbsDetailedBalance
+MeasureProtocol.ContinuousTimeJump.Driven.global_jarzynski_of_gibbsDetailedBalance
+MeasureProtocol.ContinuousTimeJump.Driven.global_second_law_of_gibbsDetailedBalance
+MeasureProtocol.ContinuousTimeJump.Driven.global_work_distribution_crooks_reverseWork_of_gibbsDetailedBalance
+MeasureProtocol.ContinuousTimeJump.Driven.global_crooks_work_atom_of_gibbsDetailedBalance
+```
+
+See [`DRIVEN_PROTOCOL.md`](DRIVEN_PROTOCOL.md) for the full design notes of the
+driven layer.
 
 ### Normalized symmetric two-state CTMC
 
@@ -496,6 +550,15 @@ path-density Crooks and Jarzynski theorems for segmentwise constant escape and
 jump rates. The library constructs a nonzero reversal-invariant simplex
 reference on the fixed horizon with derived volume `1 / n!`.
 
+For an arbitrary `FiniteJumpGenerator` on a finite state space, the library
+proves non-explosion of the fixed-initial path law, identifies its terminal
+marginal with the rows of `exp (TQ)`, packages the terminal laws as a Markov
+kernel satisfying Chapman--Kolmogorov, proves a path-level Chapman--Kolmogorov
+identity under chart concatenation, and identifies every finite-dimensional
+marginal with the chronological transition-kernel chain, with
+matrix-exponential product atoms. A branching three-state Y chain instantiates
+the identification beyond two-state examples.
+
 The stepwise driving layer covers a fixed finite family of piecewise-constant
 finite-state windows. It retains one complete path mark per window and proves
 boundary matching almost surely under the constructed laws. The
@@ -527,15 +590,21 @@ lake exe cache get
 lake build
 ```
 
-The project is pinned to Lean and Mathlib `v4.32.0`. GitHub Actions also checks
-for proof placeholders and custom axioms and prints the kernel axioms of the
-headline theorems.
+The project is pinned to Lean and Mathlib `v4.32.0`, and additionally depends
+on [Physlib](https://github.com/leanprover-community/physlib) (pinned by commit
+in `lakefile.lean`); `lake exe cache get` fetches only the Mathlib build cache,
+so Physlib is compiled from source on the first build. GitHub Actions also
+checks for proof placeholders and custom axioms and prints the kernel axioms of
+the headline theorems listed in `CrooksJarzynski/AxiomAudit.lean` and
+`CrooksJarzynski/AxiomAuditDriven.lean`.
 
 ## Theorem map
 
 See [`FORMALIZATION.md`](FORMALIZATION.md) for a paper-level-to-Lean declaration
 map covering the abstract, discrete-time, Gibbs, concrete-example, and
-continuous-time jump-process layers.
+continuous-time jump-process layers, and
+[`DRIVEN_PROTOCOL.md`](DRIVEN_PROTOCOL.md) for the design notes of the driven
+protocol and global path-law layer.
 
 ## References
 

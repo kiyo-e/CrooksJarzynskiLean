@@ -460,6 +460,17 @@ Driven.global_jarzynski_of_gibbsDetailedBalance
 Driven.global_second_law_of_gibbsDetailedBalance
 ```
 
+The three-state two-window example descends to the global chart as well
+(`ContinuousTimeJumpDrivenGlobalThreeStateTwoWindow.lean`): for strictly
+positive window widths the forward global path law gives positive probability
+to both work atoms, so the global work distribution is nondegenerate for the
+same concrete model:
+
+```lean
+Driven.ThreeStateTwoWindow.global_work_zero_atom_pos
+Driven.ThreeStateTwoWindow.global_work_log_two_atom_pos
+```
+
 ## Deferred extensions
 
 The measure construction intentionally remains on the raw reverse-oriented
