@@ -126,7 +126,14 @@ terminal marginal of the general fixed-initial path law with the rows of
 shown to satisfy Chapman--Kolmogorov and the semigroup law under kernel
 composition, and the identification is specialized to the branching three-state
 Y chain, which no parity argument reaches, and to the normalized two-state
-chain.
+chain. Concatenating fixed-initial charts at a seam multiplies their rate
+densities, which upgrades the pointwise concatenation to a path-level
+Chapman--Kolmogorov identity for the constructed path laws and recovers the
+transition-kernel semigroup law as its terminal shadow. Sampling a path at
+finitely many times identifies every finite-dimensional marginal of the
+fixed-initial path law with the chronological Markov chain of its transition
+kernels, and every finite-dimensional atom with a product of
+matrix-exponential entries.
 
 A finite-window driven protocol binds one complete normalized fixed-initial
 jump path at every switching endpoint. The reverse experiment traverses the
@@ -137,7 +144,14 @@ finite sum over window endpoints, is uniformly bounded on finite state spaces,
 and is therefore automatically integrable. Division-free instantaneous Gibbs
 detailed balance is lifted to the complete-path `WindowBalance`, yielding
 Crooks, Jarzynski, and the average-work second law without an external
-work-integrability hypothesis. The asymmetric reversible two-state final
+work-integrability hypothesis. Reading the reverse-oriented window marks in
+chronological order and concatenating them produces one global real-time
+chart; the marked forward and reverse laws push forward to global path laws,
+the work read from the global trajectory at window boundaries recovers the
+marked work almost surely, and the Crooks, Jarzynski, second-law, and
+work-distribution statements — including the conventional atomwise ratio with
+the intrinsic reverse-work observable — transport to these global laws. The
+asymmetric reversible two-state final
 quench is also recovered as an explicit one-window specialization. Its generic
 and legacy fixed-initial constructions have identical terminal-state
 pushforward measures because both are the same row of `exp (TQ)`.
@@ -208,6 +222,9 @@ canonical-ensemble API. The main results include `Protocol.crooks`,
 `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.pathLawFrom_terminalState_eq_exp_generator`,
 `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.transitionKernel_chapman_kolmogorov`,
 `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.transitionKernel_add`,
+`MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.pathLawFrom_add`,
+`MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.pathLawFrom_finiteDimensional_eq`,
+`MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.pathLawFrom_sampleAt_real_singleton_eq_exp_product`,
 `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.ThreeStateBranching.pathLawFrom_terminalState_eq_exp_generator`,
 `MeasureProtocol.ContinuousTimeJump.TwoState.finiteGenerator_pathLawFrom_terminalState_eq_exp_generator`,
 `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.ThreeStateBranching.has_two_distinct_successors`,
@@ -221,6 +238,13 @@ canonical-ensemble API. The main results include `Protocol.crooks`,
 `MeasureProtocol.ContinuousTimeJump.Driven.reverseWork_eq_neg`,
 `MeasureProtocol.ContinuousTimeJump.Driven.work_distribution_crooks_of_gibbsDetailedBalance`,
 `MeasureProtocol.ContinuousTimeJump.Driven.crooks_work_atom_of_gibbsDetailedBalance`,
+`MeasureProtocol.ContinuousTimeJump.Driven.global_crooks_of_gibbsDetailedBalance`,
+`MeasureProtocol.ContinuousTimeJump.Driven.global_jarzynski_of_gibbsDetailedBalance`,
+`MeasureProtocol.ContinuousTimeJump.Driven.global_second_law_of_gibbsDetailedBalance`,
+`MeasureProtocol.ContinuousTimeJump.Driven.global_work_distribution_crooks_reverseWork_of_gibbsDetailedBalance`,
+`MeasureProtocol.ContinuousTimeJump.Driven.global_crooks_work_atom_of_gibbsDetailedBalance`,
+`MeasureProtocol.ContinuousTimeJump.Driven.ThreeStateTwoWindow.global_work_zero_atom_pos`,
+`MeasureProtocol.ContinuousTimeJump.Driven.ThreeStateTwoWindow.global_work_log_two_atom_pos`,
 `MeasureProtocol.ContinuousTimeJump.Driven.ThreeStateTwoWindow.crooks`,
 `MeasureProtocol.ContinuousTimeJump.Driven.ThreeStateTwoWindow.jarzynski_eq_one`,
 `MeasureProtocol.ContinuousTimeJump.Driven.ThreeStateTwoWindow.work_not_constant`,
