@@ -187,6 +187,22 @@ private theorem forwardWindowKernel_ae_totalHoldingTime
   filter_upwards [G.pathLawFrom_ae_totalHoldingTime T x] with γ hγ
   exact hγ
 
+private theorem reverseWindowKernel_ae_totalHoldingTime
+    (G : FiniteJumpGenerator Ω) (T : NNReal) (y : Ω) :
+    ∀ᵐ p ∂G.reverseWindowKernel T y,
+      FullPath.totalHoldingTime p.2 = T := by
+  let record : FullPath Ω → Ω × FullPath Ω :=
+    fun γ => (FullPath.terminalState γ, FullPath.reverse γ)
+  change ∀ᵐ p ∂Measure.map record (G.pathLawFrom T y),
+    FullPath.totalHoldingTime p.2 = T
+  refine (ae_map_iff
+    (FullPath.measurable_terminalState.prodMk
+      FullPath.measurable_reverse).aemeasurable
+    ((FullPath.measurable_totalHoldingTime.comp measurable_snd).eq_const T).setOf).2 ?_
+  filter_upwards [G.pathLawFrom_ae_totalHoldingTime T y] with γ hγ
+  rcases γ with ⟨n, γ⟩
+  simpa [record, FullPath.reverse, FullPath.totalHoldingTime] using hγ
+
 private theorem forwardDrivenLaw_ae_windowsTotal :
     ∀ {M : ℕ} (initial : Measure Ω)
       (generator : Fin M → FiniteJumpGenerator Ω)
@@ -218,6 +234,57 @@ private theorem forwardDrivenLaw_ae_windowsTotal :
         · simpa using hwindow
         · simpa using hpast j
 
+private theorem reverseContinuationKernel_ae_windowsTotal :
+    ∀ {M : ℕ}
+      (generator : Fin M → FiniteJumpGenerator Ω)
+      (duration : Fin M → NNReal) (endpoint : Ω),
+      ∀ᵐ past ∂Marked.reverseContinuationKernel
+          (fun i => (generator i).reverseWindowKernel (duration i)) endpoint,
+        ∀ i, FullPath.totalHoldingTime
+          (windowAt (endpoint, past) i) = duration i
+  | 0, generator, duration, endpoint => by simp
+  | M + 1, generator, duration, endpoint => by
+      simp only [Marked.reverseContinuationKernel]
+      have hrecord : Measurable
+          (fun past : Marked.MarkedContinuation Ω (FullPath Ω) (M + 1) =>
+            (endpoint, past)) := by fun_prop
+      have hset :=
+        (measurableSet_windowsTotal (Ω := Ω) duration).preimage hrecord
+      apply Kernel.ae_compProd_of_ae_ae
+      · exact hset
+      · filter_upwards
+          [reverseWindowKernel_ae_totalHoldingTime
+            (generator (Fin.last M)) (duration (Fin.last M)) endpoint] with
+            window hwindow
+        have hpast := reverseContinuationKernel_ae_windowsTotal
+          (fun i : Fin M => generator i.castSucc)
+          (fun i : Fin M => duration i.castSucc) window.1
+        filter_upwards [hpast] with past hpast
+        change ∀ i, FullPath.totalHoldingTime
+          (windowAt ((endpoint,
+            (((window.1, window.2), past) :
+              Marked.MarkedContinuation Ω (FullPath Ω) (M + 1))) :
+                Path Ω (M + 1)) i) = duration i
+        intro i
+        refine Fin.lastCases ?_ (fun j => ?_) i
+        · rw [windowAt_last]
+          exact hwindow
+        · rw [windowAt_castSucc]
+          exact hpast j
+
+private theorem reverseDrivenLaw_ae_windowsTotal
+    {M : ℕ} (final : Measure Ω)
+    (generator : Fin M → FiniteJumpGenerator Ω)
+    (duration : Fin M → NNReal) :
+    ∀ᵐ γ ∂reverseDrivenLaw final generator duration,
+      ∀ i, FullPath.totalHoldingTime (windowAt γ i) = duration i := by
+  unfold reverseDrivenLaw Marked.reversePathMeasure
+  apply Measure.ae_compProd_of_ae_ae
+  · exact measurableSet_windowsTotal (Ω := Ω) duration
+  · filter_upwards [] with endpoint
+    exact reverseContinuationKernel_ae_windowsTotal
+      generator duration endpoint
+
 /-- Almost every forward driven carrier has exact window horizons and no jump
 at the local time-zero seams. -/
 theorem forwardDrivenLaw_ae_windowRegular
@@ -230,6 +297,21 @@ theorem forwardDrivenLaw_ae_windowRegular
   filter_upwards
     [forwardDrivenLaw_ae_isProtocolValid initial generator duration,
       forwardDrivenLaw_ae_windowsTotal initial generator duration] with γ hvalid htotal
+  exact fun i =>
+    ⟨FullPath.not_hasJumpAt_zero_of_isValid _ (hvalid.2 i), htotal i⟩
+
+/-- Almost every reverse driven carrier has exact window horizons and no jump
+at the local time-zero seams. -/
+theorem reverseDrivenLaw_ae_windowRegular
+    {M : ℕ} (final : Measure Ω)
+    (generator : Fin M → FiniteJumpGenerator Ω)
+    (duration : Fin M → NNReal) :
+    ∀ᵐ γ ∂reverseDrivenLaw final generator duration,
+      ∀ i, ¬FullPath.HasJumpAt 0 (windowAt γ i) ∧
+        FullPath.totalHoldingTime (windowAt γ i) = duration i := by
+  filter_upwards
+    [reverseDrivenLaw_ae_isProtocolValid final generator duration,
+      reverseDrivenLaw_ae_windowsTotal final generator duration] with γ hvalid htotal
   exact fun i =>
     ⟨FullPath.not_hasJumpAt_zero_of_isValid _ (hvalid.2 i), htotal i⟩
 
@@ -333,6 +415,23 @@ theorem trajectory_concatenateWindows_boundary_ae
   exact trajectory_concatenateWindows_boundary_pointwise
     duration γ hboundary hregular
 
+/-- Almost every concatenated reverse chart agrees with the marked carrier at
+every protocol boundary. -/
+theorem trajectory_concatenateWindows_boundary_ae_reverse
+    {M : ℕ} (final : Measure Ω)
+    (generator : Fin M → FiniteJumpGenerator Ω)
+    (duration : Fin M → NNReal) :
+    ∀ᵐ γ ∂reverseDrivenLaw final generator duration,
+      ∀ i : Fin M,
+        FullPath.trajectory (concatenateWindows γ)
+            ((boundaryTime duration i.succ : NNReal) : ℝ) =
+          endpointAt γ i := by
+  filter_upwards
+    [reverseDrivenLaw_ae_isBoundaryConsistent final generator duration,
+      reverseDrivenLaw_ae_windowRegular final generator duration] with γ hboundary hregular
+  exact trajectory_concatenateWindows_boundary_pointwise
+    duration γ hboundary hregular
+
 /-- Pulling global trajectory work back to the marked carrier recovers the
 original endpoint work almost surely under the forward law. -/
 theorem work_comp_concatenateWindows_ae
@@ -344,6 +443,21 @@ theorem work_comp_concatenateWindows_ae
       globalWork energy duration (concatenateWindows γ) = work energy γ := by
   filter_upwards
     [trajectory_concatenateWindows_boundary_ae initial generator duration] with γ hboundary
+  rw [globalWork, work_eq_sum]
+  exact Finset.sum_congr rfl fun i _ => by rw [hboundary i]
+
+/-- Pulling global trajectory work back to the marked carrier recovers the
+original endpoint work almost surely under the reverse law. -/
+theorem work_comp_concatenateWindows_ae_reverse
+    {M : ℕ} (final : Measure Ω)
+    (energy : Fin (M + 1) → Ω → ℝ)
+    (generator : Fin M → FiniteJumpGenerator Ω)
+    (duration : Fin M → NNReal) :
+    ∀ᵐ γ ∂reverseDrivenLaw final generator duration,
+      globalWork energy duration (concatenateWindows γ) = work energy γ := by
+  filter_upwards
+    [trajectory_concatenateWindows_boundary_ae_reverse
+      final generator duration] with γ hboundary
   rw [globalWork, work_eq_sum]
   exact Finset.sum_congr rfl fun i _ => by rw [hboundary i]
 
@@ -363,6 +477,24 @@ theorem map_globalWork_forwardGlobalLaw
     measurable_concatenateWindows]
   apply Measure.map_congr
   exact work_comp_concatenateWindows_ae initial energy generator duration
+
+/-- The global reverse work distribution is the marked-carrier work
+distribution. -/
+theorem map_globalWork_reverseGlobalLaw
+    {M : ℕ} (final : Measure Ω)
+    (energy : Fin (M + 1) → Ω → ℝ)
+    (generator : Fin M → FiniteJumpGenerator Ω)
+    (duration : Fin M → NNReal) :
+    (reverseGlobalLaw final generator duration).map
+        (globalWork energy duration) =
+      (reverseDrivenLaw final generator duration).map (work energy) := by
+  unfold reverseGlobalLaw
+  rw [Measure.map_map
+    (measurable_globalWork energy duration fun _ => Measurable.of_discrete)
+    measurable_concatenateWindows]
+  apply Measure.map_congr
+  exact work_comp_concatenateWindows_ae_reverse
+    final energy generator duration
 
 /-- The forward global law is concentrated on valid concatenated charts. -/
 theorem forwardGlobalLaw_ae_isValid

@@ -28,6 +28,26 @@ variable {Ω : Type u} [Fintype Ω]
 variable [MeasurableSpace Ω] [MeasurableSingletonClass Ω]
 variable [DecidableEq Ω] [Nonempty Ω]
 
+/-- **Work-distribution Crooks relation on concatenated global charts.** -/
+theorem global_work_distribution_crooks_of_gibbsDetailedBalance
+    {M : ℕ} (β : ℝ) (hβ : β ≠ 0)
+    (energy : Fin (M + 1) → Ω → ℝ)
+    (generator : Fin M → FiniteJumpGenerator Ω)
+    (duration : Fin M → NNReal)
+    (hbalance : ∀ i,
+      (generator i).IsGibbsDetailedBalance β (energy i.castSucc)) :
+    CrooksRelation
+      ((forwardGlobalLaw (Gibbs.measure (Measure.count : Measure Ω) β (energy 0))
+        generator duration).map (globalWork energy duration))
+      ((reverseGlobalLaw (Gibbs.measure (Measure.count : Measure Ω) β (energy (Fin.last M)))
+        generator duration).map (globalWork energy duration))
+      (fun w => ENNReal.ofReal (Real.exp (-β * w)))
+      (ENNReal.ofReal (Real.exp (-β *
+        deltaFreeEnergy (Measure.count : Measure Ω) β energy))) := by
+  rw [map_globalWork_forwardGlobalLaw, map_globalWork_reverseGlobalLaw]
+  exact work_distribution_crooks_of_gibbsDetailedBalance
+    β hβ energy generator duration hbalance
+
 /-- **Crooks relation on concatenated global charts**, derived from Gibbs
 detailed balance in every protocol window. -/
 theorem global_crooks_of_gibbsDetailedBalance
