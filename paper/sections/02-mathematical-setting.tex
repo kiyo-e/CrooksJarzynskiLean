@@ -35,7 +35,7 @@ All finite jump counts are assembled into the dependent sum
 \[
   \lean{FullPath Omega}=\sum_{n:\mathbb{N}} \lean{JumpPath Omega n}.
 \]
-The development defines measurable terminal-state, jump-time, and right-continuous trajectory maps on this carrier. All path measures in this paper, including the global driven laws of Section~\ref{sec:driven}, live on this dependent sum of finite jump records, equipped with measurable right-continuous real-time evaluation maps; we do not construct the laws directly on a canonical Skorokhod space of c\`adl\`ag functions.
+The development defines measurable terminal-state, jump-time, and right-continuous trajectory maps on this carrier. The single-window laws and the global pushforward laws of Section~\ref{sec:driven} live on this dependent sum of finite jump records, equipped with measurable right-continuous real-time evaluation maps; the intermediate marked laws of Section~\ref{sec:driven} live on finite collections of \lean{FullPath} records and are mapped onto \lean{FullPath Omega} by measurable concatenation. We do not construct the laws directly on a canonical Skorokhod space of c\`adl\`ag functions.
 
 For a fixed horizon $T\ge 0$, the holding times should satisfy $\sum_{i=0}^{n}\tau_i=T$. Restricting an ambient $(n+1)$-dimensional product Lebesgue measure to this equality slice would give the zero measure. The formalization therefore uses the free simplex
 \[
