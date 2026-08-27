@@ -10,17 +10,17 @@ The proof is intentionally presented as a six-stage spine rather than as a catal
 \toprule
 Stage & Paper-level role & Principal module and declarations \\
 \midrule
-1 & Nonzero fixed-horizon reference and simplex volume & \file{ContinuousTimeJumpSimplex.lean}: \lean{Simplex.volume_freeSimplexSet}, \lean{Simplex.sum_holdingTimesOfFree} \\
+1 & Nonzero fixed-horizon reference and simplex volume & \file{ContinuousTimeJumpSimplex.lean}:\newline \mbox{\lean{Simplex.volume_freeSimplexSet}},\newline \mbox{\lean{Simplex.sum_holdingTimesOfFree}} \\
 \addlinespace
-2 & Sector masses, tail disappearance, and normalization & \file{ContinuousTimeJumpFiniteGeneratorPathLaw.lean}: \lean{tendsto_arrivalMassFrom}, \lean{tsum_sectorMassFrom} \\
+2 & Sector masses, tail disappearance, and normalization & \file{ContinuousTimeJumpFiniteGeneratorPathLaw.lean}:\newline \mbox{\lean{tendsto_arrivalMassFrom}}, \mbox{\lean{tsum_sectorMassFrom}} \\
 \addlinespace
-3 & Actual probability measure and terminal-coordinate bridge & \file{ContinuousTimeJumpFiniteGeneratorFullPath.lean}: \lean{pathLawFrom}, \lean{instIsProbabilityMeasurePathLawFrom}, \lean{pathLawFrom_terminalState_singleton} \\
+3 & Actual probability measure and terminal-coordinate bridge & \file{ContinuousTimeJumpFiniteGeneratorFullPath.lean}:\newline \mbox{\lean{pathLawFrom}}, \mbox{\lean{instIsProbabilityMeasurePathLawFrom}},\newline \mbox{\lean{pathLawFrom_terminalState_singleton}} \\
 \addlinespace
-4 & Matrix-exponential terminal law and Markov semigroup & \file{ContinuousTimeJumpFiniteGeneratorBridge.lean}: \lean{pathLawFrom_terminalState_eq_exp_generator}, \lean{transitionKernel_add} \\
+4 & Matrix-exponential terminal law and Markov semigroup & \file{ContinuousTimeJumpFiniteGeneratorBridge.lean}:\newline \mbox{\lean{pathLawFrom_terminalState_eq_exp_generator}},\newline \mbox{\lean{transitionKernel_add}} \\
 \addlinespace
-5 & Finite-dimensional distributions & \file{ContinuousTimeJumpFiniteDimensional.lean}: \lean{pathLawFrom_finiteDimensional_eq}, \lean{pathLawFrom_sampleAt_real_singleton_eq_exp_product} \\
+5 & Finite-dimensional distributions & \file{ContinuousTimeJumpFiniteDimensional.lean}:\newline \mbox{\lean{pathLawFrom_finiteDimensional_eq}},\newline {\footnotesize\mbox{\lean{pathLawFrom_sampleAt_real_singleton_eq_exp_product}}} \\
 \addlinespace
-6 & Global driven path law and fluctuation relations & \file{ContinuousTimeJumpDrivenConcat.lean}, \file{ContinuousTimeJumpDrivenGlobalLaw.lean}, \file{ContinuousTimeJumpDrivenGlobalCrooks.lean}: \lean{concatenateWindows}, \lean{forwardGlobalLaw}, \lean{global_crooks_of_gibbsDetailedBalance}, \lean{global_jarzynski_of_gibbsDetailedBalance} \\
+6 & Global driven path law and fluctuation relations & \file{ContinuousTimeJumpDrivenConcat.lean}, \file{ContinuousTimeJumpDrivenGlobalLaw.lean}, \file{ContinuousTimeJumpDrivenGlobalCrooks.lean}:\newline \mbox{\lean{concatenateWindows}}, \mbox{\lean{forwardGlobalLaw}},\newline \mbox{\lean{global_crooks_of_gibbsDetailedBalance}},\newline \mbox{\lean{global_jarzynski_of_gibbsDetailedBalance}} \\
 \bottomrule
 \end{tabular}
 \caption{The paper theorem spine. All modules live under \file{CrooksJarzynski/}.}

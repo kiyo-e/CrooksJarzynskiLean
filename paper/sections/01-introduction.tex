@@ -23,11 +23,17 @@ The main contributions are as follows.
 The repository also contains a broader discrete-time measure-theoretic development, non-atomic Gaussian and Metropolis--Hastings examples, two-state calculations, and a refinement theorem for two discrete work conventions. Those components support and test the library, but the present paper deliberately focuses on the continuous-time chain
 \[
 \begin{aligned}
-  \text{generator}
-    &\longrightarrow \text{normalized fixed-horizon path law} \\
-    &\longrightarrow \exp(TQ)\text{ terminal and FDD laws} \\
-    &\longrightarrow \text{global driven path law}
-      \longrightarrow \text{Crooks--Jarzynski relations}.
+  \text{generator rates}
+    &\xrightarrow{\ \text{\small free-simplex sector charts}\ }
+      \text{fixed-jump-count sector laws}\\
+    &\xrightarrow{\ \text{\small tail disappearance, normalization}\ }
+      \lean{pathLawFrom}\\
+    &\xrightarrow{\ \text{\small terminal and finite-time sampling}\ }
+      \exp(TQ)\text{ kernels and FDDs}\\
+    &\xrightarrow{\ \text{\small window kernels, measurable concatenation}\ }
+      \text{forward and aligned-reverse global laws}\\
+    &\xrightarrow{\ \text{\small Gibbs detailed balance}\ }
+      \text{Crooks, Jarzynski, second law, work distribution}.
 \end{aligned}
 \]
 

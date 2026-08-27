@@ -24,6 +24,8 @@
   pdfauthor={kiyo-e}
 }
 
+\emergencystretch=1.5em
+
 \newcommand{\Lean}{Lean~4}
 \newcommand{\CJ}{CrooksJarzynskiLean}
 \newcommand{\R}{\mathbb{R}}
@@ -44,7 +46,7 @@ for Finite-State Continuous-Time Jump Processes in Lean 4}
 \maketitle
 
 \begin{abstract}
-We formalize finite-state continuous-time jump processes and their nonequilibrium work relations in Lean~4. Starting from a conservative finite-state generator, we construct normalized fixed-horizon path measures by summing explicit jump-count sectors and prove that no probability mass escapes to infinitely many jumps within the horizon. We identify the terminal marginal of the constructed law with the corresponding row of $\exp(TQ)$, derive its finite-dimensional distributions as chronological transition-kernel chains, and measurably concatenate finitely many piecewise-constant protocol windows into a global real-time path law. Under local Gibbs detailed balance, the same global law carries Crooks, Jarzynski, average-work second-law, and work-distribution relations. The contribution is the machine-checked connection from generators to physical fluctuation relations, rather than new fluctuation identities.
+We formalize finite-state continuous-time jump processes and their nonequilibrium work relations in Lean~4. Starting from a conservative finite-state generator, we construct normalized fixed-horizon path measures by summing explicit jump-count sectors and prove that no probability mass escapes to infinitely many jumps within the horizon. We identify the terminal marginal of the constructed law with the corresponding row of $\exp(TQ)$, derive its finite-dimensional distributions as chronological transition-kernel chains, and measurably concatenate finitely many piecewise-constant protocol windows into a global jump-record law inducing a right-continuous real-time trajectory. Under Gibbs detailed balance in each protocol window, the resulting forward and chronology-aligned reverse global laws satisfy the Crooks, Jarzynski, average-work second-law, and work-distribution relations. The contribution is the machine-checked connection from generators to physical fluctuation relations, rather than new fluctuation identities.
 \end{abstract}
 
 

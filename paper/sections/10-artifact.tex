@@ -10,5 +10,5 @@ lake build
 lake env lean CrooksJarzynski/AxiomAudit.lean
 lake env lean CrooksJarzynski/AxiomAuditDriven.lean
 \end{verbatim}
-The project is pinned by \file{lean-toolchain}, \file{lakefile.lean}, and \file{lake-manifest.json}. The detailed paper-to-declaration map is in \file{FORMALIZATION.md}; driven-layer design notes are in \file{DRIVEN_PROTOCOL.md}; and \file{ARTIFACT.md} gives a reviewer-oriented route through the six-stage theorem spine.
+The project is pinned by \file{lean-toolchain}, \file{lakefile.lean}, and \file{lake-manifest.json}. A separate continuous-integration workflow builds this manuscript with \lean{latexmk} and \lean{biber} in a TeX~Live container and publishes the PDF as a build artifact; the release version should pin the container image by digest. The detailed paper-to-declaration map is in \file{FORMALIZATION.md}; driven-layer design notes are in \file{DRIVEN_PROTOCOL.md}; and \file{ARTIFACT.md} gives a reviewer-oriented route through the six-stage theorem spine.
 

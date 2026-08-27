@@ -100,7 +100,7 @@ The two projects are complementary: PhysicsAI studies the structure and conseque
 
 The following language may be used in the paper or artifact description:
 
-> Our search, completed on 26 August 2026, found no prior publicly available Lean 4 or Mathlib development that connects an explicitly constructed finite-state continuous-time jump-process path measure to its matrix-exponential terminal and finite-dimensional laws and then to global path measures for finitely many piecewise-constant protocol windows carrying physical Crooks--Jarzynski work relations.
+> To our knowledge, among the public Lean 4 and Mathlib artifacts reviewed at the fixed snapshots recorded in the bibliography (search completed on 26 August 2026), we did not identify a development that connects an explicitly constructed finite-state continuous-time jump-process path measure to its matrix-exponential terminal and finite-dimensional laws and then to global path measures for finitely many piecewise-constant protocol windows carrying physical Crooks--Jarzynski work relations.
 
 This is a bounded search report, not a universal “first” claim. The reviewed search covered primary papers, official artifacts, arXiv, AFP, Mathlib, and public GitHub sources. It does not cover private repositories, unpublished manuscripts, or every proof-assistant project in every language.
 

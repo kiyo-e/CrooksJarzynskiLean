@@ -11,6 +11,30 @@ and generators $G_i$ for $i=0,\ldots,M-1$. Within window $i$, the generator is c
 
 The reverse experiment begins from the final Gibbs state, traverses the windows in reverse order, and stores reversed complete paths. The development proves almost-sure boundary matching and fixed-horizon validity for both forward and reverse marked laws. A structurally boundary-consistent subtype is also available for deterministic reasoning.
 
+The two protocols are time-mirror images of each other:
+\[
+\begin{aligned}
+\text{Forward:}\quad&
+\rho_{E_0}
+\xrightarrow{\;G_0,\,T_0\;}
+\xrightarrow{\;E_0\to E_1\;}
+\xrightarrow{\;G_1,\,T_1\;}
+\xrightarrow{\;E_1\to E_2\;}
+\cdots
+\xrightarrow{\;G_{M-1},\,T_{M-1}\;}
+\xrightarrow{\;E_{M-1}\to E_M\;},
+\\[1mm]
+\text{Reverse:}\quad&
+\rho_{E_M}
+\xrightarrow{\;E_M\to E_{M-1}\;}
+\xrightarrow{\;G_{M-1},\,T_{M-1}\;}
+\cdots
+\xrightarrow{\;E_1\to E_0\;}
+\xrightarrow{\;G_0,\,T_0\;}.
+\end{aligned}
+\]
+The forward experiment evolves under the constant generator $G_i$ on landscape $E_i$ for time $T_i$ and is quenched $E_i\to E_{i+1}$ at the end of the window; the reverse experiment applies the mirrored quench before the corresponding window. Each stored reverse window path is then reversed in time, so the reverse carrier used below is \emph{chronology-aligned}: it is charted in the forward time direction, not in the reverse experiment's own chronology.
+
 \subsection{Measurable global concatenation}
 
 The marked representation is convenient for recursive measure construction, but physical work should also be readable on a single real-time trajectory. The function \lean{concatenateWindows} restores chronological order and glues every window chart into one \lean{FullPath}. The seam holding intervals are merged by the lower-level concatenation operation. The formalization proves:
@@ -41,7 +65,7 @@ Let $s_i=\sum_{j<i}T_j$ be the boundary times. Work is read from the global righ
   W(\gamma)=\sum_{i=0}^{M-1}
   \left(E_{i+1}(X_{s_{i+1}})-E_i(X_{s_{i+1}})\right).
 \end{equation}
-For finite $\Omega$, this observable is bounded and therefore integrable under the constructed laws. The formalization proves that~\eqref{eq:work} agrees almost surely with the recursively defined marked work.
+This is the end-of-window switching-work (transition-then-quench) convention: within window $i$ the system evolves on landscape $E_i$, and the quench $E_i\to E_{i+1}$ is charged at the state occupied at the window boundary. For finite $\Omega$, this observable is bounded and therefore integrable under the constructed laws. The formalization proves that~\eqref{eq:work} agrees almost surely with the recursively defined marked work.
 
 For inverse temperature $\beta\ne 0$, assume division-free local Gibbs detailed balance in every window, equivalently
 \begin{equation}
@@ -50,7 +74,7 @@ For inverse temperature $\beta\ne 0$, assume division-free local Gibbs detailed 
   = e^{-\beta E_i(y)} k_i(y,x)
   \qquad (x\ne y).
 \end{equation}
-Let
+Here ``local'' means windowwise: each constant generator is reversible with respect to the Gibbs weight of the energy landscape used during its own window. No entropy-flow or bath decomposition beyond~\eqref{eq:gibbs-db} is assumed. Let
 \[
   Z_i=\sum_{x\in\Omega}e^{-\beta E_i(x)},
   \qquad
@@ -62,7 +86,17 @@ The path-density proof first establishes a window balance for mixtures of the ac
 
 \subsection{Global fluctuation relations}
 
-The relations below are stated for the forward global law started from the initial Gibbs state $e^{-\beta E_0}/Z_0$ and the reverse global law started from the final Gibbs state $e^{-\beta E_M}/Z_M$; these initial distributions are part of the formal theorem statements. The central measure identity on the global chart is
+The relations below are stated for the forward global law started from the initial Gibbs state $e^{-\beta E_0}/Z_0$ and the reverse global law started from the final Gibbs state $e^{-\beta E_M}/Z_M$; these initial distributions are part of the formal theorem statements. For a measure $P$ and a measurable weight $q\ge 0$, the reweighted measure is
+\[
+  \bigl(P.\operatorname{withDensity}(q)\bigr)(A)
+  = \int_A q(\gamma)\,P(\mathrm{d}\gamma).
+\]
+In density form, the central identity on the global chart reads
+\[
+  e^{-\beta W(\gamma)}\,\Pp_F^{\mathrm{glob}}(\mathrm{d}\gamma)
+  = e^{-\beta\Delta F}\,\Pp_R^{\mathrm{glob}}(\mathrm{d}\gamma);
+\]
+formally, it is the measure identity
 \begin{equation}
 \label{eq:global-crooks}
   \Pp_F^{\mathrm{glob}}.\operatorname{withDensity}
@@ -79,8 +113,9 @@ For $\beta>0$, Jensen's inequality and integrability of $W$ give the average-wor
 \label{eq:second-law}
   \Delta F\le \E_F[W].
 \end{equation}
+The Crooks and Jarzynski identities are formal theorems for any $\beta\ne 0$; the thermodynamic reading of $\Delta F$ and the second law require $\beta>0$.
 
-The development also maps~\eqref{eq:global-crooks} to the work coordinate. On the chronology-aligned global reverse chart, the intrinsic reverse-experiment work is defined by $W_R=-W$. The conventional atomwise statement is
+The development also maps~\eqref{eq:global-crooks} to the work coordinate. Recall that $\Pp_R^{\mathrm{glob}}$ is charted in the forward chronology, so the aligned work coordinate $W$ of~\eqref{eq:work} is available on it; the reverse experiment's own work observable is by definition the negated aligned coordinate, $W_R=-W$ (\lean{globalReverseWork}), and the development proves that its law agrees with the recursively defined marked reverse work. The conventional atomwise statement is
 \begin{equation}
 \label{eq:atom-crooks}
   \Pp_F(W=w)

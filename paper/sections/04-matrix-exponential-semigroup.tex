@@ -24,7 +24,9 @@ is a continuous solution of that renewal equation and that bounded continuous so
   (\Pp_{T,x}\circ X_T^{-1})_{\R}(\{y\})
   = \exp(TQ)(x,y),
 \end{equation}
-where the subscript indicates conversion from an extended-nonnegative-real measure to its real-valued mass.
+where the subscript indicates conversion from an extended-nonnegative-real measure to its real-valued mass: the left-hand side is a finite singleton mass, read as a real number.
+
+In outline, the proof of~\eqref{eq:terminal-exp} runs as follows. Conditioning on whether the path jumps within the residual fraction expresses $p_{T\rho}(x,y)$ as a no-jump survival term plus an integral over the first holding time and first successor of the same transition mass at a smaller fraction; this is the path-side renewal equation. The transition mass is bounded by one and continuous in $\rho$, and the matrix-exponential entry solves the same equation. For uniqueness, the difference of two bounded continuous solutions satisfies a homogeneous integral inequality; iterating it $n$ times bounds the difference by $C(Rt)^n/n!$, which tends to zero, so the solutions coincide. Combining the identification with the bridge~\eqref{eq:terminal-push} transfers the equality to the constructed law.
 
 The terminal laws are packaged as a Mathlib Markov kernel
 \[
@@ -34,7 +36,7 @@ Equation~\eqref{eq:terminal-exp} turns the matrix-exponential semigroup identity
 \[
   K_{S+T}=K_T\circ K_S.
 \]
-The repository also proves a stronger path-level identity. Cutting a constructed path at an intermediate horizon and concatenating an independent continuation started at the cut state recovers \lean{pathLawFrom (S+T) x}. Taking the terminal pushforward of this path-level theorem yields the kernel semigroup law as a shadow.
+Here the rightmost kernel acts first, following Mathlib's kernel-composition convention. The repository also proves a stronger path-level identity. Cutting a constructed path at an intermediate horizon and concatenating an independent continuation started at the cut state recovers \lean{pathLawFrom (S+T) x}. Taking the terminal pushforward of this path-level theorem yields the kernel semigroup law as a shadow.
 
 \subsection{Finite-dimensional distributions}
 
