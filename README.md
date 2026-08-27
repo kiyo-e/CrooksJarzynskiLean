@@ -39,6 +39,15 @@ physical laws: Crooks' relation and Jarzynski's equality are established
 results. Claims of priority for the formalization itself are intentionally
 left to a separate literature review.
 
+## Paper
+
+A manuscript draft for the continuous-time core lives in
+[`paper/`](paper/); [`PAPER.md`](PAPER.md) is the entry point to the
+publication package, [`ARTIFACT.md`](ARTIFACT.md) gives reviewers a six-stage
+theorem route through the Lean development, and
+[`RELATED_WORK.md`](RELATED_WORK.md) records the literature comparison behind
+the paper's positioning statement.
+
 ## Main results
 
 The library proves:
