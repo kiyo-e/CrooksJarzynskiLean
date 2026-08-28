@@ -80,7 +80,7 @@ For inverse temperature $\beta\ne 0$, assume windowwise Gibbs detailed balance. 
   = e^{-\beta E_i(y)} k_i(y,x)
   \qquad (x\ne y).
 \end{equation}
-``Windowwise'' means that each constant generator is reversible with respect to the Gibbs weight of the energy landscape used during its own window. This is deliberately weaker terminology than the ``local detailed balance'' of stochastic thermodynamics: no entropy-flow or bath decomposition beyond~\eqref{eq:gibbs-db} is assumed. Let
+``Windowwise'' means that each constant generator is reversible with respect to the Gibbs weight of the energy landscape used during its own window. We say windowwise Gibbs detailed balance rather than local detailed balance: condition~\eqref{eq:gibbs-db} is a single-temperature Gibbs-reversibility requirement, and the formalization does not model reservoir-resolved entropy flow or a bath decomposition. Let
 \[
   Z_i=\sum_{x\in\Omega}e^{-\beta E_i(x)},
   \qquad
@@ -144,7 +144,16 @@ Under the hypotheses of Theorem~\ref{thm:main} with $\beta>0$, Jensen's inequali
 
 The Crooks and Jarzynski identities are formal theorems for any $\beta\ne 0$; the thermodynamic reading of $\Delta F$ and the second law require $\beta>0$.
 
-The development also maps~\eqref{eq:global-crooks} to the work coordinate, and it does so at the level of measures first, consistent with the design decision of Section~\ref{sec:architecture}. Recall that $\Pp_{R,\mathrm{align}}^{\mathrm{glob}}$ is charted in the forward chronology, so the aligned work coordinate $W$ of~\eqref{eq:work} is available on it; the reverse experiment's own work observable is by definition the negated aligned coordinate, $W_R=-W$ (\lean{globalReverseWork}), and the development proves that its law agrees with the recursively defined marked reverse work. Writing
+The development also maps~\eqref{eq:global-crooks} to the work coordinate, and it does so at the level of measures first, consistent with the design decision of Section~\ref{sec:architecture}. Recall that $\Pp_{R,\mathrm{align}}^{\mathrm{glob}}$ is charted in the forward chronology, so the aligned work coordinate $W$ of~\eqref{eq:work} is available on it. In the reverse experiment's own chronology, with window boundary times $\tilde s_j$ and trajectory $\tilde X$, the reverse protocol quenches $E_{M-j}\to E_{M-j-1}$ before its $j$-th window, so its intrinsic switching work is
+\[
+  W_R(\tilde\gamma)
+  =\sum_{j=0}^{M-1}
+  \left[
+    E_{M-j-1}\bigl(\tilde X_{\tilde s_j}\bigr)
+    -E_{M-j}\bigl(\tilde X_{\tilde s_j}\bigr)
+  \right].
+\]
+Under record reversal and chronology alignment, this intrinsic reverse-protocol work equals the negated aligned coordinate, $W_R=-W$, an identity proved pointwise in the development (\lean{reverseWork_eq_neg}); the law of $W_R$ agrees with the recursively defined marked reverse work. Writing
 \[
   \mu_F=W_*\,\Pp_F^{\mathrm{glob}},
   \qquad
@@ -163,4 +172,3 @@ the pushforward of~\eqref{eq:global-crooks} is the measure-level work-distributi
   =e^{\beta(w-\Delta F)}\,\Pp_{R,\mathrm{align}}^{\mathrm{glob}}(W_R=-w).
 \end{equation}
 All of these theorems are stated on the global pushforward laws constructed from the generators, rather than on abstract work distributions supplied as assumptions.
-

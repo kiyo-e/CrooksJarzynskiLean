@@ -604,6 +604,137 @@ theorem map_pathLawFrom_trajectory_eq_transitionKernel
       Measure.map_congr (G.pathLawFrom_ae_trajectory_horizon t x)
     _ = G.transitionKernel t x := (G.transitionKernel_apply t x).symm
 
+/-- The finite distribution represented by one row of the transition kernel. -/
+private noncomputable def transitionDistribution
+    (G : FiniteJumpGenerator Ω) (t : NNReal) (x : Ω) :
+    FiniteDistribution Ω where
+  prob y := (G.transitionKernel t x).real {y}
+  nonneg _ := measureReal_nonneg
+  sum_prob := by
+    calc
+      (∑ y, (G.transitionKernel t x).real {y}) =
+          (G.transitionKernel t x).real (Finset.univ : Finset Ω) :=
+        sum_measureReal_singleton (Finset.univ : Finset Ω)
+      _ = (G.transitionKernel t x).real Set.univ := by simp
+      _ = 1 := by
+        rw [Measure.real_def, measure_univ, ENNReal.toReal_one]
+
+private theorem transitionDistribution_toMeasure
+    (G : FiniteJumpGenerator Ω) (t : NNReal) (x : Ω) :
+    (transitionDistribution G t x).toMeasure = G.transitionKernel t x := by
+  apply Measure.ext_of_singleton
+  intro y
+  rw [FiniteDistribution.toMeasure_singleton]
+  change ENNReal.ofReal ((G.transitionKernel t x).real {y}) = _
+  rw [Measure.real_def, ENNReal.ofReal_toReal]
+  exact ne_of_lt measure_singleton_lt_top
+
+/-- **General finite-dimensional distributions.** Sampling the fixed-initial path law
+at any monotone finite family of times, not necessarily starting at zero, gives the
+chronological transition-kernel path measure started from the time-`time 0` marginal. -/
+theorem pathLawFrom_finiteDimensional_eq_general
+    (G : FiniteJumpGenerator Ω) (T : NNReal) (x : Ω)
+    {n : ℕ} (time : Fin (n + 1) → NNReal)
+    (hmono : Monotone time) (hT : time (Fin.last n) ≤ T) :
+    (G.pathLawFrom T x).map (FullPath.sampleAt time) =
+      Markov.chronologicalForwardPathMeasure (G.transitionKernel (time 0) x)
+        (fun i : Fin n =>
+          G.transitionKernel (time i.succ - time i.castSucc)) := by
+  rw [G.map_pathLawFrom_sampleAt_horizon_le
+    (time (Fin.last n)) T hT x time le_rfl hmono]
+  induction n with
+  | zero =>
+      let lift : Ω → Trajectory Ω 0 :=
+        fun y => Trajectory.ofFn fun _ => y
+      have hlift : Measurable lift := by
+        apply Trajectory.measurable_ofFn.comp
+        exact measurable_pi_iff.2 fun _ => measurable_id
+      have hsample :
+          FullPath.sampleAt time =
+            lift ∘ fun γ : FullPath Ω => FullPath.trajectory γ (time 0) := by
+        funext γ
+        apply Trajectory.ext
+        intro i
+        simp only [FullPath.sampleAt, lift, Function.comp_apply,
+          Trajectory.stateAt_ofFn]
+        rw [Fin.eq_zero i]
+      rw [show time (Fin.last 0) = time 0 by rfl, hsample]
+      rw [← Measure.map_map hlift (FullPath.measurable_trajectory (time 0))]
+      rw [G.map_pathLawFrom_trajectory_eq_transitionKernel
+        (time 0) (time 0) le_rfl x]
+      let initial := transitionDistribution G (time 0) x
+      have hinitial : initial.toMeasure = G.transitionKernel (time 0) x := by
+        simpa [initial] using transitionDistribution_toMeasure G (time 0) x
+      rw [← hinitial]
+      have hforward :
+          (fun i : Fin 0 =>
+              G.transitionKernel (time i.succ - time i.castSucc)) =
+            fun i : Fin 0 => MathlibBridge.toKernel (Fin.elim0 i) := by
+        funext i
+        exact Fin.elim0 i
+      rw [hforward]
+      apply Measure.ext_of_singleton
+      intro γ
+      rw [Measure.map_apply hlift (measurableSet_singleton γ)]
+      have hpre : lift ⁻¹' {γ} = {Trajectory.stateAt γ 0} := by
+        rcases γ with ⟨y, c⟩
+        cases c
+        ext z
+        simp [lift, Trajectory.ofFn, Trajectory.stateAt]
+      rw [hpre, FiniteDistribution.toMeasure_singleton,
+        MathlibBridge.chronologicalForwardPathMeasure_singleton]
+      simp [transitionWeight]
+  | succ n ih =>
+      let earlierTime : Fin (n + 1) → NNReal := fun i => time i.castSucc
+      have hmonoEarlier : Monotone earlierTime := fun _ _ hij =>
+        hmono (Fin.castSucc_le_castSucc_iff.mpr hij)
+      have hTEarlier : earlierTime (Fin.last n) ≤ T :=
+        (hmono (Fin.le_last (Fin.last n).castSucc)).trans hT
+      rw [G.map_pathLawFrom_sampleAt_succ x time hmono]
+      rw [ih earlierTime hmonoEarlier hTEarlier]
+      rw [Markov.chronologicalForwardPathMeasure_succ]
+      congr 2
+
+/-- The atom of every general finite-dimensional marginal is the matrix-exponential
+entry from the initial state times the product of matrix-exponential entries between
+consecutive observation times. -/
+theorem pathLawFrom_sampleAt_real_singleton_eq_exp_product_general
+    (G : FiniteJumpGenerator Ω) (T : NNReal) (x : Ω)
+    {n : ℕ} (time : Fin (n + 1) → NNReal)
+    (hmono : Monotone time) (hT : time (Fin.last n) ≤ T) (γ : Trajectory Ω n) :
+    ((G.pathLawFrom T x).map (FullPath.sampleAt time)).real {γ} =
+      NormedSpace.exp (((time 0 : NNReal) : ℝ) • G.generator) x
+          (Trajectory.stateAt γ 0) *
+        ∏ i : Fin n,
+          NormedSpace.exp
+              ((((time i.succ - time i.castSucc) : NNReal) : ℝ) • G.generator)
+            (Trajectory.stateAt γ i.castSucc) (Trajectory.stateAt γ i.succ) := by
+  let initial := transitionDistribution G (time 0) x
+  let K : Fin n → CrooksJarzynski.Kernel Ω := fun i y =>
+    transitionDistribution G (time i.succ - time i.castSucc) y
+  have hinitial : initial.toMeasure = G.transitionKernel (time 0) x := by
+    simpa [initial] using transitionDistribution_toMeasure G (time 0) x
+  have hK (i : Fin n) :
+      MathlibBridge.toKernel (K i) =
+        G.transitionKernel (time i.succ - time i.castSucc) := by
+    apply ProbabilityTheory.Kernel.ext
+    intro y
+    rw [MathlibBridge.toKernel_apply]
+    simpa [K] using transitionDistribution_toMeasure G
+      (time i.succ - time i.castSucc) y
+  rw [G.pathLawFrom_finiteDimensional_eq_general T x time hmono hT]
+  rw [← hinitial]
+  simp_rw [← hK]
+  rw [Measure.real_def,
+    MathlibBridge.chronologicalForwardPathMeasure_singleton]
+  rw [ENNReal.toReal_ofReal
+    (mul_nonneg (initial.nonneg γ.1) (transitionWeight_nonneg K γ.1 γ.2))]
+  rw [Trajectory.transitionWeight_eq_transitionProduct]
+  simp only [Trajectory.transitionProduct, K, initial,
+    transitionDistribution]
+  simp_rw [G.transitionKernel_real_singleton_eq_exp_generator]
+  rw [Trajectory.stateAt_zero]
+
 /-- The mass of observing a state at any time before the path horizon is the
 corresponding entry of the matrix exponential. -/
 theorem pathLawFrom_trajectory_real_singleton_eq_exp_generator

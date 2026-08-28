@@ -131,8 +131,10 @@ change-of-variables lemmas above expose this as a reusable public API in
 | Path-level Chapman--Kolmogorov in kernel form | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.pathKernel_add` |
 | The transition-kernel semigroup law recovered from path-level concatenation | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.transitionKernel_add_from_pathLawFrom_add` |
 | Every finite-dimensional marginal is the chronological path measure of the transition kernels | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.pathLawFrom_finiteDimensional_eq` |
+| Every general finite-dimensional marginal, without a time-zero assumption, is the chronological path measure started from its first observed marginal | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.pathLawFrom_finiteDimensional_eq_general` |
 | Every single-time marginal is the corresponding transition-kernel row | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.map_pathLawFrom_trajectory_eq_transitionKernel` |
 | Every finite-dimensional atom is a product of matrix-exponential entries | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.pathLawFrom_sampleAt_real_singleton_eq_exp_product` |
+| Every general finite-dimensional atom, without a time-zero assumption, starts with the matrix-exponential entry to its first observed state | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.pathLawFrom_sampleAt_real_singleton_eq_exp_product_general` |
 | Every single-time atom is the corresponding matrix-exponential entry | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.pathLawFrom_trajectory_real_singleton_eq_exp_generator` |
 
 A `FiniteJumpGenerator` packages nonnegative finite-state jump rates into a

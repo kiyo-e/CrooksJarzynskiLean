@@ -6,7 +6,7 @@
 
 ## Positioning in one sentence
 
-CrooksJarzynskiLean contributes an end-to-end Lean 4 construction that starts from finite-state jump generators, builds normalized fixed-horizon path measures, identifies their actual terminal and finite-dimensional laws with the matrix-exponential semigroup, and transports local Gibbs detailed balance through finitely many piecewise-constant windows to global Crooks--Jarzynski relations.
+CrooksJarzynskiLean contributes an end-to-end Lean 4 construction that starts from finite-state jump generators, builds normalized fixed-horizon path measures, identifies their actual terminal and finite-dimensional laws with the matrix-exponential semigroup, and transports windowwise Gibbs detailed balance through finitely many piecewise-constant windows to global Crooks--Jarzynski relations.
 
 The fluctuation relations, finite-state CTMC theory, and jump-path densities are classical. The contribution is the machine-checked connection between them.
 
@@ -14,7 +14,7 @@ The fluctuation relations, finite-state CTMC theory, and jump-path densities are
 
 A safe paper statement is:
 
-> We present an end-to-end Lean 4 construction that starts from finite-state jump generators, builds normalized finite-horizon path measures, identifies their terminal and finite-dimensional laws with the matrix-exponential semigroup, and transports local detailed balance through finitely many piecewise-constant protocol windows to global Crooks--Jarzynski relations.
+> We present an end-to-end Lean 4 construction that starts from finite-state jump generators, builds normalized finite-horizon path measures, identifies their terminal and finite-dimensional laws with the matrix-exponential semigroup, and transports windowwise Gibbs detailed balance through finitely many piecewise-constant protocol windows to global Crooks--Jarzynski relations.
 
 The following priority claims are intentionally avoided:
 

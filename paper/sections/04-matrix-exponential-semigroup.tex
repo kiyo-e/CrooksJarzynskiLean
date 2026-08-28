@@ -72,6 +72,12 @@ where the right-hand side is Mathlib's chronological finite path measure. For a 
   \prod_{i=0}^{n-1}
   \exp((t_{i+1}-t_i)Q)(x_i,x_{i+1}).
 \end{equation}
+The formalization also proves the general form without the requirement $t_0=0$:
+prepending time zero and marginalizing the first coordinate replaces the initial
+indicator by the entry $\exp(t_0Q)(x,x_0)$
+(\lean{pathLawFrom_finiteDimensional_eq_general},
+\lean{pathLawFrom_sampleAt_real_singleton_eq_exp_product_general}), so every
+monotone finite observation family is covered.
 Thus the semigroup is not merely an API defined beside the path construction: it is identified with the actual terminal and finite-dimensional laws of that construction.
 
 A branching three-state Y-shaped chain instantiates the general theorem. This example is useful because its path law cannot be reduced to the parity-of-jump-count argument available for a two-state alternating chain.
