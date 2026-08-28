@@ -55,7 +55,7 @@ Retaining complete window paths serves a strictly stronger purpose than computin
   \qquad
   p_{01}(t)=\frac{1-e^{-2t}}{2},
 \]
-with $p_{10}=p_{01}$ and $p_{11}=p_{00}$. Under the law started from $X_0=0$, the two relevant joint masses are
+with $p_{10}=p_{01}$ and $p_{11}=p_{00}$. For $T>0$, under the law started from $X_0=0$, the two relevant joint masses are
 \[
   \Pp_{T,0}(X_{T/2}=0,\,X_T=0)
   =p_{00}(T/2)^2>0,
@@ -65,6 +65,6 @@ and
   \Pp_{T,0}(X_{T/2}=1,\,X_T=0)
   =p_{01}(T/2)\,p_{10}(T/2)>0.
 \]
-These are the concrete finite-dimensional atoms behind the interior-time theorem. Within the endpoint event $(X_0,X_T)=(0,0)$, both midpoint values occur with positive probability, so the midpoint state is not almost surely equal to any measurable function of the endpoint pair (\lean{trajectory_interior_not_ae_endpointFunction}). Endpoint-only records are therefore insufficient for general path-level observables; the present construction retains complete window paths so that the global real-time trajectory and its finite-time observations remain available.
+These are the concrete finite-dimensional atoms behind the interior-time theorem. For $T>0$, within the endpoint event $(X_0,X_T)=(0,0)$, both midpoint values occur with positive probability, so the midpoint state is not almost surely equal to any measurable function of the endpoint pair (\lean{trajectory_interior_not_ae_endpointFunction}). Endpoint-only records are therefore insufficient for general path-level observables; the present construction retains complete window paths so that the global real-time trajectory and its finite-time observations remain available.
 
 Together these examples act as regression targets for normalization, branching, physical parameterization, work sign conventions, and the distinction between endpoint and path information.

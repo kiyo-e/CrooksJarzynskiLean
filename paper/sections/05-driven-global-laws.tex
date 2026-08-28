@@ -9,7 +9,7 @@ Consider $M$ protocol windows with durations $T_i$, energy landscapes
 \]
 and generators $G_i$ for $i=0,\ldots,M-1$. Within window $i$, the generator is constant and the complete path is sampled from the normalized fixed-initial law already constructed. The next window starts at the recorded terminal state. The marked carrier therefore retains one complete \lean{FullPath} object per window rather than only its endpoints.
 
-The reverse experiment begins from the final Gibbs state, traverses the windows in reverse order, and stores reversed complete paths. The development proves almost-sure boundary matching and fixed-horizon validity for both forward and reverse marked laws. A structurally boundary-consistent subtype is also available for deterministic reasoning.
+The reverse experiment begins from the final Gibbs state, traverses the windows in reverse order, and samples complete window paths in its own chronology; each path is reversed once, before it is stored, as made precise below. The development proves almost-sure boundary matching and fixed-horizon validity for both forward and reverse marked laws. A structurally boundary-consistent subtype is also available for deterministic reasoning.
 
 The two protocols are time-mirror images of each other:
 \[
@@ -37,13 +37,13 @@ The forward protocol stops immediately after the final switch to $E_M$; the reve
 
 For $M>0$, the forward experiment evolves under the constant generator $G_i$ on landscape $E_i$ for time $T_i$ and is quenched $E_i\to E_{i+1}$ at the end of the window; the reverse experiment applies the mirrored quench before the corresponding window. For $M=0$, both protocols degenerate to the equilibrium experiment with no evolution and zero work, and the theorems below hold trivially.
 
-We assume trivial kinematic time reversal on the state space, $\vartheta x=x$. The path-reversal map $\Theta$ reverses the temporal order of the states and holding times of a record. Each stored reverse window path is transformed in this way. On a fixed-jump-count chart, the definition is (\lean{JumpPath.reverse})
+We assume trivial kinematic time reversal on the state space, $\vartheta x=x$. The path-reversal map $\Theta$ reverses the temporal order of the states and holding times of a record. On a fixed-jump-count chart, the definition is (\lean{JumpPath.reverse})
 \begin{equation}
 \label{eq:reversal}
   \Theta\bigl((x_0,\ldots,x_n),(\tau_0,\ldots,\tau_n)\bigr)
   = \bigl((x_n,\ldots,x_0),(\tau_n,\ldots,\tau_0)\bigr).
 \end{equation}
-At jump times, this record-level definition corresponds to the usual c\`adl\`ag reversal with the appropriate left-limit convention. We write $\Pp_R^{\Theta}$ for the resulting chronology-aligned reverse law: the pushforward of the reverse experiment's stored window records under the windowwise record reversal~\eqref{eq:reversal} and chronological concatenation, so that $\Pp_R^{\Theta}$ plays the role of the time-reversed image $\Theta_*$ of the reverse-protocol law. This measure is called the aligned reverse law in the formal development. It is charted in the forward time direction, not in the reverse experiment's own chronology. The state assigned at each jump time is fixed by the record convention, whereas the naive pointwise reversal $t\mapsto X_{T-t}$ of a right-continuous trajectory would not remain right-continuous at jump times.
+At jump times, this record-level convention informally represents the usual c\`adl\`ag reversal with the appropriate left-limit convention. In the formal construction, each reverse window path is transformed by $\Theta$ exactly once, before it is stored on the common forward-aligned marked carrier (\lean{reverseWindowKernel}); the marked reverse law is therefore already chronology-aligned, and the global reverse law, written $\Pp_R^{\Theta}$, is obtained from it by chronological concatenation. In this way $\Pp_R^{\Theta}$ plays the role of the time-reversed image $\Theta_*\Pp_R$ of the reverse-protocol law; it is called the aligned reverse law in the formal development. It is charted in the forward time direction, not in the reverse experiment's own chronology. The state assigned at each jump time is fixed by the record convention, whereas the naive pointwise reversal $t\mapsto X_{T-t}$ of a right-continuous trajectory would not remain right-continuous at jump times.
 
 \subsection{Measurable global concatenation}
 
@@ -92,7 +92,7 @@ Equivalently, after cancelling $Z_i$, this is the unnormalized identity used in 
   = e^{-\beta E_i(y)} k_i(y,x)
   \qquad (x\ne y).
 \end{equation}
-This division-free form is the hypothesis \lean{FiniteJumpGenerator.IsGibbsDetailedBalance}. The formal development calls it windowwise Gibbs detailed balance. Detailed balance is a property of the generator $G_i$; it does not assume that the system equilibrates during the finite window duration $T_i$. Since $G_i$ is reversible with respect to $\pi_i$, the reverse protocol uses the same window generator $G_i$, with the windows traversed in the opposite order. This is not local detailed balance: condition~\eqref{eq:gibbs-db} is a single-temperature Gibbs-reversibility requirement, and the formalization does not model reservoir-resolved entropy flow or a bath decomposition \parencite{Maes2021}. Let
+This division-free form is the hypothesis \lean{FiniteJumpGenerator.IsGibbsDetailedBalance}. The formal development calls it windowwise Gibbs detailed balance. Detailed balance is a property of the generator $G_i$; it does not assume that the system equilibrates during the finite window duration $T_i$. Since $G_i$ is reversible with respect to $\pi_i$, the reverse protocol uses the same window generator $G_i$, with the windows traversed in the opposite order. We do not formalize the general reservoir-resolved form of local detailed balance \parencite{Maes2021}: condition~\eqref{eq:gibbs-db} is its single-bath equilibrium specialization, imposed here in the stronger generator-level form of Gibbs reversibility; no reservoir decomposition or reservoir-resolved entropy flow is modeled. Let
 \[
   Z_i=\sum_{x\in\Omega}e^{-\beta E_i(x)},
   \qquad
@@ -142,7 +142,7 @@ The Lean theorem states the first, division-free measure identity, which remains
 \end{equation}
 \end{theorem}
 
-Defining the dissipated work $W_{\mathrm{diss}}=W-\Delta F$, the path-space irreversibility variable is $\Sigma=\beta W_{\mathrm{diss}}$ \parencite{Seifert2012,VandenBroeckEsposito2015}. Jarzynski's equality and the mean-work inequality are respectively the exponential and first-moment consequences of this same path-measure identity. The machine-checked measure identity is valid for every $\beta\ne0$; the thermodynamic statements are presented for $\beta>0$. No irreducibility, uniqueness-of-equilibrium, or long-window equilibration assumption is required.
+Defining the dissipated work $W_{\mathrm{diss}}=W-\Delta F$, the path-space irreversibility variable is $\Sigma=\beta W_{\mathrm{diss}}$ \parencite{Seifert2012,VandenBroeckEsposito2015}. Jarzynski's equality and the mean-work inequality are respectively the exponential and first-moment consequences of this same path-measure identity. The machine-checked Crooks and Jarzynski identities hold for every $\beta\ne0$; the average-work inequality is stated for $\beta>0$. No irreducibility, uniqueness-of-equilibrium, or long-window equilibration assumption is required.
 
 \begin{corollary}[Jarzynski equality]
 Under the hypotheses of Theorem~\ref{thm:main}, evaluating~\eqref{eq:global-crooks-lean} on the whole path space yields
@@ -169,7 +169,7 @@ The development also maps~\eqref{eq:global-crooks-lean} to the work coordinate, 
     -E_{M-j}\bigl(\tilde X_{\tilde s_j}\bigr)
   \right].
 \]
-Under record reversal and chronology alignment, this intrinsic reverse-protocol work equals the negated aligned coordinate, $W_R=-W$, an identity proved pointwise in the development (\lean{reverseWork_eq_neg}); the law of $W_R$ agrees with the recursively defined marked reverse work. Writing
+We use the same symbol $W_R$ for the transport of this intrinsic reverse-chronology observable to the aligned carrier. Under record reversal and chronology alignment, it equals the negated aligned coordinate, $W_R=-W$, an identity proved pointwise in the development (\lean{reverseWork_eq_neg}); the law of $W_R$ agrees with the recursively defined marked reverse work. Writing
 \[
   \mu_F=W_*\,\Pp_F^{\mathrm{glob}},
   \qquad
