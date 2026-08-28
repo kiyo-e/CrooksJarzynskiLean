@@ -1,7 +1,7 @@
 \section{Artifact and reproducibility}
 \label{sec:artifact}
 
-This draft was prepared against repository \lean{main} at base commit \artifactbase. The manuscript source, bibliography, reader-facing related-work review, theorem map, and artifact guide live in the same repository. A release version should replace the base-commit statement with a versioned tag and archival DOI.
+The core formalization described in Sections~\ref{sec:setting}--\ref{sec:driven} is based on repository \lean{main} at commit \artifactbase. The manuscript source, bibliography, reader-facing related-work review, theorem map, artifact guide, and the interior-time theorem of Section~\ref{sec:examples} are contained in the artifact commit from which this PDF is built; that commit extends \artifactbase{} and lives in the same repository. A release version should replace both commit references with a single versioned artifact tag and archival DOI, so that one checkout reproduces every Lean declaration cited here together with this manuscript.
 
 The principal verification commands are:
 \begin{verbatim}

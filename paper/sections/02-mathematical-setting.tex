@@ -17,7 +17,7 @@ and conservative generator matrix
     -\lambda(x), & x=y.
   \end{cases}
 \]
-The formal structure \lean{FiniteJumpGenerator} packages the nonnegative rates, the induced escape rates and real generator, and the reference measures used below. Conservation is proved as the row-sum identity $\sum_y Q(x,y)=0$.
+We extend the rate function to all state pairs by setting $k(x,x)=0$; consequently, diagonal terms in the unrestricted sums and products below vanish, so the sector densities and the renewal equation may be written without excluding equal adjacent states. The formal structure \lean{FiniteJumpGenerator} packages the nonnegative rates together with this diagonal convention (\lean{jumpRate_self}), the induced escape rates and real generator, and the reference measures used below. Conservation is proved as the row-sum identity $\sum_y Q(x,y)=0$.
 
 \subsection{Fixed-jump-count charts}
 

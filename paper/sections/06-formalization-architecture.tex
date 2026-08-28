@@ -10,7 +10,7 @@ The proof is intentionally presented as a six-stage spine rather than as a catal
 \toprule
 Stage & Paper-level role & Principal module and declarations \\
 \midrule
-1 & Nonzero normalized free-simplex reference (scaled by the sector mass $T^n/n!$) and simplex volume & \file{ContinuousTimeJumpSimplex.lean}:\newline \mbox{\lean{Simplex.volume_freeSimplexSet}},\newline \mbox{\lean{Simplex.sum_holdingTimesOfFree}} \\
+1 & Normalized free-simplex path probability, its finite-mass scaled reference (sector mass $T^n/n!$), and simplex volume & \file{ContinuousTimeJumpSimplex.lean}:\newline \mbox{\lean{Simplex.volume_freeSimplexSet}},\newline \mbox{\lean{Simplex.sum_holdingTimesOfFree}} \\
 \addlinespace
 2 & Sector masses, tail disappearance, and normalization & \file{ContinuousTimeJumpFiniteGeneratorPathLaw.lean}:\newline \mbox{\lean{tendsto_arrivalMassFrom}}, \mbox{\lean{tsum_sectorMassFrom}} \\
 \addlinespace

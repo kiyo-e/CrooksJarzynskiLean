@@ -127,6 +127,7 @@ the trusted base of the development.
 #print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.TwoState.conditionalTerminalLaw_real_singleton_eq
 #print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.TwoState.exp_smul_generator_apply
 #print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.TwoState.conditionalTerminalLaw_eq_exp_generator
+#print axioms CrooksJarzynski.MeasureProtocol.ContinuousTimeJump.TwoState.trajectory_interior_not_ae_endpointFunction
 #print axioms CrooksJarzynski.Protocol.measure_forwardWeight_singleton
 #print axioms CrooksJarzynski.Protocol.measure_reverseWeight_singleton
 #print axioms CrooksJarzynski.Protocol.measure_crooks

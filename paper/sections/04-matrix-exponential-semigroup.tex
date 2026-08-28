@@ -36,10 +36,10 @@ is a continuous solution of the same equation~\eqref{eq:renewal} and that bounde
 where $R$ caps the escape rates. Matching the path-side solution to the matrix-exponential solution gives
 \begin{equation}
 \label{eq:terminal-exp}
-  (\Pp_{T,x}\circ X_T^{-1})_{\R}(\{y\})
+  \operatorname{toReal}\bigl((\Pp_{T,x}\circ X_T^{-1})(\{y\})\bigr)
   = \exp(TQ)(x,y),
 \end{equation}
-where the subscript indicates conversion from an extended-nonnegative-real measure to its real-valued mass: the left-hand side is a finite singleton mass, read as a real number.
+where $\operatorname{toReal}$, matching the Lean coercion of the same name, converts an extended-nonnegative-real mass to its real value: the left-hand side is a finite singleton mass, read as a real number.
 
 The transition mass is bounded by one and continuous in $\rho$, so the uniqueness theorem applies and the solutions coincide. Combining the identification with the bridge~\eqref{eq:terminal-push} transfers the equality to the constructed law.
 

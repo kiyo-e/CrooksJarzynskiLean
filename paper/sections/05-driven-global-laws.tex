@@ -33,7 +33,7 @@ The two protocols are time-mirror images of each other:
 \xrightarrow{\;G_0,\,T_0\;}.
 \end{aligned}
 \]
-The forward experiment evolves under the constant generator $G_i$ on landscape $E_i$ for time $T_i$ and is quenched $E_i\to E_{i+1}$ at the end of the window; the reverse experiment applies the mirrored quench before the corresponding window. Each stored reverse window path is then reversed in time. At the record level, reversal acts on a fixed-jump-count chart by reversing both the state sequence and the holding-time sequence (\lean{JumpPath.reverse}),
+For $M>0$, the forward experiment evolves under the constant generator $G_i$ on landscape $E_i$ for time $T_i$ and is quenched $E_i\to E_{i+1}$ at the end of the window; the reverse experiment applies the mirrored quench before the corresponding window. For $M=0$, both protocols degenerate to the equilibrium experiment with no evolution and zero work, and the theorems below hold trivially. Each stored reverse window path is then reversed in time. At the record level, reversal acts on a fixed-jump-count chart by reversing both the state sequence and the holding-time sequence (\lean{JumpPath.reverse}),
 \begin{equation}
 \label{eq:reversal}
   \Theta\bigl((x_0,\ldots,x_n),(\tau_0,\ldots,\tau_n)\bigr)
@@ -71,9 +71,9 @@ Let $s_i=\sum_{j<i}T_j$ be the boundary times. Work is read from the global righ
   W(\gamma)=\sum_{i=0}^{M-1}
   \left(E_{i+1}(X_{s_{i+1}})-E_i(X_{s_{i+1}})\right).
 \end{equation}
-This is the end-of-window switching-work (transition-then-quench) convention: within window $i$ the system evolves on landscape $E_i$, and the quench $E_i\to E_{i+1}$ is charged at the state occupied at the window boundary. For finite $\Omega$, this observable is bounded and therefore integrable under the constructed laws. The formalization proves that~\eqref{eq:work} agrees almost surely with the recursively defined marked work.
+This is the end-of-window switching-work (transition-then-quench) convention: within window $i$ the system evolves on landscape $E_i$, and the quench $E_i\to E_{i+1}$ is charged at the state occupied at the window boundary. For finite $\Omega$ and finitely many windows, this observable is bounded and therefore integrable under the constructed laws. The formalization proves that~\eqref{eq:work} agrees almost surely with the recursively defined marked work.
 
-For inverse temperature $\beta\ne 0$, assume division-free windowwise Gibbs detailed balance, equivalently
+For inverse temperature $\beta\ne 0$, assume windowwise Gibbs detailed balance; equivalently to detailed balance with respect to the normalized Gibbs distribution, we assume the division-free identity in unnormalized Boltzmann weights
 \begin{equation}
 \label{eq:gibbs-db}
   e^{-\beta E_i(x)} k_i(x,y)

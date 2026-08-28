@@ -12,12 +12,13 @@ The paper does not rely on every module in the repository. The six stages below 
 
 ## Snapshot and dependencies
 
-- Manuscript baseline: [`f96e380`](https://github.com/kiyo-e/CrooksJarzynskiLean/commit/f96e380035b71cd5f0f8025dfa48f8cd592719f8).
+- Core formalization baseline: [`f96e380`](https://github.com/kiyo-e/CrooksJarzynskiLean/commit/f96e380035b71cd5f0f8025dfa48f8cd592719f8).
+- Manuscript sources, this artifact guide, and the interior-time theorem (`ContinuousTimeJumpTwoStateInteriorTime.lean`): contained in the artifact commit that extends the baseline (the head of the manuscript branch; checking out the baseline alone does not reproduce them).
 - Lean toolchain: `leanprover/lean4:v4.32.0`.
 - Mathlib and all Lake dependencies: fixed by `lake-manifest.json`.
 - Physlib: pinned by commit in `lakefile.lean`.
 
-A publication release should replace the baseline with a versioned tag and archival DOI.
+A publication release should replace both commit references with a single versioned artifact tag and archival DOI, so that one checkout reproduces the manuscript and every Lean declaration it cites.
 
 ## Build and proof audit
 

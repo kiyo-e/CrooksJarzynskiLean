@@ -1,7 +1,7 @@
 # Related work and positioning
 
 - Review completed: 2026-08-26; final quality check: 2026-08-27.
-- CrooksJarzynskiLean snapshot used for the manuscript baseline: [`f96e380`](https://github.com/kiyo-e/CrooksJarzynskiLean/commit/f96e380035b71cd5f0f8025dfa48f8cd592719f8).
+- CrooksJarzynskiLean core-formalization baseline: [`f96e380`](https://github.com/kiyo-e/CrooksJarzynskiLean/commit/f96e380035b71cd5f0f8025dfa48f8cd592719f8). The manuscript sources and the interior-time theorem live in the artifact commit that extends this baseline; a release replaces both references with a single versioned artifact tag.
 - Intended audience: researchers in stochastic thermodynamics, probability, and interactive theorem proving.
 
 ## Positioning in one sentence
