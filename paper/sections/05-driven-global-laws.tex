@@ -49,9 +49,9 @@ In the present work all state variables are even, so $\vartheta=\mathrm{id}$. Th
   \Theta\bigl((x_0,\ldots,x_n),(\tau_0,\ldots,\tau_n)\bigr)
   = \bigl((x_n,\ldots,x_0),(\tau_n,\ldots,\tau_0)\bigr),
 \end{equation}
-which fixes the state assigned at each jump time in accordance with that left-limit convention. The quench at the beginning of the reverse experiment is not an additional operation; it is the exact time mirror of the final quench of the forward protocol.
+which fixes the state assigned at each jump time in accordance with that left-limit convention. This correspondence is itself machine-checked: on an exact-horizon record, the reversed trajectory equals the original trajectory at the mirrored time whenever the mirrored time is not a jump time (\lean{FullPath.trajectory_reverse_eq_mirror}); at each fixed observation time the identity holds almost surely under the constructed fixed-initial law (\lean{pathLawFrom_ae_trajectory_reverse_eq_mirror}); and consequently the joint law of the reversed trajectory at any finite family of times equals the joint law of the original trajectory at the mirrored times (\lean{map_trajectory_reverse_eq_map_mirror}). The quench at the beginning of the reverse experiment is not an additional operation; it is the exact time mirror of the final quench of the forward protocol.
 
-In the formal construction, each reverse window path is transformed by $\Theta$ exactly once, before it is stored on the common forward-aligned marked carrier (\lean{reverseWindowKernel}); the marked reverse law is therefore already chronology-aligned, and the global reverse law $\Pp_R^{\Theta}$ is obtained from it by chronological concatenation. In this way $\Pp_R^{\Theta}$ plays the role of the time-reversed image $\Theta_*\Pp_R$ of the reverse-protocol law; it is called the aligned reverse law in the formal development, and it is charted in the forward time direction, not in the reverse experiment's own chronology.
+In the formal construction, each reverse window path is transformed by $\Theta$ exactly once, before it is stored on the common forward-aligned marked carrier (\lean{reverseWindowKernel}); the marked reverse law is therefore already chronology-aligned, and the global reverse law $\Pp_R^{\Theta}$ is obtained from it by chronological concatenation. In this way $\Pp_R^{\Theta}$ realizes the time-reversed image $\Theta_*\Pp_R$ of the reverse-protocol law: within each window the identification is proved at the level of all finite-dimensional distributions by the mirror theorems above, and the global concatenated laws are additionally matched at the window boundaries almost surely. It is called the aligned reverse law in the formal development, and it is charted in the forward time direction, not in the reverse experiment's own chronology. A single global statement mirroring arbitrary observation times across window seams is not formalized (Section~\ref{sec:limitations}).
 
 \subsection{Measurable global concatenation}
 
@@ -172,7 +172,7 @@ For $\beta>0$, averaging the logarithmic density under the forward law gives the
   D\!\left(\Pp_F^{\mathrm{glob}}\,\middle\|\,\Pp_R^{\Theta}\right)
   = \beta\bigl(\langle W\rangle_F-\Delta F\bigr):
 \]
-the mean dissipated work is the path-space distinguishability of the forward and reverse experiments \parencite{KawaiParrondoVandenBroeck2007}. This is a standard consequence of~\eqref{eq:global-crooks-lean}, stated here as interpretation; it is not part of the mechanized development.
+the mean dissipated work is the path-space distinguishability of the forward and reverse experiments \parencite{KawaiParrondoVandenBroeck2007}. This consequence of~\eqref{eq:global-crooks-lean} is also mechanized: the log-likelihood ratio is identified with $\beta(W-\Delta F)$ forward-almost surely, and the divergence evaluates to the mean dissipated work (\lean{llr_forwardGlobalLaw_reverseGlobalLaw}, \lean{klDiv_forwardGlobalLaw_reverseGlobalLaw}).
 
 \begin{corollary}[Jarzynski equality]
 Under the hypotheses of Theorem~\ref{thm:main}, evaluating~\eqref{eq:global-crooks-lean} on the whole path space yields
