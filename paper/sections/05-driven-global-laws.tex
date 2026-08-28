@@ -33,13 +33,17 @@ The two protocols are time-mirror images of each other:
 \xrightarrow{\;G_0,\,T_0\;}.
 \end{aligned}
 \]
-For $M>0$, the forward experiment evolves under the constant generator $G_i$ on landscape $E_i$ for time $T_i$ and is quenched $E_i\to E_{i+1}$ at the end of the window; the reverse experiment applies the mirrored quench before the corresponding window. For $M=0$, both protocols degenerate to the equilibrium experiment with no evolution and zero work, and the theorems below hold trivially. Each stored reverse window path is then reversed in time. At the record level, reversal acts on a fixed-jump-count chart by reversing both the state sequence and the holding-time sequence (\lean{JumpPath.reverse}),
+The forward protocol stops immediately after the final switch to $E_M$; the reverse experiment starts in the Gibbs state of $E_M$ and performs the mirrored switch before its first dynamical window.
+
+For $M>0$, the forward experiment evolves under the constant generator $G_i$ on landscape $E_i$ for time $T_i$ and is quenched $E_i\to E_{i+1}$ at the end of the window; the reverse experiment applies the mirrored quench before the corresponding window. For $M=0$, both protocols degenerate to the equilibrium experiment with no evolution and zero work, and the theorems below hold trivially.
+
+We assume trivial kinematic time reversal on the state space, $\vartheta x=x$. The path-reversal map $\Theta$ reverses the temporal order of the states and holding times of a record. Each stored reverse window path is transformed in this way. On a fixed-jump-count chart, the definition is (\lean{JumpPath.reverse})
 \begin{equation}
 \label{eq:reversal}
   \Theta\bigl((x_0,\ldots,x_n),(\tau_0,\ldots,\tau_n)\bigr)
-  = \bigl((x_n,\ldots,x_0),(\tau_n,\ldots,\tau_0)\bigr),
+  = \bigl((x_n,\ldots,x_0),(\tau_n,\ldots,\tau_0)\bigr).
 \end{equation}
-so the reverse carrier used below is \emph{chronology-aligned}: it is charted in the forward time direction, not in the reverse experiment's own chronology. The time reversal used throughout is this record-level reversal; the state assigned at each jump time is fixed by the record convention, whereas the naive pointwise reversal $t\mapsto X_{T-t}$ of a right-continuous trajectory would not remain right-continuous at jump times. To keep this alignment visible, the aligned reverse law is written $\Pp_{R,\mathrm{align}}^{\mathrm{glob}}$ throughout.
+At jump times, this record-level definition corresponds to the usual c\`adl\`ag reversal with the appropriate left-limit convention. We write $\Pp_R^{\Theta}$ for the resulting chronology-aligned reverse law: the pushforward of the reverse experiment's stored window records under the windowwise record reversal~\eqref{eq:reversal} and chronological concatenation, so that $\Pp_R^{\Theta}$ plays the role of the time-reversed image $\Theta_*$ of the reverse-protocol law. This measure is called the aligned reverse law in the formal development. It is charted in the forward time direction, not in the reverse experiment's own chronology. The state assigned at each jump time is fixed by the record convention, whereas the naive pointwise reversal $t\mapsto X_{T-t}$ of a right-continuous trajectory would not remain right-continuous at jump times.
 
 \subsection{Measurable global concatenation}
 
@@ -58,8 +62,8 @@ The global laws are the pushforwards
   \Pp_F^{\mathrm{glob}}
   =\Pp_F^{\mathrm{marked}}\circ C^{-1},
   \qquad
-  \Pp_{R,\mathrm{align}}^{\mathrm{glob}}
-  =\Pp_{R,\mathrm{align}}^{\mathrm{marked}}\circ C^{-1},
+  \Pp_R^{\Theta}
+  =\Pp_R^{\Theta,\mathrm{marked}}\circ C^{-1},
 \]
 where $C$ is chronological concatenation. Both are probability measures.
 
@@ -71,16 +75,24 @@ Let $s_i=\sum_{j<i}T_j$ be the boundary times. Work is read from the global righ
   W(\gamma)=\sum_{i=0}^{M-1}
   \left(E_{i+1}(X_{s_{i+1}})-E_i(X_{s_{i+1}})\right).
 \end{equation}
-This is the end-of-window switching-work (transition-then-quench) convention: within window $i$ the system evolves on landscape $E_i$, and the quench $E_i\to E_{i+1}$ is charged at the state occupied at the window boundary. For finite $\Omega$ and finitely many windows, this observable is bounded and therefore integrable under the constructed laws. The formalization proves that~\eqref{eq:work} agrees almost surely with the recursively defined marked work.
+During window $i$, the system evolves for time $T_i$ under $G_i$ at the fixed energy landscape $E_i$. At the end of the window, the control parameter is switched instantaneously from $E_i$ to $E_{i+1}$ while the state is held fixed. We use the inclusive convention in which positive work is work done on the system. This is instantaneous switching work evaluated after the window evolution (a right-endpoint convention), called the transition-then-quench convention in the formal development: the switch is charged at the state occupied at the window boundary. For finite $\Omega$ and finitely many windows, this observable is bounded and therefore integrable under the constructed laws. The formalization proves that~\eqref{eq:work} agrees almost surely with the recursively defined marked work.
 
-For inverse temperature $\beta\ne 0$, assume windowwise Gibbs detailed balance. Equivalently, rather than referring to the normalized Gibbs distribution, we use the division-free identity in unnormalized Boltzmann weights
+In the usual single-bath interpretation, jumps within a window change the system energy at fixed control parameter and are associated with heat exchange, whereas the instantaneous switches contribute work \parencite{Sekimoto2010,Seifert2012}. Heat and a trajectory-level first law are not formalized in the present development.
+
+For inverse temperature $\beta\ne 0$, each window generator satisfies instantaneous detailed balance with respect to the Gibbs distribution of the current landscape,
+\[
+  \pi_i(x)=Z_i^{-1}e^{-\beta E_i(x)},
+  \qquad
+  \pi_i(x)\,k_i(x,y)=\pi_i(y)\,k_i(y,x).
+\]
+Equivalently, after cancelling $Z_i$, this is the unnormalized identity used in Lean, which is the division-free form:
 \begin{equation}
 \label{eq:gibbs-db}
   e^{-\beta E_i(x)} k_i(x,y)
   = e^{-\beta E_i(y)} k_i(y,x)
   \qquad (x\ne y).
 \end{equation}
-``Windowwise'' means that each constant generator is reversible with respect to the Gibbs weight of the energy landscape used during its own window. We say windowwise Gibbs detailed balance rather than local detailed balance: condition~\eqref{eq:gibbs-db} is a single-temperature Gibbs-reversibility requirement, and the formalization does not model reservoir-resolved entropy flow or a bath decomposition. Let
+This division-free form is the hypothesis \lean{FiniteJumpGenerator.IsGibbsDetailedBalance}. The formal development calls it windowwise Gibbs detailed balance. Detailed balance is a property of the generator $G_i$; it does not assume that the system equilibrates during the finite window duration $T_i$. Since $G_i$ is reversible with respect to $\pi_i$, the reverse protocol uses the same window generator $G_i$, with the windows traversed in the opposite order. This is not local detailed balance: condition~\eqref{eq:gibbs-db} is a single-temperature Gibbs-reversibility requirement, and the formalization does not model reservoir-resolved entropy flow or a bath decomposition \parencite{Maes2021}. Let
 \[
   Z_i=\sum_{x\in\Omega}e^{-\beta E_i(x)},
   \qquad
@@ -108,26 +120,32 @@ Assume:
   \item each window carries a finite jump generator $G_i$ satisfying the windowwise Gibbs detailed balance~\eqref{eq:gibbs-db} for its own landscape $E_i$;
   \item $\beta\ne 0$;
   \item the forward experiment starts from the initial Gibbs state $e^{-\beta E_0}/Z_0$ and the reverse experiment starts from the final Gibbs state $e^{-\beta E_M}/Z_M$;
-  \item work uses the transition-then-quench convention~\eqref{eq:work}, and the reverse law is the chronology-aligned pushforward $\Pp_{R,\mathrm{align}}^{\mathrm{glob}}$ of the reverse experiment's window records under record reversal~\eqref{eq:reversal} and concatenation.
+  \item work uses the transition-then-quench convention~\eqref{eq:work}, and the reverse law is the chronology-aligned pushforward $\Pp_R^{\Theta}$ of the reverse experiment's window records under record reversal~\eqref{eq:reversal} and concatenation.
 \end{enumerate}
 Then
 \begin{equation}
 \label{eq:global-crooks}
+  e^{-\beta W(\gamma)}\,\Pp_F^{\mathrm{glob}}(\dd\gamma)
+  =e^{-\beta\Delta F}\,\Pp_R^{\Theta}(\dd\gamma).
+\end{equation}
+Whenever ratio notation is legitimate, this is equivalently
+\begin{equation}
+  \log\frac{\dd\Pp_F^{\mathrm{glob}}}{\dd\Pp_R^{\Theta}}(\gamma)
+  =\beta\bigl(W(\gamma)-\Delta F\bigr).
+\end{equation}
+The Lean theorem states the first, division-free measure identity, which remains meaningful without dividing by the probability of an individual trajectory:
+\begin{equation}
+\label{eq:global-crooks-lean}
   \Pp_F^{\mathrm{glob}}.\operatorname{withDensity}
   \left(e^{-\beta W}\right)
-  = e^{-\beta\Delta F}\,\Pp_{R,\mathrm{align}}^{\mathrm{glob}}.
+  = e^{-\beta\Delta F}\,\Pp_R^{\Theta}.
 \end{equation}
 \end{theorem}
 
-In the conventional physicists' differential notation, identity~\eqref{eq:global-crooks} reads
-\[
-  e^{-\beta W(\gamma)}\,\Pp_F^{\mathrm{glob}}(\mathrm{d}\gamma)
-  = e^{-\beta\Delta F}\,\Pp_{R,\mathrm{align}}^{\mathrm{glob}}(\mathrm{d}\gamma).
-\]
-The formal statement is the \lean{withDensity} measure identity, not a pointwise density ratio; this division-free form avoids ratios on zero-probability trajectories.
+Defining the dissipated work $W_{\mathrm{diss}}=W-\Delta F$, the path-space irreversibility variable is $\Sigma=\beta W_{\mathrm{diss}}$ \parencite{Seifert2012,VandenBroeckEsposito2015}. Jarzynski's equality and the mean-work inequality are respectively the exponential and first-moment consequences of this same path-measure identity. The machine-checked measure identity is valid for every $\beta\ne0$; the thermodynamic statements are presented for $\beta>0$. No irreducibility, uniqueness-of-equilibrium, or long-window equilibration assumption is required.
 
 \begin{corollary}[Jarzynski equality]
-Under the hypotheses of Theorem~\ref{thm:main}, evaluating~\eqref{eq:global-crooks} on the whole path space yields
+Under the hypotheses of Theorem~\ref{thm:main}, evaluating~\eqref{eq:global-crooks-lean} on the whole path space yields
 \begin{equation}
 \label{eq:jarzynski}
   \E_F\left[e^{-\beta W}\right]=e^{-\beta\Delta F}.
@@ -142,9 +160,7 @@ Under the hypotheses of Theorem~\ref{thm:main} with $\beta>0$, Jensen's inequali
 \end{equation}
 \end{corollary}
 
-The Crooks and Jarzynski identities are formal theorems for any $\beta\ne 0$; the thermodynamic reading of $\Delta F$ and the second law require $\beta>0$.
-
-The development also maps~\eqref{eq:global-crooks} to the work coordinate, and it does so at the level of measures first, consistent with the design decision of Section~\ref{sec:architecture}. Recall that $\Pp_{R,\mathrm{align}}^{\mathrm{glob}}$ is charted in the forward chronology, so the aligned work coordinate $W$ of~\eqref{eq:work} is available on it. In the reverse experiment's own chronology, with window boundary times $\tilde s_j$ and trajectory $\tilde X$, the reverse protocol quenches $E_{M-j}\to E_{M-j-1}$ before its $j$-th window, so its intrinsic switching work is
+The development also maps~\eqref{eq:global-crooks-lean} to the work coordinate, and it does so at the level of measures first, consistent with the design decision of Section~\ref{sec:architecture}. Recall that $\Pp_R^{\Theta}$ is charted in the forward chronology, so the aligned work coordinate $W$ of~\eqref{eq:work} is available on it. In the reverse experiment's own chronology, with window boundary times $\tilde s_j$ and trajectory $\tilde X$, the reverse protocol quenches $E_{M-j}\to E_{M-j-1}$ before its $j$-th window, so its intrinsic switching work is
 \[
   W_R(\tilde\gamma)
   =\sum_{j=0}^{M-1}
@@ -157,9 +173,9 @@ Under record reversal and chronology alignment, this intrinsic reverse-protocol 
 \[
   \mu_F=W_*\,\Pp_F^{\mathrm{glob}},
   \qquad
-  \mu_R=(W_R)_*\,\Pp_{R,\mathrm{align}}^{\mathrm{glob}},
+  \mu_R=(W_R)_*\,\Pp_R^{\Theta},
 \]
-the pushforward of~\eqref{eq:global-crooks} is the measure-level work-distribution relation
+the pushforward of~\eqref{eq:global-crooks-lean} is the measure-level work-distribution relation
 \begin{equation}
 \label{eq:work-crooks}
   \mu_F.\operatorname{withDensity}\bigl(w\mapsto e^{-\beta w}\bigr)
@@ -169,6 +185,6 @@ the pushforward of~\eqref{eq:global-crooks} is the measure-level work-distributi
 \begin{equation}
 \label{eq:atom-crooks}
   \Pp_F^{\mathrm{glob}}(W=w)
-  =e^{\beta(w-\Delta F)}\,\Pp_{R,\mathrm{align}}^{\mathrm{glob}}(W_R=-w).
+  =e^{\beta(w-\Delta F)}\,\Pp_R^{\Theta}(W_R=-w).
 \end{equation}
 All of these theorems are stated on the global pushforward laws constructed from the generators, rather than on abstract work distributions supplied as assumptions.

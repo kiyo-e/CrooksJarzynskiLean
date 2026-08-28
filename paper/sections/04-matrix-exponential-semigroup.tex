@@ -39,11 +39,15 @@ where $R$ caps the escape rates. Matching the path-side solution to the matrix-e
   \operatorname{toReal}\bigl((\Pp_{T,x}\circ X_T^{-1})(\{y\})\bigr)
   = \exp(TQ)(x,y),
 \end{equation}
-where $\operatorname{toReal}$, matching the Lean coercion of the same name, converts an extended-nonnegative-real mass to its real value: the left-hand side is a finite singleton mass, read as a real number.
+where $\operatorname{toReal}$ reads the finite singleton mass, an extended nonnegative real, as a real number; Section~\ref{sec:architecture} discusses this coercion and the kernel conventions.
 
 The transition mass is bounded by one and continuous in $\rho$, so the uniqueness theorem applies and the solutions coincide. Combining the identification with the bridge~\eqref{eq:terminal-push} transfers the equality to the constructed law.
 
-The terminal laws are packaged as a Mathlib Markov kernel
+The matrix exponential first supplies the familiar semigroup identity
+\[
+  e^{(S+T)Q}=e^{SQ}e^{TQ}.
+\]
+The terminal laws are then packaged as a transition kernel satisfying the Chapman--Kolmogorov relation (a Mathlib Markov kernel)
 \[
   K_T(x,\cdot)=\Pp_{T,x}\circ X_T^{-1}.
 \]
@@ -51,7 +55,7 @@ Equation~\eqref{eq:terminal-exp} turns the matrix-exponential semigroup identity
 \[
   K_{S+T}=K_T\circ K_S.
 \]
-Here the rightmost kernel acts first, following Mathlib's kernel-composition convention. The repository also proves a stronger path-level identity. Cutting a constructed path at an intermediate horizon and concatenating an independent continuation started at the cut state recovers \lean{pathLawFrom (S+T) x}. Taking the terminal pushforward of this path-level theorem yields the kernel semigroup law as a shadow.
+The repository also proves a stronger path-level identity. Cutting a constructed path at an intermediate horizon and concatenating an independent continuation started at the cut state recovers $\Pp_{S+T,x}$ (\lean{pathLawFrom_add}). Taking the terminal pushforward of this path-level theorem yields the kernel semigroup law as a shadow.
 
 \subsection{Finite-dimensional distributions}
 
@@ -65,7 +69,7 @@ be a finite monotone family of observation times. The measurable sampling map re
   \Pp_{T,x}\circ (X_{t_0},\ldots,X_{t_n})^{-1}
   = \delta_x K_{t_1-t_0}\cdots K_{t_n-t_{n-1}},
 \end{equation}
-where the right-hand side is Mathlib's chronological finite path measure. For a state sequence $(x_0,\ldots,x_n)$, the atom formula is
+where the right-hand side is the usual Markov product law (the chronological kernel chain of the formal development). For a state sequence $(x_0,\ldots,x_n)$, the atom formula is
 \begin{equation}
 \label{eq:fdd-atom}
   \mathbf{1}_{\{x_0=x\}}
@@ -81,4 +85,3 @@ monotone finite observation family is covered.
 Thus the semigroup is not merely an API defined beside the path construction: it is identified with the actual terminal and finite-dimensional laws of that construction.
 
 A branching three-state Y-shaped chain instantiates the general theorem. This example is useful because its path law cannot be reduced to the parity-of-jump-count argument available for a two-state alternating chain.
-
