@@ -3,6 +3,8 @@
 
 The core formalization described in Sections~\ref{sec:setting}--\ref{sec:driven} is based on repository \lean{main} at commit \artifactbase. The manuscript source, bibliography, reader-facing related-work review, theorem map, artifact guide, and the interior-time theorem of Section~\ref{sec:examples} are contained in the artifact commit from which this PDF is built; that commit extends \artifactbase{} and lives in the same repository. A release version should replace both commit references with a single versioned artifact tag and archival DOI, so that one checkout reproduces every Lean declaration cited here together with this manuscript.
 
+Beyond the continuous-time chain presented in this paper, the repository also contains a broader discrete-time measure-theoretic development, non-atomic Gaussian and Metropolis--Hastings examples, two-state calculations, and a refinement theorem relating two discrete work conventions. Those components support and test the library but are not part of the claims of this paper.
+
 The principal verification commands are:
 \begin{verbatim}
 lake exe cache get
