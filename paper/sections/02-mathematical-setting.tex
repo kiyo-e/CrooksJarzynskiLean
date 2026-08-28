@@ -21,11 +21,11 @@ We extend the rate function to all state pairs by setting $k(x,x)=0$; consequent
 
 \subsection{Fixed-jump-count charts}
 
-A path with exactly $n$ jumps is represented by a state sequence and a holding-time sequence,
+An $n$-jump-sector record is represented by a state sequence and a holding-time sequence,
 \[
   \gamma=((x_0,\ldots,x_n),(\tau_0,\ldots,\tau_n)).
 \]
-The final holding interval $\tau_n$ records the no-jump remainder after the last jump. In Lean the type is
+The final holding interval $\tau_n$ records the no-jump remainder after the last jump. The ambient record type also contains degenerate records, with equal adjacent states or with holding times inconsistent with the horizon; the sector laws below assign such records measure zero, through the diagonal convention $k(x,x)=0$ and the fixed-horizon support theorem, and concentrate almost surely on valid fixed-horizon records. In Lean the type is
 \[
   \lean{JumpPath Omega n}
   = (\lean{Fin (n+1) -> Omega})\times

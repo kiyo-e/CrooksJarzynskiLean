@@ -20,7 +20,7 @@ Stage & Paper-level role & Principal module and declarations \\
 \addlinespace
 5 & Finite-dimensional distributions & \file{ContinuousTimeJumpFiniteDimensional.lean}:\newline \mbox{\lean{pathLawFrom_finiteDimensional_eq}},\newline {\footnotesize\mbox{\lean{pathLawFrom_sampleAt_real_singleton_eq_exp_product}}} \\
 \addlinespace
-6 & Global driven path law and fluctuation relations & \file{ContinuousTimeJumpDrivenConcat.lean}, \file{ContinuousTimeJumpDrivenGlobalLaw.lean}, \file{ContinuousTimeJumpDrivenGlobalCrooks.lean}:\newline \mbox{\lean{concatenateWindows}}, \mbox{\lean{forwardGlobalLaw}},\newline \mbox{\lean{global_crooks_of_gibbsDetailedBalance}},\newline \mbox{\lean{global_jarzynski_of_gibbsDetailedBalance}},\newline \mbox{\lean{global_second_law_of_gibbsDetailedBalance}},\newline {\scriptsize\mbox{\lean{global_work_distribution_crooks_of_gibbsDetailedBalance}}} \\
+6 & Global driven path law and fluctuation relations & \file{ContinuousTimeJumpDrivenConcat.lean}, \file{ContinuousTimeJumpDrivenGlobalLaw.lean}, \file{ContinuousTimeJumpDrivenGlobalCrooks.lean}:\newline \mbox{\lean{concatenateWindows}}, \mbox{\lean{forwardGlobalLaw}},\newline \mbox{\lean{global_crooks_of_gibbsDetailedBalance}},\newline \mbox{\lean{global_jarzynski_of_gibbsDetailedBalance}},\newline \mbox{\lean{global_second_law_of_gibbsDetailedBalance}},\newline {\scriptsize\mbox{\lean{global_work_distribution_crooks_reverseWork}}\newline \mbox{\hspace*{1em}\lean{_of_gibbsDetailedBalance}}} \\
 \bottomrule
 \end{tabular}
 \caption{The paper theorem spine. All modules live under \file{CrooksJarzynski/}.}
@@ -38,5 +38,5 @@ Sector sums, renewal functions, and matrix entries are useful intermediate objec
 \paragraph{Marked construction before global projection.}
 Window marks retain enough structure to prove boundary matching and windowwise balance. Only after those facts are available are the marks measurably concatenated into a global path. This separates recursive probability construction from real-time observation while proving that their work observables agree almost surely.
 
-The implementation uses \Lean\ \parencite{Moura2021}, Mathlib \parencite{Mathlib2020}, and Physlib \parencite{Physlib}. The snapshot underlying this draft pins Lean and Mathlib to version 4.32.0 and pins Physlib by commit. The CI workflow builds the project, rejects proof placeholders and custom axiom declarations, and audits the kernel axioms of selected headline theorems. The accepted foundational axioms are the standard \lean{propext}, \lean{Classical.choice}, and \lean{Quot.sound} used by the Lean/Mathlib environment.
+The implementation uses \Lean\ \parencite{Moura2021}, Mathlib \parencite{Mathlib2020}, and Physlib \parencite{Physlib}. The snapshot underlying this draft pins Lean and Mathlib to version 4.32.0 and pins Physlib by commit. The CI workflow builds the project, scans the project sources for proof placeholders and explicit axiom or constant declarations, and audits the kernel axioms of selected headline theorems. The accepted foundational axioms are the standard \lean{propext}, \lean{Classical.choice}, and \lean{Quot.sound} used by the Lean/Mathlib environment.
 

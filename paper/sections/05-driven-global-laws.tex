@@ -39,7 +39,7 @@ For $M>0$, the forward experiment evolves under the constant generator $G_i$ on 
   \Theta\bigl((x_0,\ldots,x_n),(\tau_0,\ldots,\tau_n)\bigr)
   = \bigl((x_n,\ldots,x_0),(\tau_n,\ldots,\tau_0)\bigr),
 \end{equation}
-so the reverse carrier used below is \emph{chronology-aligned}: it is charted in the forward time direction, not in the reverse experiment's own chronology. To keep this alignment visible, the aligned reverse law is written $\Pp_{R,\mathrm{align}}^{\mathrm{glob}}$ throughout.
+so the reverse carrier used below is \emph{chronology-aligned}: it is charted in the forward time direction, not in the reverse experiment's own chronology. The time reversal used throughout is this record-level reversal; the state assigned at each jump time is fixed by the record convention, whereas the naive pointwise reversal $t\mapsto X_{T-t}$ of a right-continuous trajectory would not remain right-continuous at jump times. To keep this alignment visible, the aligned reverse law is written $\Pp_{R,\mathrm{align}}^{\mathrm{glob}}$ throughout.
 
 \subsection{Measurable global concatenation}
 
@@ -73,7 +73,7 @@ Let $s_i=\sum_{j<i}T_j$ be the boundary times. Work is read from the global righ
 \end{equation}
 This is the end-of-window switching-work (transition-then-quench) convention: within window $i$ the system evolves on landscape $E_i$, and the quench $E_i\to E_{i+1}$ is charged at the state occupied at the window boundary. For finite $\Omega$ and finitely many windows, this observable is bounded and therefore integrable under the constructed laws. The formalization proves that~\eqref{eq:work} agrees almost surely with the recursively defined marked work.
 
-For inverse temperature $\beta\ne 0$, assume windowwise Gibbs detailed balance; equivalently to detailed balance with respect to the normalized Gibbs distribution, we assume the division-free identity in unnormalized Boltzmann weights
+For inverse temperature $\beta\ne 0$, assume windowwise Gibbs detailed balance. Equivalently, rather than referring to the normalized Gibbs distribution, we use the division-free identity in unnormalized Boltzmann weights
 \begin{equation}
 \label{eq:gibbs-db}
   e^{-\beta E_i(x)} k_i(x,y)
@@ -159,8 +159,8 @@ the pushforward of~\eqref{eq:global-crooks} is the measure-level work-distributi
 (\lean{global_work_distribution_crooks_reverseWork_of_gibbsDetailedBalance}). Because $\Omega$ and $M$ are finite, $W$ has finite range, and evaluating~\eqref{eq:work-crooks} on singletons recovers the conventional atomwise statement
 \begin{equation}
 \label{eq:atom-crooks}
-  \Pp_F(W=w)
-  =e^{\beta(w-\Delta F)}\Pp_R(W_R=-w).
+  \Pp_F^{\mathrm{glob}}(W=w)
+  =e^{\beta(w-\Delta F)}\,\Pp_{R,\mathrm{align}}^{\mathrm{glob}}(W_R=-w).
 \end{equation}
 All of these theorems are stated on the global pushforward laws constructed from the generators, rather than on abstract work distributions supplied as assumptions.
 
