@@ -1,4 +1,4 @@
-\section{Examples and validation targets}
+\section{Examples and physical interpretation}
 \label{sec:examples}
 
 The repository contains several concrete instances that exercise distinct parts of the general construction.
@@ -43,7 +43,7 @@ The atomwise Crooks relation~\eqref{eq:atom-crooks} can therefore be checked val
   =\frac{2/3}{1/2}=\frac43
   =e^{-\log\frac32-\Delta F},
 \]
-so the example checks the path-to-work Crooks sign conventions directly, in addition to Jarzynski's equality. This one-window example is thus a sign-convention test: a stationary Gibbs state followed by a single quench, rather than a nontrivial finite-time relaxation. The formalization obtains the path-space Crooks relation and its work-distribution corollary for this model, together with an entropy-production integral fluctuation theorem, and recovers the model as a one-window instance of the general driven construction.
+so the example checks the path-to-work Crooks sign conventions directly, in addition to Jarzynski's equality. The common offset $-\log 3$ in the final landscape is an energy-gauge choice: adding $+\log 3$ to both final-state energies shifts every value of $W$ and $\Delta F$ by the same amount while leaving the dissipated work $W-\Delta F$, the Crooks exponent, and Jarzynski's equality unchanged. In the shifted gauge $E_1=(0,0)$, the forward work values are $0$ and $\log 2$ with probabilities $1/3$ and $2/3$, and $\Delta F=\log\frac32$. This one-window example is thus a sign-convention test: a stationary Gibbs state followed by a single quench, rather than a nontrivial finite-time relaxation. The formalization obtains the path-space Crooks relation and its work-distribution corollary for this model, together with an entropy-production integral fluctuation theorem, and recovers the model as a one-window instance of the general driven construction.
 
 \paragraph{Branching and history-dependent work.}
 A three-state Y-shaped chain uses
@@ -58,11 +58,11 @@ A three-state Y-shaped chain uses
 \]
 This is the smallest reversible network with a genuine branching choice: from the hub state $0$, a jump can reach either leaf, so the chain is not a telegraph process, and its symmetric rates make the uniform distribution stationary. The branching at state $0$ is why jump-count parity arguments from the two-state alternating chain do not apply; this generator validates the general terminal-law theorem beyond that special case.
 
-A separate two-window three-state protocol has energy landscapes
+A separate two-window three-state protocol on the same Y-shaped network is fully specified as follows: energy landscapes
 \[
-  (0,0,0)\longrightarrow(0,\log 2,0)\longrightarrow(0,0,0).
+  (0,0,0)\longrightarrow(0,\log 2,0)\longrightarrow(0,0,0)
 \]
-Its second-window generator doubles the rate out of the raised state, $k(1,0)=2$: the rate ratio compensates the Gibbs weight $e^{-\log 2}=1/2$ of the raised state, which is detailed balance~\eqref{eq:gibbs-db} in concrete form. Here $0\to1\to0$ denotes the boundary-state triple $(X_{s_0},X_{s_1},X_{s_2})$, not the complete sequence of microscopic jumps. The resting history $0\to0\to0$ has $W=0$. The history $0\to1\to0$ has $W=\log 2$, because the first switch raises state $1$ while the second switch occurs after the process has returned to state $0$. Both histories have the same endpoint pair $(0,0)$, and both have positive probability for positive window durations (\lean{work_zero_same_endpoints_event_pos}, \lean{work_log_two_same_endpoints_event_pos}). Consequently, the work is not determined almost surely by the overall initial and final states (\lean{work_not_ae_initialFinalFunction}): the intermediate window-boundary history is essential, even though the work observable~\eqref{eq:work} itself reads only window-boundary states.
+at inverse temperature $\beta=1$; initial distribution the uniform Gibbs state of the flat landscape; arbitrary durations $T_0,T_1>0$; first-window generator the symmetric Y-shaped generator above, with unit rates on the edges $0\leftrightarrow1$ and $0\leftrightarrow2$; and second-window generator identical except that the rate out of the raised state is doubled, $k(1,0)=2$: the rate ratio compensates the Gibbs weight $e^{-\log 2}=1/2$ of the raised state, which is detailed balance~\eqref{eq:gibbs-db} in concrete form. Here $0\to1\to0$ denotes the boundary-state triple $(X_{s_0},X_{s_1},X_{s_2})$, not the complete sequence of microscopic jumps. The resting history $0\to0\to0$ has $W=0$. The history $0\to1\to0$ has $W=\log 2$, because the first switch raises state $1$ while the second switch occurs after the process has returned to state $0$. Both histories have the same endpoint pair $(0,0)$, and both have positive probability for positive window durations (\lean{work_zero_same_endpoints_event_pos}, \lean{work_log_two_same_endpoints_event_pos}). Consequently, the work is not determined almost surely by the overall initial and final states (\lean{work_not_ae_initialFinalFunction}): the intermediate window-boundary history is essential, even though the work observable~\eqref{eq:work} itself reads only window-boundary states.
 
 \paragraph{Endpoint data do not determine interior observations.}
 Retaining complete window paths serves a strictly stronger purpose than computing work: constructing and observing a single global real-time trajectory and proving path-level pushforward identities. For the unit-rate symmetric two-state chain, the exact transition probabilities are
@@ -81,6 +81,13 @@ and
   \Pp_{T,0}(X_{T/2}=1,\,X_T=0)
   =p_{01}(T/2)\,p_{10}(T/2)>0.
 \]
+Conditioning on the complete endpoint pair therefore leaves the midpoint genuinely random:
+\[
+  0<
+  \Pp\bigl(X_{T/2}=1\,\big|\,X_0=0,\,X_T=0\bigr)
+  =\frac{p_{01}(T/2)^2}{p_{00}(T)}
+  <1 .
+\]
 These are the concrete finite-dimensional atoms behind the interior-time theorem. For $T>0$, within the endpoint event $(X_0,X_T)=(0,0)$, both midpoint values occur with positive probability, so the midpoint state is not almost surely equal to any measurable function of the endpoint pair (\lean{trajectory_interior_not_ae_endpointFunction}). Endpoint-only records are therefore insufficient for general path-level observables; the present construction retains complete window paths so that the global real-time trajectory and its finite-time observations remain available.
 
-Together these examples act as regression targets for normalization, branching, physical parameterization, work sign conventions, and the distinction between endpoint and path information.
+Together these examples illustrate normalization, branching, physical parameterization, work sign conventions, and the distinction between endpoint and path information.

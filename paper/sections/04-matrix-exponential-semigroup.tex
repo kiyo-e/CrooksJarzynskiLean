@@ -62,6 +62,7 @@ Equation~\eqref{eq:terminal-exp} turns the matrix-exponential semigroup identity
 \[
   K_{S+T}=K_T\circ K_S.
 \]
+In ordinary row-matrix notation this is $P_{S+T}=P_SP_T$; the formal expression uses Mathlib's convention that the rightmost kernel acts first.
 The repository also proves a stronger path-level identity. Cutting a constructed path at an intermediate horizon and concatenating an independent continuation started at the cut state recovers $\Pp_{S+T,x}$ (\lean{pathLawFrom_add}). Taking the terminal pushforward of this path-level theorem yields the kernel semigroup law as a shadow.
 
 \subsection{Finite-dimensional distributions}
@@ -89,6 +90,6 @@ indicator by the entry $\exp(t_0Q)(x,x_0)$
 (\lean{pathLawFrom_finiteDimensional_eq_general},
 \lean{pathLawFrom_sampleAt_real_singleton_eq_exp_product_general}), so all
 finite-dimensional distributions at nondecreasing observation times are covered.
-Thus the semigroup is not merely an API defined beside the path construction: it is identified with the actual terminal and finite-dimensional laws of that construction.
+Thus the semigroup is not an independently postulated transition kernel defined beside the path construction: it is identified with the actual terminal and finite-dimensional laws of that construction.
 
 A branching three-state Y-shaped chain instantiates the general theorem. It is the smallest reversible network with a genuine branching choice: from the hub state a jump can reach either leaf, so the process is not a telegraph process, and its path law cannot be reduced to the parity-of-jump-count argument available for a two-state alternating chain.

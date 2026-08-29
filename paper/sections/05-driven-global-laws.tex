@@ -7,7 +7,7 @@ Consider $M$ protocol windows with durations $T_i$, energy landscapes
 \[
   E_0,E_1,\ldots,E_M:\Omega\to\R,
 \]
-and generators $G_i$ for $i=0,\ldots,M-1$. Within window $i$, the generator is constant and the complete path is sampled from the normalized fixed-initial law already constructed. The next window starts at the recorded terminal state. The marked carrier therefore retains one complete \lean{FullPath} object per window rather than only its endpoints.
+and generators $G_i$ for $i=0,\ldots,M-1$. Within window $i$, the generator is constant and the complete path is sampled from the normalized fixed-initial law already constructed. The next window starts at the recorded terminal state. The augmented marked path space therefore retains one complete window trajectory (a \lean{FullPath} object) per window rather than only its endpoints.
 
 The reverse experiment begins from the final Gibbs state, traverses the windows in reverse order, and samples complete window paths in its own chronology; each path is reversed once, before it is stored, as made precise below. The development proves almost-sure boundary matching and fixed-horizon validity for both forward and reverse marked laws. A structurally boundary-consistent subtype is also available for deterministic reasoning.
 
@@ -37,7 +37,7 @@ The forward protocol stops immediately after the final switch to $E_M$; the reve
 
 For $M>0$, the forward experiment evolves under the constant generator $G_i$ on landscape $E_i$ for time $T_i$ and is quenched $E_i\to E_{i+1}$ at the end of the window; the reverse experiment applies the mirrored quench before the corresponding window. For $M=0$, both protocols degenerate to the equilibrium experiment with no evolution and zero work, and the theorems below hold trivially.
 
-Let $\Pp_R$ denote the law of the reverse protocol in its own chronology, and let $\Pp_R^{\Theta}$ denote its chronology-aligned image on the common path carrier. For a c\`adl\`ag trajectory $X$ on a horizon $[0,\tau]$ and a kinematic time-reversal involution $\vartheta$, the standard time reversal is
+Let $\Pp_R$ denote the law of the reverse protocol in its own chronology, and let $\Pp_R^{\Theta}$ denote its chronology-aligned image on the common path carrier. For a c\`adl\`ag trajectory $X$ on a horizon $[0,\tau]$ and a kinematic time-reversal involution $\vartheta$, the standard time reversal is \parencite{MaesNetocny2003,SpinneyFord2012}
 \[
   (\Theta X)_t=\vartheta X_{(\tau-t)-}\quad(0\le t<\tau),
   \qquad
@@ -49,7 +49,7 @@ In the present work all state variables are even, so $\vartheta=\mathrm{id}$. Th
   \Theta\bigl((x_0,\ldots,x_n),(\tau_0,\ldots,\tau_n)\bigr)
   = \bigl((x_n,\ldots,x_0),(\tau_n,\ldots,\tau_0)\bigr),
 \end{equation}
-which fixes the state assigned at each jump time in accordance with that left-limit convention. This correspondence is itself machine-checked: on an exact-horizon record, the reversed trajectory equals the original trajectory at the mirrored time whenever the mirrored time is not a jump time (\lean{FullPath.trajectory_reverse_eq_mirror}); at each fixed observation time the identity holds almost surely under the constructed fixed-initial law (\lean{pathLawFrom_ae_trajectory_reverse_eq_mirror}); and consequently the joint law of the reversed trajectory at any finite family of times equals the joint law of the original trajectory at the mirrored times (\lean{map_trajectory_reverse_eq_map_mirror}). The quench at the beginning of the reverse experiment is not an additional operation; it is the exact time mirror of the final quench of the forward protocol.
+which fixes the state assigned at each jump time in accordance with that left-limit convention. This correspondence is itself machine-checked: on an exact-horizon record, the reversed trajectory equals the original trajectory at the mirrored time whenever the mirrored time is not a jump time (\lean{FullPath.trajectory_reverse_eq_mirror}); at each fixed observation time the identity holds almost surely under the constructed fixed-initial law (\lean{pathLawFrom_ae_trajectory_reverse_eq_mirror}); and consequently the joint law of the reversed trajectory at any finite family of times equals the joint law of the original trajectory at the mirrored times (\lean{map_trajectory_reverse_eq_map_mirror}). Because the forward schedule contains the final boundary quench $E_{M-1}\to E_M$ at $t=\tau$, the time-reversed schedule contains the corresponding initial boundary quench $E_M\to E_{M-1}$ at $t=0$.
 
 In the formal construction, each reverse window path is transformed by $\Theta$ exactly once, before it is stored on the common forward-aligned marked carrier (\lean{reverseWindowKernel}); the marked reverse law is therefore already chronology-aligned, and the global reverse law $\Pp_R^{\Theta}$ is obtained from it by chronological concatenation. In this way $\Pp_R^{\Theta}$ realizes the time-reversed image $\Theta_*\Pp_R$ of the reverse-protocol law: within each window the identification is proved at the level of all finite-dimensional distributions by the mirror theorems above, and the global concatenated laws are additionally matched at the window boundaries almost surely. It is called the aligned reverse law in the formal development, and it is charted in the forward time direction, not in the reverse experiment's own chronology. A single global statement mirroring arbitrary observation times across window seams is not formalized (Section~\ref{sec:limitations}).
 
@@ -83,11 +83,13 @@ Let $s_i=\sum_{j<i}T_j$ be the boundary times. Work is read from the global righ
   W(\gamma)=\sum_{i=0}^{M-1}
   \left(E_{i+1}(X_{s_{i+1}})-E_i(X_{s_{i+1}})\right).
 \end{equation}
-During window $i$, the system evolves for time $T_i$ under $G_i$ at the fixed energy landscape $E_i$. At the end of the window, the control parameter is switched instantaneously from $E_i$ to $E_{i+1}$ while the state is held fixed. A stochastic jump at the deterministically prescribed switching time has probability zero, so $X_{s_{i+1}^-}=X_{s_{i+1}}$ almost surely, and~\eqref{eq:work} is the usual inclusive switching work, charged at the state occupied at the window boundary, with positive sign for work done on the system. We refer to this as the end-of-window quench convention; ``transition-then-quench'' is the name used in the formal development. For finite $\Omega$ and finitely many windows, this observable is bounded and therefore integrable under the constructed laws. The formalization proves that~\eqref{eq:work} agrees almost surely with the recursively defined marked work.
+During window $i$, the system evolves for time $T_i$ under $G_i$ at the fixed energy landscape $E_i$. At the end of the window, the control parameter is switched instantaneously from $E_i$ to $E_{i+1}$ while the state is held fixed. A stochastic jump at the deterministically prescribed switching time has probability zero, so $X_{s_{i+1}^-}=X_{s_{i+1}}$ almost surely, and~\eqref{eq:work} is the usual inclusive switching work, charged at the state occupied at the window boundary, with positive sign for work done on the system. We refer to this as the evolve-then-quench convention; ``transition-then-quench'' is the name used in the formal development. For finite $\Omega$ and finitely many windows, this observable is bounded and therefore integrable under the constructed laws. The formalization proves that~\eqref{eq:work} agrees almost surely with the recursively defined marked work.
 
 In the usual single-bath interpretation, jumps within a window change the system energy at fixed control parameter and are associated with heat exchange, whereas the instantaneous switches contribute work \parencite{Sekimoto2010,Seifert2012}. Heat and a trajectory-level first law are not formalized in the present development.
 
-Fix an inverse temperature $\beta\ne 0$. The formal identities below are proved for every $\beta\ne0$; the standard thermal interpretation assumes $\beta>0$, and negative $\beta$ may be read as a formal parameter. During each fixed-control window, the time-homogeneous generator $G_i$ obeys ordinary detailed balance with respect to the Gibbs distribution of the current landscape,
+The protocol specifies both an energy schedule $E_i$ and a kinetic schedule $G_i$, and both may change at a window boundary. Equation~\eqref{eq:work} assigns work only to the change of the state-energy landscape: detailed balance constrains the rate ratios but not the symmetric kinetic prefactors, so effective barrier heights may differ between windows, and any actuator cost associated with changing those kinetic parameters is outside the present coarse-grained thermodynamic bookkeeping. The reverse protocol mirrors both schedules.
+
+Fix an inverse temperature $\beta\ne 0$. The formal identities below are proved for every $\beta\ne0$; the standard thermal interpretation assumes $\beta>0$, and negative $\beta$ may be read as a formal parameter. During each fixed-control window, the time-homogeneous generator $G_i$ obeys equilibrium detailed balance --- equivalently, Gibbs reversibility --- with respect to the Gibbs distribution of the current landscape,
 \[
   \pi_i(x)=Z_i^{-1}e^{-\beta E_i(x)},
   \qquad
@@ -105,7 +107,11 @@ while, after cancelling $Z_i$, the unnormalized identity used in Lean is the div
   = e^{-\beta E_i(y)} k_i(y,x)
   \qquad (x\ne y).
 \end{equation}
-This division-free form is the hypothesis \lean{FiniteJumpGenerator.IsGibbsDetailedBalance}; the formal development calls it windowwise Gibbs detailed balance. In stochastic-thermodynamic language, condition~\eqref{eq:gibbs-db} is the one-reservoir, energy-only specialization of local detailed balance \parencite{Maes2021}; no reservoir decomposition or reservoir-resolved entropy flow is modeled. Detailed balance is a property of the generator $G_i$: it makes $\pi_i$ the stationary reference distribution of the window, and it does not imply that the actual state distribution equals $\pi_i$ during the finite window duration $T_i$. Since $G_i$ is reversible with respect to $\pi_i$, the reverse protocol uses the same window generator $G_i$, with the windows traversed in the opposite order. Let
+This division-free form is the hypothesis \lean{FiniteJumpGenerator.IsGibbsDetailedBalance}; the formal development calls it windowwise Gibbs detailed balance. In stochastic-thermodynamic language, condition~\eqref{eq:gibbs-db} is the one-reservoir, energy-only specialization of local detailed balance \parencite{Maes2021}: there is a single equilibrium reservoir, no nonconservative affinity, and no stationary probability current in $\pi_i$; no reservoir decomposition or reservoir-resolved entropy flow is modeled. Detailed balance is a property of the generator $G_i$: it makes $\pi_i$ the stationary reference distribution of the window, and it does not imply that the actual state distribution equals $\pi_i$ during the finite window duration $T_i$. The adjoint time-reversed rates are
+\[
+  k_i^{\dagger}(x,y)=\frac{\pi_i(y)\,k_i(y,x)}{\pi_i(x)},
+\]
+and equilibrium detailed balance states exactly $k_i^{\dagger}=k_i$; this is why the reverse protocol uses the same window generator $G_i$, with the windows traversed in the opposite order. Let
 \[
   Z_i=\sum_{x\in\Omega}e^{-\beta E_i(x)},
   \qquad
@@ -115,7 +121,13 @@ This division-free form is the hypothesis \lean{FiniteJumpGenerator.IsGibbsDetai
 \]
 Here $F_M$ is the equilibrium free energy associated with the final landscape $E_M$; the actual forward ensemble need not be equilibrated at the end of the protocol. It is the reverse experiment that prepares the Gibbs distribution of $E_M$, before its initial mirrored quench.
 
-The physical content of the balance condition can be seen directly at the trajectory level. For a forward trajectory $\gamma$ and its conjugate reverse trajectory, the exponential survival factors of the sector density~\eqref{eq:sector-density} cancel, because the two trajectories visit the same states for the same holding times. Every jump $x\to y$ in window $i$ contributes the rate ratio $\log[k_i(x,y)/k_i(y,x)]=-\beta[E_i(y)-E_i(x)]$, and these energy increments telescope against the Gibbs boundary weights: heuristically,
+The physical content of the balance condition can be seen directly at the trajectory level. For a forward trajectory $\gamma$ and its conjugate reverse trajectory, the exponential survival factors of the sector density~\eqref{eq:sector-density} cancel, because the two trajectories visit the same states for the same holding times. Every jump $x\to y$ in window $i$ contributes the rate ratio $\log[k_i(x,y)/k_i(y,x)]=-\beta[E_i(y)-E_i(x)]$. For physical interpretation (heat is not formalized in the development), define the heat absorbed by the system as
+\[
+  Q_{\mathrm{sys}}(\gamma)
+  =\sum_{\text{jumps }x^-\to x^+\text{ in window }i}
+   \bigl[E_i(x^+)-E_i(x^-)\bigr],
+\]
+so that the first law for this protocol reads $E_M(X_\tau)-E_0(X_0)=W+Q_{\mathrm{sys}}$, while detailed balance sums the rate ratios to $-\beta Q_{\mathrm{sys}}$. The jump contributions therefore telescope against the Gibbs boundary weights: heuristically,
 \[
   \log\frac{\dd\Pp_F^{\mathrm{glob}}}{\dd\Pp_R^{\Theta}}(\gamma)
   = \log\frac{\pi_0(x_0)}{\pi_M(x_\tau)}
@@ -123,7 +135,7 @@ The physical content of the balance condition can be seen directly at the trajec
    \log\frac{k_i(x^-,x^+)}{k_i(x^+,x^-)}
   = \beta\bigl[W(\gamma)-\Delta F\bigr],
 \]
-since the total energy change along the trajectory splits into the jump contributions and the switching work~\eqref{eq:work}. This is the familiar trajectory-level cancellation of stochastic thermodynamics \parencite{Crooks1999,Seifert2012,Maes2021}; the theorem below is its measure-theoretic realization on the constructed path law, stated without dividing by the probability of an individual trajectory. The path-density proof establishes exactly this identity in division-free form: it first proves a window balance for mixtures of the actual fixed-initial laws, then lifts it through the recursive marked construction, and finally maps it through global concatenation.
+since the boundary weights contribute $\log[\pi_0(x_0)/\pi_M(x_\tau)]=\beta[E_M(x_\tau)-E_0(x_0)]-\beta\Delta F$, and the first law converts $E_M(x_\tau)-E_0(x_0)-Q_{\mathrm{sys}}$ into the switching work~\eqref{eq:work}. This is the familiar trajectory-level cancellation of stochastic thermodynamics \parencite{Crooks1999,Seifert2012,Maes2021}; the theorem below is its measure-theoretic realization on the constructed path law, stated without dividing by the probability of an individual trajectory. The path-density proof establishes exactly this identity in division-free form: it first proves a window balance for mixtures of the actual fixed-initial laws, then lifts it through the recursive marked construction, and finally maps it through global concatenation.
 
 \subsection{Global fluctuation relations}
 
@@ -143,7 +155,7 @@ Assume:
   \item each window carries a finite jump generator $G_i$ satisfying the windowwise Gibbs detailed balance~\eqref{eq:gibbs-db} for its own landscape $E_i$;
   \item $\beta\ne 0$;
   \item the forward experiment starts from the initial Gibbs state $e^{-\beta E_0}/Z_0$ and the reverse experiment starts from the final Gibbs state $e^{-\beta E_M}/Z_M$;
-  \item work uses the end-of-window quench convention~\eqref{eq:work}, and the reverse law is the chronology-aligned pushforward $\Pp_R^{\Theta}$ of the reverse experiment's window records under record reversal~\eqref{eq:reversal} and concatenation.
+  \item work uses the evolve-then-quench convention~\eqref{eq:work}, and the reverse law is the chronology-aligned pushforward $\Pp_R^{\Theta}$ of the reverse experiment's window records under record reversal~\eqref{eq:reversal} and concatenation.
 \end{enumerate}
 Then
 \begin{equation}
@@ -151,12 +163,12 @@ Then
   e^{-\beta W(\gamma)}\,\Pp_F^{\mathrm{glob}}(\dd\gamma)
   =e^{-\beta\Delta F}\,\Pp_R^{\Theta}(\dd\gamma).
 \end{equation}
-Whenever ratio notation is legitimate, this is equivalently
+Because $W$ has finite range for a finite state space and a finite protocol, the density $e^{-\beta W}$ is bounded and strictly positive, so~\eqref{eq:global-crooks} implies that $\Pp_F^{\mathrm{glob}}$ and $\Pp_R^{\Theta}$ are mutually absolutely continuous, with Radon--Nikodym derivative
 \begin{equation}
   \log\frac{\dd\Pp_F^{\mathrm{glob}}}{\dd\Pp_R^{\Theta}}(\gamma)
-  =\beta\bigl(W(\gamma)-\Delta F\bigr).
+  =\beta\bigl(W(\gamma)-\Delta F\bigr)
 \end{equation}
-The Lean theorem states the first, division-free measure identity, which remains meaningful without dividing by the probability of an individual trajectory:
+almost surely --- a derivative between path measures, not a ratio of probabilities assigned to singleton trajectories. The Lean theorem states the first, division-free measure identity:
 \begin{equation}
 \label{eq:global-crooks-lean}
   \Pp_F^{\mathrm{glob}}.\operatorname{withDensity}
@@ -172,7 +184,7 @@ For $\beta>0$, averaging the logarithmic density under the forward law gives the
   D\!\left(\Pp_F^{\mathrm{glob}}\,\middle\|\,\Pp_R^{\Theta}\right)
   = \beta\bigl(\langle W\rangle_F-\Delta F\bigr):
 \]
-the mean dissipated work is the path-space distinguishability of the forward and reverse experiments \parencite{KawaiParrondoVandenBroeck2007}. This consequence of~\eqref{eq:global-crooks-lean} is also mechanized: the log-likelihood ratio is identified with $\beta(W-\Delta F)$ forward-almost surely, and the divergence evaluates to the mean dissipated work (\lean{llr_forwardGlobalLaw_reverseGlobalLaw}, \lean{klDiv_forwardGlobalLaw_reverseGlobalLaw}).
+the mean dissipated work is the path-space distinguishability of the forward and reverse experiments \parencite{KawaiParrondoVandenBroeck2007,Crooks1999,Seifert2012}. This consequence of~\eqref{eq:global-crooks-lean} is also mechanized: the log-likelihood ratio is identified with $\beta(W-\Delta F)$ forward-almost surely, and the divergence evaluates to the mean dissipated work (\lean{llr_forwardGlobalLaw_reverseGlobalLaw}, \lean{klDiv_forwardGlobalLaw_reverseGlobalLaw}).
 
 \begin{corollary}[Jarzynski equality]
 Under the hypotheses of Theorem~\ref{thm:main}, evaluating~\eqref{eq:global-crooks-lean} on the whole path space yields
