@@ -95,8 +95,9 @@ File: [`CrooksJarzynski/ContinuousTimeJumpFiniteDimensional.lean`](CrooksJarzyns
 
 Key declarations:
 
-- `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.pathLawFrom_finiteDimensional_eq` identifies every monotone finite-time sampling pushforward with the chronological transition-kernel path measure;
-- `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.pathLawFrom_sampleAt_real_singleton_eq_exp_product` gives the matrix-exponential product formula for every finite-dimensional atom.
+- `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.pathLawFrom_finiteDimensional_eq` identifies the finite-time sampling pushforward with the chronological transition-kernel path measure for nondecreasing observation families starting at time zero;
+- `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.pathLawFrom_sampleAt_real_singleton_eq_exp_product` gives the matrix-exponential product formula for the corresponding finite-dimensional atoms;
+- `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.pathLawFrom_finiteDimensional_eq_general` and `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.pathLawFrom_sampleAt_real_singleton_eq_exp_product_general` extend both statements to arbitrary nondecreasing observation times, without the time-zero requirement.
 
 Why it matters: the bridge is not restricted to the endpoint. The constructed real-time path has the expected finite-dimensional laws.
 
