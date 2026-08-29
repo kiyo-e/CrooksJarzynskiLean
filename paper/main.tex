@@ -1,0 +1,70 @@
+\documentclass[11pt]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,mathtools}
+\usepackage{amsthm}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{xurl}
+\usepackage{hyperref}
+\usepackage[backend=biber,style=authoryear,maxcitenames=2,maxbibnames=99,doi=true,isbn=false,url=true]{biblatex}
+\addbibresource{references.bib}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue,
+  citecolor=blue,
+  urlcolor=blue,
+  pdftitle={Machine-Checked Path Measures and Fluctuation Relations for Finite-State Continuous-Time Jump Processes in Lean 4},
+  pdfauthor={kiyo-e}
+}
+
+\emergencystretch=1.5em
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{corollary}{Corollary}
+
+\newcommand{\Lean}{Lean~4}
+\newcommand{\CJ}{CrooksJarzynskiLean}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\Pp}{\mathbb{P}}
+\newcommand{\dd}{\,\mathrm{d}}
+\newcommand{\lean}[1]{\ifmmode\text{\ttfamily\detokenize{#1}}\else\nolinkurl{#1}\fi}
+\newcommand{\file}[1]{\ifmmode\text{\ttfamily\detokenize{#1}}\else\nolinkurl{#1}\fi}
+\newcommand{\artifactbase}{\texttt{efbf55e}}
+
+\title{Machine-Checked Path Measures and Fluctuation Relations\\
+for Finite-State Continuous-Time Jump Processes in Lean 4}
+\author{kiyo-e\\
+\small \url{https://github.com/kiyo-e/CrooksJarzynskiLean}}
+\date{Draft of 27 August 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Compact derivations of fluctuation relations for Markov jump processes move directly between generator dynamics, trajectory-weight ratios, and work distributions, without keeping a single normalized path measure explicit throughout. We give an end-to-end, machine-checked Lean~4 construction for finite-state processes on a finite time horizon. Starting from a conservative generator, we build a normalized measure on finite jump records, prove finite-horizon non-explosion, and identify its terminal and finite-dimensional marginals with the semigroup $\exp(tQ)$. We then concatenate finitely many constant-generator windows separated by instantaneous energy switches. If each window generator satisfies detailed balance with respect to the Gibbs distribution of its current energy landscape, the forward path law and the chronology-aligned reverse law obtained by windowwise record reversal obey the path-measure Crooks identity $e^{-\beta W}\,\Pp_F = e^{-\beta\Delta F}\,\Pp_R^{\Theta}$, where $W$ is the inclusive work done on the system. Jarzynski's equality and, for $\beta>0$, the average-work inequality $\langle W\rangle_F \ge \Delta F$ follow on the same constructed path space. The result covers finite state spaces, finite time, and finite stepwise protocols; no new fluctuation identity is claimed.
+\end{abstract}
+
+
+\input{sections/01-introduction.tex}
+\input{sections/02-mathematical-setting.tex}
+\input{sections/03-normalized-path-measure.tex}
+\input{sections/04-matrix-exponential-semigroup.tex}
+\input{sections/05-driven-global-laws.tex}
+\input{sections/06-formalization-architecture.tex}
+\input{sections/07-examples.tex}
+\input{sections/08-related-work.tex}
+\input{sections/09-limitations.tex}
+\input{sections/10-artifact.tex}
+\input{sections/11-conclusion.tex}
+
+\printbibliography
+
+\end{document}

@@ -131,8 +131,10 @@ change-of-variables lemmas above expose this as a reusable public API in
 | Path-level Chapman--Kolmogorov in kernel form | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.pathKernel_add` |
 | The transition-kernel semigroup law recovered from path-level concatenation | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.transitionKernel_add_from_pathLawFrom_add` |
 | Every finite-dimensional marginal is the chronological path measure of the transition kernels | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.pathLawFrom_finiteDimensional_eq` |
+| Every general finite-dimensional marginal, without a time-zero assumption, is the chronological path measure started from its first observed marginal | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.pathLawFrom_finiteDimensional_eq_general` |
 | Every single-time marginal is the corresponding transition-kernel row | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.map_pathLawFrom_trajectory_eq_transitionKernel` |
 | Every finite-dimensional atom is a product of matrix-exponential entries | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.pathLawFrom_sampleAt_real_singleton_eq_exp_product` |
+| Every general finite-dimensional atom, without a time-zero assumption, starts with the matrix-exponential entry to its first observed state | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.pathLawFrom_sampleAt_real_singleton_eq_exp_product_general` |
 | Every single-time atom is the corresponding matrix-exponential entry | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.pathLawFrom_trajectory_real_singleton_eq_exp_generator` |
 
 A `FiniteJumpGenerator` packages nonnegative finite-state jump rates into a
@@ -198,6 +200,12 @@ atom with a product of matrix-exponential entries.
 | Conventional global atomwise ratio `P_F(W=w) = e^{β(w-ΔF)} P_R(W_R=-w)` | `MeasureProtocol.ContinuousTimeJump.Driven.global_crooks_work_atom_of_gibbsDetailedBalance` |
 | Jarzynski equality for global trajectory work | `MeasureProtocol.ContinuousTimeJump.Driven.global_jarzynski_of_gibbsDetailedBalance` |
 | Average-work second law for global trajectory work | `MeasureProtocol.ContinuousTimeJump.Driven.global_second_law_of_gibbsDetailedBalance` |
+| Pointwise cadlag time-reversal mirror on exact-horizon records | `MeasureProtocol.ContinuousTimeJump.JumpPath.trajectory_reverse_eq_mirror`, `MeasureProtocol.ContinuousTimeJump.FullPath.trajectory_reverse_eq_mirror` |
+| Almost-sure fixed-time mirror under the normalized fixed-initial law | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.pathLawFrom_ae_trajectory_reverse_eq_mirror` |
+| Finite-dimensional time-reversal mirror of the windowed path law | `MeasureProtocol.ContinuousTimeJump.FiniteJumpGenerator.map_trajectory_reverse_eq_map_mirror` |
+| Aligned reverse global law as the dissipation-tilted forward law | `MeasureProtocol.ContinuousTimeJump.Driven.reverseGlobalLaw_eq_forwardGlobalLaw_withDensity` |
+| Log-likelihood ratio equals dimensionless dissipated work | `MeasureProtocol.ContinuousTimeJump.Driven.llr_forwardGlobalLaw_reverseGlobalLaw` |
+| Mean entropy production equals path-space relative entropy | `MeasureProtocol.ContinuousTimeJump.Driven.klDiv_forwardGlobalLaw_reverseGlobalLaw` |
 | One-window work is the terminal energy quench | `MeasureProtocol.ContinuousTimeJump.Driven.work_one` |
 | Reverse work observable is the negated forward work | `MeasureProtocol.ContinuousTimeJump.Driven.reverseWork_eq_neg` |
 | Work-distribution Crooks relation for driven protocols | `MeasureProtocol.ContinuousTimeJump.Driven.work_distribution_crooks_of_gibbsDetailedBalance` |

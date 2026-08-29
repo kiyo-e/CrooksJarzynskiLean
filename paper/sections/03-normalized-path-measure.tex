@@ -1,0 +1,29 @@
+\section{From sectors to a normalized path measure}
+\label{sec:normalization}
+
+The key normalization argument is organized around an unfinished-arrival mass. Informally, let $A_n(T,x)$ be the mass of trajectories that have reached their $n$th arrival before the horizon without yet assigning the terminal no-jump remainder. A telescoping identity relates completed sectors to the next arrival mass:
+\begin{equation}
+\label{eq:telescope}
+  \sum_{n<N} \mu^{(n)}_{T,x}(\Gamma_n(T)) + A_N(T,x)=1.
+\end{equation}
+The identity is proved by integrating out the last free simplex coordinate: splitting the $N$th arrival integral according to whether the remaining time survives without a further jump produces exactly the $N$th completed-sector mass plus the $(N{+}1)$st arrival mass, and the partial sums telescope from $A_0(T,x)=1$.
+
+Because $\Omega$ is finite, the escape rates admit a global cap $R$. The formalization proves a Poisson-type estimate
+\begin{equation}
+\label{eq:arrival-bound}
+  A_n(T,x)\le \frac{(RT)^n}{n!},
+\end{equation}
+interpreted in nonnegative extended reals. The right-hand side tends to zero. Combining this limit with~\eqref{eq:telescope} yields
+\begin{equation}
+\label{eq:normalization}
+  \sum_{n=0}^{\infty}\mu^{(n)}_{T,x}(\Gamma_n(T))=1.
+\end{equation}
+
+The complete fixed-initial law is then defined by lifting each sector to the dependent sum and summing the measures:
+\[
+  \Pp_{T,x}=\lean{pathLawFrom T x}.
+\]
+An \lean{IsProbabilityMeasure} instance is derived from~\eqref{eq:normalization}. This is the formalization's finite-horizon non-explosion statement: no probability mass escapes from the union of finite-jump sectors to an infinite number of jumps before $T$. The statement is intentionally distinguished from an infinite-time jump-and-hold construction whose explosion time is almost surely infinite.
+
+Several measure-level support results accompany normalization. Almost every path has total holding time exactly $T$, starts at the prescribed state, has positive interior waits where required, is valid as a real-time chart, and ends at its recorded terminal state. These properties are later used to cut, concatenate, and sample paths without replacing the measure by a merely arithmetic transition formula.
+
