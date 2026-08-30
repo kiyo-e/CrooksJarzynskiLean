@@ -12,7 +12,7 @@ The paper does not rely on every module in the repository. The six stages below 
 
 ## Snapshot and dependencies
 
-- Archived release: [`v1.0.0`](https://github.com/kiyo-e/CrooksJarzynskiLean/releases/tag/v1.0.0). One checkout of this tag contains the complete formalization -- including the time-reversal mirror theorems (`ContinuousTimeJumpTrajectoryReversal.lean`), the KL dissipation identity (`ContinuousTimeJumpDrivenKL.lean`), and the interior-time theorem (`ContinuousTimeJumpTwoStateInteriorTime.lean`) -- together with the manuscript sources and this artifact guide. An archival copy is deposited on Zenodo.
+- Archived release: [`v1.0.0`](https://github.com/kiyo-e/CrooksJarzynskiLean/releases/tag/v1.0.0). One checkout of this tag contains the complete formalization -- including the time-reversal mirror theorems (`ContinuousTimeJumpTrajectoryReversal.lean`), the KL dissipation identity (`ContinuousTimeJumpDrivenKL.lean`), and the interior-time theorem (`ContinuousTimeJumpTwoStateInteriorTime.lean`) -- together with the manuscript sources and this artifact guide. An archival copy is deposited on Zenodo: version DOI [10.5281/zenodo.22176568](https://doi.org/10.5281/zenodo.22176568), concept DOI [10.5281/zenodo.22176567](https://doi.org/10.5281/zenodo.22176567).
 - Lean toolchain: `leanprover/lean4:v4.32.0`.
 - Mathlib and all Lake dependencies: fixed by `lake-manifest.json`.
 - Physlib: pinned by commit in `lakefile.lean`.

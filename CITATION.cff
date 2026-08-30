@@ -7,6 +7,7 @@ authors:
     given-names: "Kiyohiro"
     alias: "kiyo-e"
 repository-code: "https://github.com/kiyo-e/CrooksJarzynskiLean"
+doi: 10.5281/zenodo.22176567
 license: Apache-2.0
 version: "1.0.0"
 date-released: "2026-08-30"

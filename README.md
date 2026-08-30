@@ -1,5 +1,7 @@
 # Crooks–Jarzynski in Lean 4
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22176567.svg)](https://doi.org/10.5281/zenodo.22176567)
+
 A machine-checked development of stochastic thermodynamics in Lean 4. The
 library contains:
 
