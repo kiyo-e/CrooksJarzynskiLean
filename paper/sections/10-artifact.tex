@@ -1,7 +1,7 @@
 \section{Artifact and reproducibility}
 \label{sec:artifact}
 
-The core formalization described in Sections~\ref{sec:setting}--\ref{sec:driven} is based on the repository at commit \artifactbase, on the branch from which this manuscript is built. The manuscript source, bibliography, reader-facing related-work review, theorem map, artifact guide, and the interior-time theorem of Section~\ref{sec:examples} are contained in the artifact commit from which this PDF is built; that commit extends \artifactbase{} and lives in the same repository. A release version should replace both commit references with a single versioned artifact tag and archival DOI, so that one checkout reproduces every Lean declaration cited here together with this manuscript.
+The formalization described in Sections~\ref{sec:setting}--\ref{sec:driven} and this manuscript are archived together as the release tag \artifactbase{} of the repository: one checkout of that tag reproduces every Lean declaration cited here together with the manuscript source, bibliography, reader-facing related-work review, theorem map, artifact guide, and the interior-time theorem of Section~\ref{sec:examples}. An archival copy of the release, with a persistent identifier, is deposited on Zenodo through the repository's Zenodo integration.
 
 Beyond the continuous-time chain presented in this paper, the repository also contains a broader discrete-time measure-theoretic development, non-atomic Gaussian and Metropolis--Hastings examples, two-state calculations, and a refinement theorem relating two discrete work conventions. Those components support and test the library but are not part of the claims of this paper.
 
@@ -12,5 +12,5 @@ lake build
 lake env lean CrooksJarzynski/AxiomAudit.lean
 lake env lean CrooksJarzynski/AxiomAuditDriven.lean
 \end{verbatim}
-The project is pinned by \file{lean-toolchain}, \file{lakefile.lean}, and \file{lake-manifest.json}. A separate continuous-integration workflow builds this manuscript with \lean{latexmk} and \lean{biber} in a TeX~Live container and publishes the PDF as a build artifact; the release version should pin the container image by digest. The detailed paper-to-declaration map is in \file{FORMALIZATION.md}; driven-layer design notes are in \file{DRIVEN_PROTOCOL.md}; and \file{ARTIFACT.md} gives a reviewer-oriented route through the six-stage theorem spine.
+The project is pinned by \file{lean-toolchain}, \file{lakefile.lean}, and \file{lake-manifest.json}. A separate continuous-integration workflow builds this manuscript with \lean{latexmk} and \lean{biber} in a TeX~Live container pinned by image digest and publishes the PDF as a build artifact. The detailed paper-to-declaration map is in \file{FORMALIZATION.md}; driven-layer design notes are in \file{DRIVEN_PROTOCOL.md}; and \file{ARTIFACT.md} gives a reviewer-oriented route through the six-stage theorem spine.
 

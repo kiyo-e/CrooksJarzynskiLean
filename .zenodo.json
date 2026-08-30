@@ -1,0 +1,27 @@
+{
+  "title": "CrooksJarzynskiLean: a Lean 4 formalization of the Crooks and Jarzynski fluctuation theorems",
+  "upload_type": "software",
+  "license": "Apache-2.0",
+  "creators": [
+    { "name": "Endo, Kiyohiro" }
+  ],
+  "description": "<p>A machine-checked development of stochastic thermodynamics in Lean 4. For finite-state continuous-time Markov jump processes on a fixed finite horizon, it constructs the normalized trajectory law from a conservative generator, proves finite-horizon non-explosion, and identifies the terminal and all finite-dimensional marginals with the matrix-exponential semigroup exp(tQ). Concatenating finitely many constant-generator windows separated by instantaneous energy quenches, it proves the path-space Crooks relation, the Crooks work-distribution relation, Jarzynski's equality, and the average-work second law on the constructed global path laws, together with trajectory-level time-reversal mirror theorems and the identity between mean dissipated work and path-space relative entropy. A broader discrete-time measure-theoretic development with Gaussian, Metropolis-Hastings, and finite-state examples supports the library. Release v1.0.0 archives the formalization together with the accompanying manuscript, its bibliography, the paper-to-declaration map, and the reviewer-oriented artifact guide. The build is pinned by lean-toolchain, lakefile.lean, and lake-manifest.json; continuous integration rejects sorry/admit and custom axioms and audits the kernel axioms of the headline theorems (only propext, Classical.choice, and Quot.sound are permitted).</p>",
+  "keywords": [
+    "Lean 4",
+    "Mathlib",
+    "formal verification",
+    "stochastic thermodynamics",
+    "fluctuation theorems",
+    "Crooks theorem",
+    "Jarzynski equality",
+    "continuous-time Markov chains",
+    "matrix exponential semigroup",
+    "path measures"
+  ],
+  "related_identifiers": [
+    {
+      "relation": "isSupplementTo",
+      "identifier": "https://github.com/kiyo-e/CrooksJarzynskiLean"
+    }
+  ]
+}

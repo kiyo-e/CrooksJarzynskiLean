@@ -12,17 +12,16 @@ on:
 
 jobs:
   build-pdf:
-    runs-on: ubuntu-latest
-    # For a release, pin this image by digest so the TeX Live snapshot is frozen.
-    container: texlive/texlive:latest
+    runs-on: ubuntu-24.04
+    container: texlive/texlive@sha256:4984977ccf5afe883cb382d0163f267de0d029d140bb7a9e8f4c19f0b781d57b # texlive/texlive:latest as of 2026-08-30
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - name: Build manuscript
         run: |
           cd paper
           latexmk -pdf -interaction=nonstopmode -halt-on-error main.tex
       - name: Upload PDF
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: paper-pdf
           path: paper/main.pdf
